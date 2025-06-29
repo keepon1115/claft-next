@@ -1,10 +1,20 @@
 import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
+const isProd = process.env.NODE_ENV === 'production';
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   swcMinify: true,
+  
+  // GitHub Pages用の設定
+  output: isGitHubPages ? 'export' : undefined,
+  basePath: isGitHubPages ? '/claft-next' : '',
+  assetPrefix: isGitHubPages ? '/claft-next/' : '',
+  trailingSlash: true,
+  
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
@@ -60,8 +70,10 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // GitHub Pagesでは画像最適化を無効化
+    unoptimized: isGitHubPages,
     // 画像最適化設定
-    formats: ['image/webp', 'image/avif'],
+    formats: isGitHubPages ? undefined : ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     domains: [
@@ -93,7 +105,6 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     // 最適化設定
     minimumCacheTTL: 60,
-    unoptimized: false,
   },
   
   // 実験的機能
@@ -145,7 +156,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-const pwaConfig = withPWA({
+// GitHub Pages用には PWA を無効化
+const finalConfig = isGitHubPages ? nextConfig : withPWA({
   // @ts-ignore
   dest: "public",
   register: true,
@@ -204,4 +216,4 @@ const pwaConfig = withPWA({
   },
 })(nextConfig);
 
-export default pwaConfig;
+export default finalConfig;
