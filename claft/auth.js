@@ -1,0 +1,516 @@
+// auth.js - CLAFT共通認証モジュール
+
+// Supabase設定
+const SUPABASE_URL = 'https://laqvpxecqvlufboquffe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhcXZweGVjcXZsdWZib3F1ZmZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0MzYwNjgsImV4cCI6MjA2NDAxMjA2OH0.IRkg1miEpOGIFQMnno_P0hsMe1IgwCi2kl_kNcrmZTw';
+
+async function waitForSupabase(timeout = 5000) {
+    const interval = 50;
+    let waited = 0;
+    while (waited < timeout) {
+        if (window.supabase && window.supabase.createClient) {
+            return true;
+        }
+        await new Promise(res => setTimeout(res, interval));
+        waited += interval;
+    }
+    return false;
+}
+
+let supabase;
+
+class AuthManager {
+    constructor() {
+        this.currentUser = null;
+        this.isAdmin = false;
+        this.initializeAuth();
+    }
+
+    async initializeAuth() {
+        console.log('Auth initialization started');
+        const loaded = await waitForSupabase();
+        if (!loaded) {
+            console.error('Supabaseライブラリが読み込まれていません');
+            return;
+        }
+        
+        console.log('Supabase URL:', SUPABASE_URL);
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase client created:', !!supabase);
+        // 認証状態の監視
+        if (!supabase || !supabase.auth) {
+            console.error('Supabaseクライアントの初期化に失敗しました');
+            return;
+        }
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed:', event, !!session?.user);
+            this.currentUser = session?.user || null;
+            
+            if (this.currentUser) {
+                await this.handleLogin();
+                await this.checkAdminStatus();
+                
+                // リダイレクト処理
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectUrl = urlParams.get('redirect');
+                if (redirectUrl) {
+                    // リダイレクトパラメータをクリア
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                    
+                    // 少し遅らせてリダイレクト（認証状態の安定化）
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 500);
+                }
+            } else {
+                // ログアウト時の処理
+                this.isAdmin = false;
+                document.querySelectorAll('.admin-link').forEach(link => {
+                    link.style.display = 'none';
+                });
+            }
+            
+            // ページ別の処理
+            this.handlePageSpecificAuth();
+            
+            // 認証状態変更のコールバック実行
+            if (window.onAuthStateChanged) {
+                window.onAuthStateChanged(this.currentUser);
+            }
+        });
+        // 初期認証状態の確認
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                this.currentUser = session.user;
+                await this.handleLogin();
+                await this.checkAdminStatus();
+            }
+        } catch (e) {
+            console.error('Supabase認証セッション取得エラー:', e);
+        }
+        this.initializeAuthUI();
+    }
+
+    async handleLogin() {
+        if (!this.currentUser || !supabase) return;
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const { data: stats, error: statsError } = await supabase
+                .from('user_stats')
+                .select('*')
+                .eq('user_id', this.currentUser.id)
+                .single();
+            if (statsError && statsError.code === 'PGRST116') {
+                await supabase.from('user_stats').insert({
+                    user_id: this.currentUser.id,
+                    login_count: 1,
+                    last_login_date: today
+                });
+            } else if (stats && stats.last_login_date !== today) {
+                await supabase
+                    .from('user_stats')
+                    .update({
+                        login_count: stats.login_count + 1,
+                        last_login_date: today,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', this.currentUser.id);
+            }
+            const { data: profile, error: profileError } = await supabase
+                .from('users_profile')
+                .select('*')
+                .eq('id', this.currentUser.id)
+                .single();
+            if (profileError && profileError.code === 'PGRST116') {
+                await supabase.from('users_profile').insert({
+                    id: this.currentUser.id,
+                    email: this.currentUser.email,
+                    nickname: this.currentUser.user_metadata?.display_name || '冒険者'
+                });
+            }
+        } catch (error) {
+            console.error('ログイン処理エラー:', error);
+        }
+    }
+
+    async checkAdminStatus() {
+        if (!this.currentUser || !supabase) {
+            this.isAdmin = false;
+            return;
+        }
+        try {
+            // supabaseClientではなくsupabaseを使用
+            const { data, error } = await supabase
+                .from('admin_users')
+                .select('is_active')
+                .eq('user_id', this.currentUser.id)  // 'id'ではなく'user_id'
+                .eq('is_active', true)
+                .single();
+            
+            this.isAdmin = !error && data?.is_active === true;
+            console.log('Admin status check:', { isAdmin: this.isAdmin, data, error });
+            
+            // 管理者の場合、管理画面リンクを表示
+            if (this.isAdmin) {
+                document.querySelectorAll('.admin-link').forEach(link => {
+                    link.style.display = 'block';
+                });
+            } else {
+                // 管理者でない場合は非表示
+                document.querySelectorAll('.admin-link').forEach(link => {
+                    link.style.display = 'none';
+                });
+            }
+        } catch (error) {
+            console.error('管理者チェックエラー:', error);
+            this.isAdmin = false;
+            // エラー時も管理画面リンクを非表示
+            document.querySelectorAll('.admin-link').forEach(link => {
+                link.style.display = 'none';
+            });
+        }
+    }
+
+    initializeAuthUI() {
+        // 共通認証UIのセットアップ
+        this.createAuthModal();
+        this.updateAuthButtons();
+    }
+
+    createAuthModal() {
+        // 認証モーダルが既に存在する場合はスキップ
+        if (document.getElementById('authModal')) return;
+
+        const modalHTML = `
+            <div class="auth-modal" id="authModal" style="display: none;">
+                <div class="auth-modal-content">
+                    <button class="auth-modal-close" onclick="authManager.hideAuthModal()">×</button>
+                    <h2 class="auth-modal-title">🔐 冒険者登録・ログイン</h2>
+                    
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" data-tab="login" onclick="authManager.switchTab('login')">ログイン</button>
+                        <button class="auth-tab" data-tab="signup" onclick="authManager.switchTab('signup')">新規登録</button>
+                    </div>
+                    
+                    <div class="auth-form" id="loginForm">
+                        <h3>冒険を続ける</h3>
+                        <div class="form-group">
+                            <label for="loginEmail">メールアドレス</label>
+                            <input type="email" id="loginEmail" placeholder="your-email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">パスワード</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="loginPassword" placeholder="パスワードを入力" required>
+                                <button type="button" class="password-toggle" onclick="authManager.togglePassword('loginPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="auth-submit-btn" id="loginSubmitBtn" onclick="authManager.handleLogin()">🚪 ログイン</button>
+                        <div class="auth-message" id="loginMessage"></div>
+                    </div>
+                    
+                    <div class="auth-form" id="signupForm" style="display: none;">
+                        <h3>新しい冒険を始める</h3>
+                        <div class="form-group">
+                            <label for="signupEmail">メールアドレス</label>
+                            <input type="email" id="signupEmail" placeholder="your-email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">パスワード</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="signupPassword" placeholder="6文字以上のパスワード" required>
+                                <button type="button" class="password-toggle" onclick="authManager.togglePassword('signupPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupNickname">冒険者名</label>
+                            <input type="text" id="signupNickname" placeholder="あなたの冒険者名">
+                        </div>
+                        <button class="auth-submit-btn" id="signupSubmitBtn" onclick="authManager.handleSignup()">⚔️ 冒険者登録</button>
+                        <div class="auth-message" id="signupMessage"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    updateAuthButtons() {
+        // 既存の認証ボタンを更新
+        const authButtons = document.querySelectorAll('[data-auth-action]');
+        authButtons.forEach(button => {
+            if (this.currentUser) {
+                if (button.dataset.authAction === 'logout') {
+                    button.style.display = 'block';
+                    button.onclick = () => this.logout();
+                } else {
+                    button.style.display = 'none';
+                }
+            } else {
+                if (button.dataset.authAction === 'login') {
+                    button.style.display = 'block';
+                    button.onclick = () => this.showAuthModal();
+                } else {
+                    button.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    showAuthModal() {
+        console.log('showAuthModal called from:', new Error().stack);
+        const modal = document.getElementById('authModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    hideAuthModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) {
+            modal.style.display = 'none';
+            this.clearAuthForms();
+        }
+    }
+
+    switchTab(tabName) {
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        document.getElementById('loginForm').style.display = tabName === 'login' ? 'block' : 'none';
+        document.getElementById('signupForm').style.display = tabName === 'signup' ? 'block' : 'none';
+    }
+
+    async handleLoginSubmit() {
+        if (!supabase) {
+            this.showMessage(document.getElementById('loginMessage'), 'Supabaseが初期化されていません', 'error');
+            return;
+        }
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const messageDiv = document.getElementById('loginMessage');
+
+        if (!email || !password) {
+            this.showMessage(messageDiv, 'メールアドレスとパスワードを入力してください', 'error');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            this.showMessage(messageDiv, '✅ ログイン成功！', 'success');
+            setTimeout(() => {
+                this.hideAuthModal();
+                location.reload(); // ページをリロードして状態を更新
+            }, 1000);
+
+        } catch (error) {
+            this.showMessage(messageDiv, `❌ ログインエラー: ${error.message}`, 'error');
+        }
+    }
+
+    // 現在のhandleLoginSubmitメソッドの直後に以下を追加
+    async handleLogin() {
+        return this.handleLoginSubmit();
+    }
+
+    async handleSignup() {
+        if (!supabase) {
+            this.showMessage(document.getElementById('signupMessage'), 'Supabaseが初期化されていません', 'error');
+            return;
+        }
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+        const nickname = document.getElementById('signupNickname').value;
+        const messageDiv = document.getElementById('signupMessage');
+        const submitBtn = document.getElementById('signupSubmitBtn');
+
+        if (!email || !password) {
+            this.showMessage(messageDiv, 'メールアドレスとパスワードを入力してください', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showMessage(messageDiv, 'パスワードは6文字以上で入力してください', 'error');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = '登録中...';
+
+        try {
+            const { data, error } = await window.supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        display_name: nickname || '冒険者'
+                    }
+                }
+            });
+
+            if (error) {
+                // エラーメッセージを日本語でわかりやすく
+                let errorMessage = '登録に失敗しました';
+                
+                if (error.message.includes('already registered')) {
+                    errorMessage = 'このメールアドレスは既に登録されています';
+                } else if (error.message.includes('weak password')) {
+                    errorMessage = 'パスワードが脆弱です。より強いパスワードを設定してください';
+                } else if (error.message.includes('invalid email')) {
+                    errorMessage = '有効なメールアドレスを入力してください';
+                } else if (error.message.includes('Network')) {
+                    errorMessage = 'ネットワークエラーが発生しました。接続を確認してください';
+                } else {
+                    errorMessage = `登録エラー: ${error.message}`;
+                }
+                
+                throw new Error(errorMessage);
+            }
+
+            this.showMessage(messageDiv, '✅ 登録完了！確認メールをご確認ください', 'success');
+            setTimeout(() => {
+                this.hideAuthModal();
+            }, 3000);
+
+        } catch (error) {
+            this.showMessage(messageDiv, `❌ ${error.message}`, 'error');
+            
+            // エラー時に入力欄を揺らすアニメーション
+            const form = document.getElementById('signupForm');
+            form.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                form.style.animation = '';
+            }, 500);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '⚔️ 冒険者登録';
+        }
+    }
+
+    async logout() {
+        if (!supabase) {
+            alert('Supabaseが初期化されていません');
+            return;
+        }
+        try {
+            const { error } = await window.supabaseClient.auth.signOut();
+            if (error) throw error;
+            
+            location.reload();
+        } catch (error) {
+            console.error('ログアウトエラー:', error);
+            alert('ログアウトに失敗しました');
+        }
+    }
+
+    showMessage(element, message, type) {
+        element.textContent = message;
+        element.className = `auth-message ${type}`;
+        element.style.display = 'block';
+    }
+
+    clearAuthForms() {
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('signupEmail').value = '';
+        document.getElementById('signupPassword').value = '';
+        document.getElementById('signupNickname').value = '';
+        
+        document.querySelectorAll('.auth-message').forEach(msg => {
+            msg.style.display = 'none';
+        });
+    }
+
+    // ユーザー情報取得メソッド
+    getCurrentUser() {
+        return this.currentUser;
+    }
+
+    isLoggedIn() {
+        return !!this.currentUser;
+    }
+
+    isAdminUser() {
+        return this.isAdmin;
+    }
+
+    handlePageSpecificAuth() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        
+        console.log('handlePageSpecificAuth called:', {
+            currentPage,
+            hasUser: !!this.currentUser,
+            isIndex: currentPage === 'index.html',
+            isProfile: currentPage === 'profile.html'
+        });
+        
+        // profile.htmlの場合のみ、ログインを強制
+        if (currentPage === 'profile.html' && !this.currentUser) {
+            console.log('Showing auth modal for profile.html');
+            this.showAuthModal();
+            return;
+        }
+        
+        // index.htmlでは認証モーダルを自動表示しない
+        if (currentPage === 'index.html') {
+            console.log('index.html detected - no auto auth modal');
+            this.updateAuthButtons();
+            return;
+        }
+        
+        // その他のページでは、ログインボタンの表示/非表示のみ制御
+        this.updateAuthButtons();
+    }
+
+    // ページ保護メソッド - showAuthModalを自動実行しないように修正
+    requireAuth(redirectUrl = '/') {
+        if (!this.isLoggedIn()) {
+            // 自動でモーダルを表示しない
+            console.log('Authentication required');
+            return false;
+        }
+        return true;
+    }
+
+    requireAdmin(redirectUrl = '/') {
+        if (!this.isAdminUser()) {
+            alert('管理者権限が必要です');
+            window.location.href = redirectUrl;
+            return false;
+        }
+        return true;
+    }
+
+    // パスワードの表示/非表示を切り替える
+    togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.nextElementSibling;
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+}
+
+// グローバルインスタンスの作成
+window.authManager = new AuthManager(); 

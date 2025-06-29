@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <!-- キャッシュ制御 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- PWA関連メタタグ -->
+    <meta name="theme-color" content="#29B6F6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CLAFT">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="shortcut icon" href="icons/icon-192.png">
+    <!-- manifest.jsonは動的に読み込む -->
+    <title>CLAFT クエストマップ - 冒険の書</title>
+    
+    <!-- フォントとスタイル -->
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/navigation.css?v=20250119-001">
+    <link rel="stylesheet" href="css/auth.css?v=20250119-001">
+    <link rel="stylesheet" href="css/quest.css?v=20250119-001">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        /* CSSは前回と変更なしのため、ここでは省略します */
+        /* (実際のファイルでは、前回のCSSがここにそのまま入ります) */
+        * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
+        body { font-family: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif; line-height: 1.6; color: #2c2c2c; overflow-x: hidden; background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%); min-height: 100vh; position: relative; padding-bottom: 100px; }
+        .sky-object { position: fixed; opacity: 0.8; animation-timing-function: linear; animation-iteration-count: infinite; z-index: 1; pointer-events: none; }
+        .cloud { width: 100px; height: 40px; background: white; border-radius: 100px; box-shadow: 20px 10px 0 10px white, -20px 10px 0 5px white; }
+        .ufo { font-size: 40px; text-align: center; animation: ufo-wobble 3s ease-in-out infinite alternate; }
+        .ufo::before { content: '🛸'; }
+        @keyframes ufo-wobble { from { transform: translateY(-3px) rotate(-2deg); } to { transform: translateY(3px) rotate(2deg); } }
+        @keyframes float-sky-ltr { from { transform: translateX(0) translateY(var(--sy, 0)); } to { transform: translateX(calc(100vw + 200px)) translateY(var(--ey, 0)); } }
+        @keyframes float-sky-rtl { from { transform: translateX(0) translateY(var(--sy, 0)); } to { transform: translateX(calc(-100vw - 200px)) translateY(var(--ey, 0)); } }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 80px 16px 40px; position: relative; z-index: 10; }
+        .map-header { text-align: center; margin-bottom: 30px; position: relative; }
+        .map-header h1 { font-size: 2.5rem; color: #FFF; margin-bottom: 16px; text-shadow: 2px 2px 0 #4DB6F7, 4px 4px 0 #3A8BC4, 6px 6px 8px rgba(0,0,0,0.3); letter-spacing: 2px; animation: float_title 3s ease-in-out infinite; }
+        @keyframes float_title { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .map-header p { font-size: 1.1rem; color: #FFF; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 16px; border-radius: 0; border: 2px solid rgba(255,255,255,0.3); }
+        .adventure-log-button { display: inline-block; margin: 20px auto 0; padding: 12px 32px; background: #FFD700; border: 3px solid #B8860B; color: #654321; font-weight: bold; font-size: 1rem; cursor: pointer; position: relative; box-shadow: 0 0 0 1px #DAA520, 4px 4px 0 0 rgba(0,0,0,0.3); transition: all 0.1s ease; }
+        .adventure-log-button::before { content: '📖'; margin-right: 8px; }
+        .adventure-log-button:hover { transform: translate(-2px, -2px); box-shadow: 0 0 0 1px #DAA520, 6px 6px 0 0 rgba(0,0,0,0.3); }
+        .adventure-log-button:active { transform: translate(1px, 1px); box-shadow: 0 0 0 1px #DAA520, 2px 2px 0 0 rgba(0,0,0,0.3); }
+        .stage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-bottom: 40px; padding: 0 20px; }
+        @media (max-width: 767px) { .stage-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 0; } }
+        .stage-node { position: relative; text-align: center; cursor: pointer; transition: transform 0.2s ease; }
+        .stage-node:nth-child(2), .stage-node:nth-child(5) { transform: translateY(40px); }
+        @media (max-width: 767px) { .stage-node:nth-child(even) { transform: translateY(40px); } .stage-node:nth-child(5) { transform: translateY(0); } }
+        .stage-node:hover { transform: translateY(-5px) scale(1.05); }
+        .stage-node:nth-child(2):hover, .stage-node:nth-child(5):hover { transform: translateY(35px) scale(1.05); }
+        @media (max-width: 767px) { .stage-node:nth-child(even):hover { transform: translateY(35px) scale(1.05); } .stage-node:nth-child(5):hover { transform: translateY(-5px) scale(1.05); } }
+        .stage-icon { width: 120px; height: 120px; margin: 0 auto 16px; position: relative; background: #E8F5E9; border: 4px solid #333; box-shadow: 0 0 0 2px #666, 6px 6px 0 0 rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 64px; transition: all 0.3s ease; overflow: hidden; }
+        .stage-node.locked .stage-icon, .stage-node.current .stage-icon { background: #9E9E9E; }
+        .stage-node.completed .stage-icon { background: #FFF9C4; box-shadow: 0 0 0 2px #FFD700, 6px 6px 0 0 rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.5); }
+        .stage-icon img.icon-image { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; display: block; transition: filter 0.3s ease; filter: grayscale(1); }
+        .stage-node.completed .stage-icon img.icon-image { filter: grayscale(0); }
+        .stage-node.locked .stage-icon img.icon-image { filter: grayscale(1); opacity: 0.7; }
+        .stage-icon .icon-fallback { font-size: 64px; display: none; filter: grayscale(1); }
+        .stage-node.completed .stage-icon .icon-fallback { filter: grayscale(0); }
+        .stage-node.locked .stage-icon .icon-fallback { filter: grayscale(1); opacity: 0.7; }
+        .clear-effect { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; object-fit: contain; display: none; z-index: 2; animation: effect-animation 2s ease-in-out infinite; }
+        .stage-node.completed .clear-effect { display: block; }
+        @keyframes effect-animation { 0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.9; } 25% { transform: translateY(-5px) scale(1.1) rotate(5deg); opacity: 1; } 50% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.9; } 75% { transform: translateY(-3px) scale(1.05) rotate(-5deg); opacity: 1; } }
+        .clear-badge { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #FFD700; border: 3px solid #B8860B; padding: 4px 12px; font-weight: bold; font-size: 14px; color: #654321; letter-spacing: 1px; box-shadow: 0 0 0 1px #DAA520, 3px 3px 0 0 rgba(0,0,0,0.5); z-index: 10; animation: bounce-in 0.5s ease; display: none; }
+        .stage-node.completed .clear-badge { display: block; }
+        @keyframes bounce-in { 0% { transform: translateX(-50%) translateY(-20px) scale(0); } 50% { transform: translateX(-50%) translateY(0) scale(1.2); } 100% { transform: translateX(-50%) translateY(0) scale(1); } }
+        .stage-number-badge { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; background: #4DB6F7; border: 3px solid #2C88C7; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: white; box-shadow: 0 0 0 1px #5AC8F7, 3px 3px 0 0 rgba(0,0,0,0.3); z-index: 5; padding: 2px; }
+        .stage-number-badge::before { content: ''; width: 6px; height: 6px; background: white; border-radius: 50%; position: absolute; top: 8px; left: 10px; box-shadow: 0 0 0 1px #2C88C7; }
+        .stage-number-badge::after { content: ''; width: 6px; height: 6px; background: white; border-radius: 50%; position: absolute; top: 8px; right: 10px; box-shadow: 0 0 0 1px #2C88C7; }
+        .stage-number-text { margin-top: 14px; }
+        .stage-node.locked .stage-number-badge { background: #757575; border-color: #616161; box-shadow: 0 0 0 1px #9E9E9E, 3px 3px 0 0 rgba(0,0,0,0.3); }
+        .stage-node.locked .stage-number-badge::before, .stage-node.locked .stage-number-badge::after { background: #ccc; box-shadow: 0 0 0 1px #616161; }
+        .stage-node.completed .stage-number-badge { background: #8EE38F; border-color: #6CBD6C; }
+        .stage-node.completed .stage-number-badge::before, .stage-node.completed .stage-number-badge::after { box-shadow: 0 0 0 1px #6CBD6C; }
+        .hero-face { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background-color: #FFEB3B; border: 3px solid #FBC02D; border-radius: 50%; z-index: 20; display: none; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); animation: hero-face-bounce 1.5s ease-in-out infinite; }
+        .hero-face::before, .hero-face::after { content: ''; position: absolute; width: 6px; height: 8px; background-color: #333; border-radius: 3px / 4px; top: 12px; }
+        .hero-face::before { left: 9px; }
+        .hero-face::after { right: 9px; }
+        .hero-face .mouth { position: absolute; width: 16px; height: 2px; background-color: #333; bottom: 10px; left: 50%; transform: translateX(-50%); border-radius: 1px; }
+        .stage-node.current .hero-face { display: block; }
+        @keyframes hero-face-bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+        .stage-info { background: white; border: 3px solid #333; padding: 12px 16px; margin-top: 16px; position: relative; box-shadow: 0 0 0 1px #666, 4px 4px 0 0 rgba(0,0,0,0.2); }
+        .stage-title { font-size: 1.1rem; font-weight: bold; color: #333; margin-bottom: 4px; }
+        .stage-description { font-size: 0.9rem; color: #666; line-height: 1.4; }
+        .path-line { position: absolute; width: 60px; height: 4px; background: repeating-linear-gradient( 90deg, #8B4513, #8B4513 10px, #D2691E 10px, #D2691E 20px ); top: 60px; right: -60px; transform: translateY(-50%); z-index: 1; }
+        .stage-node:nth-child(3n) .path-line, .stage-node:last-child .path-line { display: none; }
+        @media (max-width: 767px) { .stage-node:nth-child(3n) .path-line { display: block; } .stage-node:nth-child(2n) .path-line, .stage-node:last-child .path-line { display: none; } }
+        .quest-button { position: fixed; bottom: 30px; right: 30px; width: auto; min-width: 200px; margin: 0; padding: 16px 32px; background: #FF6B6B; border: 4px solid #DC143C; color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 0 2px #FF8787, 6px 6px 0 0 rgba(0,0,0,0.3); transition: all 0.1s ease; animation: pulse_button 2s ease-in-out infinite; z-index: 900; }
+        @keyframes pulse_button { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        .quest-button:hover { transform: translate(-2px, -2px) scale(1.02); box-shadow: 0 0 0 2px #FF8787, 8px 8px 0 0 rgba(0,0,0,0.3); animation: none; }
+        .quest-button:active { transform: translate(2px, 2px); box-shadow: 0 0 0 2px #FF8787, 2px 2px 0 0 rgba(0,0,0,0.3); }
+        @media (max-width: 767px) { .quest-button { padding: 12px 24px; font-size: 1rem; bottom: 20px; right: 20px; min-width: 160px; } }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1001; align-items: center; justify-content: center; }
+        .modal-content { background: #F5F5DC; border: 4px solid #8B4513; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 0 0 2px #A0522D, 8px 8px 0 0 rgba(0,0,0,0.5); position: relative; }
+        .modal-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; background: #DC143C; border: 2px solid #8B0000; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; font-weight: bold; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5); }
+        .modal-close:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 0 rgba(0,0,0,0.5); }
+        .modal-close:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 0 rgba(0,0,0,0.5); }
+        .modal-title { font-size: 1.6rem; color: #8B4513; margin-bottom: 16px; font-weight: bold; text-align: center; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
+        .modal-description { color: #654321; margin-bottom: 20px; line-height: 1.6; text-align: center; }
+        .modal-message { background: #FFF9C4; border: 2px solid #F9A825; padding: 16px; margin-bottom: 24px; text-align: center; font-style: italic; color: #5D4037; box-shadow: inset 0 0 8px rgba(0,0,0,0.1); }
+        .modal-buttons { display: flex; gap: 16px; justify-content: center; }
+        @media (max-width: 767px) { .modal-buttons { flex-direction: column; } }
+        .modal-button { flex: 1; padding: 12px 24px; border: 3px solid; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.1s ease; position: relative; }
+        .modal-button.video { background: #4CAF50; border-color: #388E3C; color: white; box-shadow: 0 0 0 1px #66BB6A, 4px 4px 0 0 rgba(0,0,0,0.3); }
+        .modal-button.video:hover { transform: translate(-2px, -2px); box-shadow: 0 0 0 1px #66BB6A, 6px 6px 0 0 rgba(0,0,0,0.3); }
+        .modal-button.quest { background: #2196F3; border-color: #1976D2; color: white; box-shadow: 0 0 0 1px #42A5F5, 4px 4px 0 0 rgba(0,0,0,0.3); }
+        .modal-button.quest:hover { transform: translate(-2px, -2px); box-shadow: 0 0 0 1px #42A5F5, 6px 6px 0 0 rgba(0,0,0,0.3); }
+        .modal-button:active { transform: translate(1px, 1px); box-shadow: 0 0 0 1px currentColor, 2px 2px 0 0 rgba(0,0,0,0.3); }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .loading-content { text-align: center; background: #F5F5DC; padding: 30px; border: 4px solid #8B4513; box-shadow: 0 0 0 2px #A0522D, 8px 8px 0 0 rgba(0,0,0,0.5); }
+        .loading-spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #4DB6F7; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        .loading-content p { color: #654321; font-weight: bold; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 認証ボタンのスタイル */
+        .nav-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 998;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #4DB6F7;
+            color: #4DB6F7;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-btn:hover {
+            background: #4DB6F7;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(77, 182, 247, 0.3);
+        }
+
+        /* Font Awesomeアイコンが読み込まれていない場合の対策 */
+        .auth-btn i {
+            display: inline-block;
+        }
+        
+        /* ハンバーガーメニューはnavigation.cssで統一管理 */
+
+    </style>
+</head>
+<body class="quest-page">
+    <!-- 回転促進メッセージ -->
+    <div class="rotation-notice">
+        <div class="rotation-notice-icon">📱</div>
+        <h2>横画面でお楽しみください</h2>
+        <p>このアプリは横画面でのご利用を推奨しています。<br>スマートフォンを横向きにしてお楽しみください。</p>
+    </div>
+
+    <!-- ハンバーガーメニュー -->
+    <div class="hamburger-menu" id="hamburgerMenu">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <!-- サイドバー -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🎮 CLAFT</div>
+        </div>
+        <div class="sidebar-nav">
+            <ul>
+                <li><a href="index.html"><i class="fas fa-home"></i><span class="nav-label">ホーム</span></a></li>
+                <li><a href="quest.html" class="active"><i class="fas fa-map"></i><span class="nav-label">クエストマップ</span></a></li>
+                <li><a href="yononaka.html"><i class="fas fa-globe"></i><span class="nav-label">Yononaka</span></a></li>
+                <li><a href="mirai.html"><i class="fas fa-rocket"></i><span class="nav-label">ミライクラフト</span></a></li>
+                <li><a href="admin.html" style="display: none;" class="admin-link"><i class="fas fa-cog"></i><span class="nav-label">管理画面</span></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- オーバーレイ -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- 認証ボタン用スペース -->
+    <div class="nav-buttons">
+        <button data-auth-action="login" class="auth-btn login-btn" style="display: block;">
+            <i class="fas fa-sign-in-alt"></i> ログイン/登録
+        </button>
+    </div>
+
+    <div id="skyObjectsContainer"></div>
+    <div class="loading-overlay" id="loadingOverlay"> <div class="loading-content"> <div class="loading-spinner"></div> <p>冒険の準備中...</p> </div> </div>
+    
+    <div class="container">
+        <header class="map-header"> <h1>🗺️ CLAFT クエストマップ</h1> <p>きみだけの冒険物語をつくろう！</p> <button class="adventure-log-button" id="adventureLogBtn"> これまでの冒険を振り返る </button> </header>
+        <div class="stage-grid" id="stageGrid">
+            <!-- ステージ1 -->
+            <div class="stage-node" id="stage-1" data-stage-id="1">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div> 
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ1アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">🏠</span>
+                    <img class="clear-effect" src="" alt="煙エフェクト" data-effect-type="smoke">
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">1</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+                <div class="path-line"></div>
+            </div>
+            <!-- ステージ2 -->
+            <div class="stage-node" id="stage-2" data-stage-id="2">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div>
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ2アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">🌲</span>
+                    <img class="clear-effect" src="" alt="動物エフェクト" data-effect-type="animal">
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">2</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+                <div class="path-line"></div>
+            </div>
+            <!-- ステージ3 -->
+            <div class="stage-node" id="stage-3" data-stage-id="3">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div>
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ3アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">⚔️</span>
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">3</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+                <div class="path-line"></div>
+            </div>
+            <!-- ステージ4 -->
+            <div class="stage-node" id="stage-4" data-stage-id="4">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div>
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ4アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">🛡️</span>
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">4</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+                <div class="path-line"></div>
+            </div>
+            <!-- ステージ5 -->
+            <div class="stage-node" id="stage-5" data-stage-id="5">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div>
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ5アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">👥</span>
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">5</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+                <div class="path-line"></div>
+            </div>
+            <!-- ステージ6 -->
+            <div class="stage-node" id="stage-6" data-stage-id="6">
+                <div class="clear-badge">CLEAR!</div>
+                <div class="hero-face"><div class="mouth"></div></div>
+                <div class="stage-icon">
+                    <img class="icon-image" src="" alt="ステージ6アイコン" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="icon-fallback">🏰</span>
+                </div>
+                <div class="stage-number-badge"><span class="stage-number-text">6</span></div>
+                <div class="stage-info"><h3 class="stage-title"></h3><p class="stage-description"></p></div>
+            </div>
+        </div>
+    </div>
+    <button class="quest-button" id="mainQuestButton">🔥 次の冒険へ進む！</button>
+    
+
+    <div class="modal" id="stageModal"> <div class="modal-content"> <button class="modal-close" id="modalCloseBtn">×</button> <h2 class="modal-title" id="modalStageTitle"></h2> <p class="modal-description" id="modalStageDescription"></p> <div class="modal-message" id="modalStageMessage"></div> <div class="modal-buttons"> <button class="modal-button video" id="modalVideoBtn">🎬 動画を見る</button> <button class="modal-button quest" id="modalQuestBtn">⚔️ クエストに挑む</button> </div> </div> </div>
+    
+    <!-- 重複しているSupabaseの読み込みを削除 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
+    <script>
+        // グローバル変数の更新
+        let currentUserId = null;
+        let userProgress = {};
+        let currentStageIdForModal = null;
+
+        // 認証状態が変更されたときの処理
+        window.onAuthStateChanged = async function(user) {
+            console.log('🔄 Auth state changed in quest.html:', !!user);
+            try {
+                if (user) {
+                    currentUserId = user.id;
+                    console.log('✅ User logged in, initializing quest map...');
+                    await initializeQuestMap();
+                } else {
+                    currentUserId = null;
+                    console.log('👤 No user, showing demo quest map...');
+                    // デモデータでクエストマップを表示
+                    showDemoQuestMap();
+                }
+            } catch (error) {
+                console.error('❌ Error in onAuthStateChanged:', error);
+                // エラーが発生してもデモを表示
+                showDemoQuestMap();
+            }
+        };
+
+        const TOTAL_STAGES = 6;
+        const NUM_SKY_OBJECTS = 7;
+
+        const stageStaticData = {
+            1: { 
+                title: '君はどんな冒険者？', 
+                description: '〜学びの地図をひらこう〜', 
+                message: '「勉強という二文字を忘れよう」',
+                videoUrl: 'https://vimeo.com/1096785134/fc1a254212',
+                formUrl: 'https://forms.gle/DX3GDXH9E62wVWTz7',
+                iconImage: 'https://via.placeholder.com/64x64/8B4513/FFFFFF?text=House', 
+                fallbackIcon: '🏠', 
+                clearEffectImage: 'https://via.placeholder.com/32x32/CCCCCC/000000?text=Smoke' 
+            },
+            2: { 
+                title: '新時代の冒険者に必要なものって？', 
+                description: '〜武器と道具の話〜', 
+                message: '「君は武器や道具をどう使う？」',
+                videoUrl: 'https://youtube.com/watch?v=stage2video',
+                formUrl: 'https://forms.google.com/your-form-2',
+                iconImage: 'https://via.placeholder.com/64x64/228B22/FFFFFF?text=Forest', 
+                fallbackIcon: '🌲', 
+                clearEffectImage: 'https://via.placeholder.com/32x32/8B4513/FFFFFF?text=Animal' 
+            },
+            3: { 
+                title: '君はどんなキャラ？', 
+                description: '〜自分を育てる育成ゲーム〜', 
+                message: '「自分のキャラは、自分で決めよう」',
+                videoUrl: 'https://youtube.com/watch?v=stage3video',
+                formUrl: 'https://forms.google.com/your-form-3',
+                iconImage: 'https://via.placeholder.com/64x64/4169E1/FFFFFF?text=Sword', 
+                fallbackIcon: '⚔️', 
+                clearEffectImage: null 
+            },
+            4: { 
+                title: 'ちがうって、おもしろい', 
+                description: '〜正解がないから広がる世界〜', 
+                message: '「だれかと違うのは怖いことじゃない」',
+                videoUrl: 'https://youtube.com/watch?v=stage4video',
+                formUrl: 'https://forms.google.com/your-form-4',
+                iconImage: 'https://via.placeholder.com/64x64/FFD700/000000?text=Shield', 
+                fallbackIcon: '🛡️', 
+                clearEffectImage: null 
+            },
+            5: { 
+                title: '「？」が世界をひらく', 
+                description: '〜ワクワク＆もやもや〜', 
+                message: '「"もやもや"がアイデアをつくる！！」',
+                videoUrl: 'https://youtube.com/watch?v=stage5video',
+                formUrl: 'https://forms.google.com/your-form-5',
+                iconImage: 'https://via.placeholder.com/64x64/32CD32/FFFFFF?text=Team', 
+                fallbackIcon: '👥', 
+                clearEffectImage: null 
+            },
+            6: { 
+                title: 'つくってつたえると気づける', 
+                description: '〜違いを生かして未来を創る〜', 
+                message: '「小さな一歩が、大きな未来につながる」',
+                videoUrl: 'https://youtube.com/watch?v=stage6video',
+                formUrl: 'https://forms.google.com/your-form-6',
+                iconImage: 'https://via.placeholder.com/64x64/8B0000/FFFFFF?text=Boss', 
+                fallbackIcon: '🏰', 
+                clearEffectImage: null 
+            }
+        };
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const stageGrid = document.getElementById('stageGrid');
+        const mainQuestButton = document.getElementById('mainQuestButton');
+        const stageModal = document.getElementById('stageModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalStageTitle = document.getElementById('modalStageTitle');
+        const modalStageDescription = document.getElementById('modalStageDescription');
+        const modalStageMessage = document.getElementById('modalStageMessage');
+        const modalVideoBtn = document.getElementById('modalVideoBtn');
+        const modalQuestBtn = document.getElementById('modalQuestBtn');
+        const skyObjectsContainer = document.getElementById('skyObjectsContainer');
+        
+        function createSkyObjects() {
+            skyObjectsContainer.innerHTML = ''; 
+            for (let i = 0; i < NUM_SKY_OBJECTS; i++) {
+                const obj = document.createElement('div');
+                obj.classList.add('sky-object');
+                let type;
+                const randomValue = Math.random();
+                if (randomValue < 0.95) { type = 'cloud'; } else { type = 'ufo'; }
+                obj.classList.add(type);
+                obj.style.top = `${Math.random() * 70 + 5}%`; 
+                const duration = Math.random() * 25 + 20; 
+                obj.style.animationDuration = `${duration}s`;
+                const startY = Math.random() * 10 - 5; 
+                const endY = Math.random() * 10 - 5;
+                obj.style.setProperty('--sy', `${startY}px`);
+                obj.style.setProperty('--ey', `${endY}px`);
+                if (Math.random() < 0.5) { obj.style.left = `-${Math.random() * 100 + 100}px`; obj.style.animationName = 'float-sky-ltr'; } 
+                else { obj.style.right = `-${Math.random() * 100 + 100}px`; obj.style.animationName = 'float-sky-rtl'; }
+                obj.style.animationDelay = `${Math.random() * duration * 0.8}s`; 
+                skyObjectsContainer.appendChild(obj);
+            }
+        }
+        
+        // クエストマップの初期化
+        let currentUser = null; 
+
+        // クエストマップの初期化
+        async function initializeQuestMap() {
+            console.log('🚀 Initializing quest map for user:', currentUserId);
+            if (!currentUserId) {
+                console.log('⚠️ No user ID, skipping initialization');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                console.log('📊 Fetching user progress...');
+                userProgress = await fetchUserProgress(currentUserId);
+                console.log('📈 User progress loaded:', userProgress);
+                updateStageDisplay();
+                console.log('✅ Quest map initialized successfully');
+            } catch (error) {
+                console.error('❌ Error initializing quest map:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // クエストマップのリセット
+        function resetQuestMap() {
+            for (let i = 1; i <= TOTAL_STAGES; i++) {
+                userProgress[i] = 'locked';
+            }
+            updateStageDisplay();
+        }
+
+        // デモ用のクエストマップ表示関数
+        function showDemoQuestMap() {
+            console.log('🎮 Showing demo quest map...');
+            try {
+                // デモ用の進捗データ（ステージ1のみアクセス可能）
+                userProgress = {
+                    1: 'current',  // ステージ1は未ログインでも体験可能
+                    2: 'locked',
+                    3: 'locked',
+                    4: 'locked',
+                    5: 'locked',
+                    6: 'locked'
+                };
+                
+                console.log('📋 Demo progress set:', userProgress);
+                updateStageDisplay();
+                
+                // メインクエストボタンをステージ1体験用に変更
+                const mainQuestButton = document.getElementById('mainQuestButton');
+                if (mainQuestButton) {
+                    mainQuestButton.textContent = '🌟 ステージ1を体験してみる';
+                    mainQuestButton.onclick = () => openStageModal(1);
+                    console.log('🎯 Main quest button updated for demo');
+                } else {
+                    console.error('❌ Main quest button not found');
+                }
+                
+                // ローディングを確実に非表示にする
+                showLoading(false);
+                console.log('✅ Demo quest map displayed successfully');
+            } catch (error) {
+                console.error('❌ Error showing demo quest map:', error);
+                showLoading(false);
+            }
+        }
+        
+        function showLoading(show) {
+            console.log(`🔄 ${show ? 'Showing' : 'Hiding'} loading overlay`);
+            try {
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = show ? 'flex' : 'none';
+                    console.log(`✅ Loading overlay ${show ? 'shown' : 'hidden'}`);
+                } else {
+                    console.error('❌ Loading overlay element not found');
+                }
+            } catch (error) {
+                console.error('❌ Error controlling loading overlay:', error);
+            }
+        }
+        
+        // ユーザー進行状況の取得（更新版）
+        async function fetchUserProgress(userId) {
+            showLoading(true);
+            console.log(`Fetching progress for userId: ${userId}`);
+            
+            try {
+                const { data, error } = await supabase
+                    .from('quest_progress')
+                    .select('*')
+                    .eq('user_id', userId);
+                    
+                if (error) throw error;
+                
+                const progress = {};
+                
+                // 初期状態：ステージ1はcurrent、他はlocked
+                for (let i = 1; i <= TOTAL_STAGES; i++) {
+                    progress[i] = i === 1 ? 'current' : 'locked';
+                }
+                
+                // データベースの状態で上書き
+                if (data && data.length > 0) {
+                    data.forEach(record => {
+                        progress[record.stage_id] = record.status;
+                    });
+                    
+                    // 次のステージを自動的にcurrentに
+                    let hasCurrentStage = false;
+                    for (let i = 1; i <= TOTAL_STAGES; i++) {
+                        if (progress[i] === 'current' || progress[i] === 'pending_approval') {
+                            hasCurrentStage = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasCurrentStage) {
+                        // 最後にcompletedになっているステージの次をcurrentに
+                        for (let i = TOTAL_STAGES - 1; i >= 1; i--) {
+                            if (progress[i] === 'completed' && i < TOTAL_STAGES) {
+                                progress[i + 1] = 'current';
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Progress fetched:', progress);
+                return progress;
+                
+            } catch (error) {
+                console.error('Error fetching user progress:', error.message);
+                const defaultProgress = {};
+                for (let i = 1; i <= TOTAL_STAGES; i++) {
+                    defaultProgress[i] = i === 1 ? 'current' : 'locked';
+                }
+                return defaultProgress;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ユーザー進行状況の保存（更新版）
+        async function saveUserProgress(userId, stageId, newStatus, additionalData = {}) {
+            showLoading(true);
+            console.log(`Saving progress for userId: ${userId}, stageId: ${stageId}, status: ${newStatus}`);
+            
+            try {
+                const updateData = {
+                    user_id: userId,
+                    stage_id: stageId,
+                    status: newStatus,
+                    updated_at: new Date().toISOString(),
+                    ...additionalData
+                };
+                
+                const { data, error } = await supabase
+                    .from('quest_progress')
+                    .upsert(updateData, {
+                        onConflict: 'user_id,stage_id'
+                    })
+                    .select();
+                    
+                if (error) throw error;
+                
+                console.log('Progress saved:', data);
+                userProgress[stageId] = newStatus;
+                
+                // 統計情報の更新（completedの場合）
+                if (newStatus === 'completed') {
+                    await updateQuestStats(userId);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error saving user progress:', error.message);
+                return false;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // クエスト統計の更新
+        async function updateQuestStats(userId) {
+            try {
+                // 現在の統計を取得
+                const { data: stats, error: statsError } = await supabase
+                    .from('user_stats')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+                    
+                if (statsError && statsError.code !== 'PGRST116') throw statsError;
+                
+                const currentStats = stats || { quest_clear_count: 0, total_exp: 0 };
+                
+                // クエストクリア回数と経験値を更新
+                const { error: updateError } = await supabase
+                    .from('user_stats')
+                    .upsert({
+                        user_id: userId,
+                        quest_clear_count: currentStats.quest_clear_count + 1,
+                        total_exp: currentStats.total_exp + 100, // 1クエストクリアで100EXP
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+                    
+                if (updateError) throw updateError;
+                
+            } catch (error) {
+                console.error('Error updating quest stats:', error);
+            }
+        }
+        
+        // ステージ表示の更新（pending_approval対応）
+        function updateStageDisplay() {
+            console.log('🎯 Updating stage display with progress:', userProgress);
+            try {
+                let currentStageExists = false;
+                let allStagesCompleted = true;
+                
+                for (let i = 1; i <= TOTAL_STAGES; i++) {
+                    const stageNode = document.getElementById(`stage-${i}`);
+                    if (!stageNode) {
+                        console.warn(`⚠️ Stage node ${i} not found`);
+                        continue;
+                    }
+                    
+                    const status = userProgress[i] || 'locked';
+                    console.log(`📍 Stage ${i} status: ${status}`);
+                    
+                    // クラスの更新
+                    stageNode.classList.remove('completed', 'current', 'locked', 'pending');
+                    if (status === 'pending_approval') {
+                        stageNode.classList.add('current', 'pending');
+                    } else {
+                        stageNode.classList.add(status);
+                    }
+                    
+                    if (status !== 'completed') {
+                        allStagesCompleted = false;
+                    }
+                    
+                    // 既存の表示更新処理...
+                    const staticInfo = stageStaticData[i];
+                    const titleElement = stageNode.querySelector('.stage-title');
+                    const descElement = stageNode.querySelector('.stage-description');
+                    
+                    if (titleElement) titleElement.textContent = staticInfo.title;
+                    if (descElement) descElement.textContent = staticInfo.description;
+                    
+                    // ヒーローフェイスの表示
+                    const heroFace = stageNode.querySelector('.hero-face');
+                    if (heroFace) {
+                        if (status === 'current' || status === 'pending_approval') {
+                            heroFace.style.display = 'block';
+                            currentStageExists = true;
+                        } else {
+                            heroFace.style.display = 'none';
+                        }
+                    }
+                    
+                    // 承認待ちバッジの追加
+                    if (status === 'pending_approval') {
+                        let pendingBadge = stageNode.querySelector('.pending-badge');
+                        if (!pendingBadge) {
+                            pendingBadge = document.createElement('div');
+                            pendingBadge.className = 'pending-badge';
+                            pendingBadge.textContent = '承認待ち';
+                            stageNode.appendChild(pendingBadge);
+                        }
+                    } else {
+                        const pendingBadge = stageNode.querySelector('.pending-badge');
+                        if (pendingBadge) {
+                            pendingBadge.remove();
+                        }
+                    }
+                }
+                
+                // メインクエストボタンの更新
+                updateMainQuestButton(allStagesCompleted, currentStageExists);
+                console.log('✅ Stage display updated successfully');
+            } catch (error) {
+                console.error('❌ Error updating stage display:', error);
+            }
+        }
+
+        // メインクエストボタンの更新
+        function updateMainQuestButton(allCompleted, hasCurrentStage) {
+            const mainQuestButton = document.getElementById('mainQuestButton');
+            
+            if (allCompleted && Object.keys(userProgress).length >= TOTAL_STAGES) {
+                mainQuestButton.textContent = '🎉 全ての冒険を達成！';
+                mainQuestButton.disabled = true;
+            } else if (!hasCurrentStage && !allCompleted && Object.keys(userProgress).length > 0) {
+                mainQuestButton.textContent = '❓ 次のステージへ';
+                mainQuestButton.disabled = false;
+            } else if (!currentUserId) {
+                mainQuestButton.textContent = '🌟 ステージ1を体験してみる';
+                mainQuestButton.disabled = false;
+                // onclick処理はイベントリスナーで統一管理
+            } else {
+                mainQuestButton.textContent = '🔥 次の冒険へ進む！';
+                mainQuestButton.disabled = false;
+            }
+        }
+
+        // モーダルを開く（更新版）
+        function openStageModal(stageId) {
+            const status = userProgress[stageId];
+            
+            // ステージ1は未ログインでもアクセス可能、他のステージはlocked時は拒否
+            if (status === 'locked' && stageId !== 1) {
+                alert('このステージはまだ開放されていません！');
+                return;
+            }
+            
+            // ステージ1で未ログインの場合の特別処理
+            if (stageId === 1 && !currentUserId) {
+                openStage1GuestModal();
+                return;
+            }
+            
+            currentStageIdForModal = stageId;
+            const staticInfo = stageStaticData[stageId];
+            
+            modalStageTitle.textContent = `ステージ ${stageId}: ${staticInfo.title}`;
+            modalStageDescription.textContent = staticInfo.description;
+            modalStageMessage.textContent = staticInfo.message;
+            
+            // ボタンの表示制御
+            const videoBtn = document.getElementById('modalVideoBtn');
+            const questBtn = document.getElementById('modalQuestBtn');
+            
+            if (status === 'current') {
+                // 動画ボタンの表示と設定
+                videoBtn.style.display = 'block';
+                videoBtn.textContent = '🎬 動画を見る';
+                videoBtn.disabled = false;
+                
+                // お題ボタンの表示と設定
+                questBtn.style.display = 'block';
+                questBtn.textContent = '⚔️ クエストに挑む';
+                questBtn.disabled = false;
+                
+                // イベントハンドラーの設定はstartQuest関数内で行う
+                startQuest(stageId);
+            } else if (status === 'pending_approval') {
+                videoBtn.style.display = 'none';
+                questBtn.style.display = 'block';
+                questBtn.textContent = '⏳ 承認待ち';
+                questBtn.disabled = true;
+            } else if (status === 'completed') {
+                videoBtn.style.display = 'none';
+                questBtn.style.display = 'none';
+            }
+            
+            stageModal.style.display = 'flex';
+        }
+
+        // ステージ1のゲスト用モーダル表示
+        function openStage1GuestModal() {
+            currentStageIdForModal = 1;
+            const staticInfo = stageStaticData[1];
+            
+            modalStageTitle.textContent = `ステージ 1: ${staticInfo.title}`;
+            modalStageDescription.textContent = staticInfo.description;
+            modalStageMessage.textContent = staticInfo.message;
+            
+            // ボタンの表示制御（ゲスト用）
+            const videoBtn = document.getElementById('modalVideoBtn');
+            const questBtn = document.getElementById('modalQuestBtn');
+            
+            videoBtn.style.display = 'block';
+            videoBtn.textContent = '🎬 動画を見る';
+            videoBtn.disabled = false;
+            
+            questBtn.style.display = 'block';
+            questBtn.textContent = '⚔️ クエストに挑む';
+            questBtn.disabled = false;
+            
+            // ゲスト用のイベントハンドラー設定
+            setupGuestStage1Handlers();
+            
+            stageModal.style.display = 'flex';
+        }
+
+        // ゲスト用ステージ1のハンドラー設定
+        function setupGuestStage1Handlers() {
+            const videoBtn = document.getElementById('modalVideoBtn');
+            const questBtn = document.getElementById('modalQuestBtn');
+            
+            // 動画ボタン：ログインを促す
+            videoBtn.onclick = function() {
+                closeStageModal();
+                setTimeout(() => {
+                    if (confirm('動画を視聴するにはログインが必要です。ログインしますか？')) {
+                        if (window.authManager) {
+                            authManager.showAuthModal();
+                        }
+                    }
+                }, 100);
+            };
+            
+            // クエストボタン：ログインを促す
+            questBtn.onclick = function() {
+                closeStageModal();
+                setTimeout(() => {
+                    if (confirm('クエストに挑戦するにはログインが必要です。ログインしますか？')) {
+                        if (window.authManager) {
+                            authManager.showAuthModal();
+                        }
+                    }
+                }, 100);
+            };
+        }
+
+        function closeStageModal() {
+            stageModal.style.display = 'none';
+            currentStageIdForModal = null;
+        }
+
+        // 動画視聴とお題提出の処理を実装
+        function startQuest(stageId) {
+            if (!currentUserId || userProgress[stageId] !== 'current') return;
+            
+            const staticInfo = stageStaticData[stageId];
+            const videoBtn = document.getElementById('modalVideoBtn');
+            const questBtn = document.getElementById('modalQuestBtn');
+            
+            // 動画視聴済みかチェック
+            const videoWatched = localStorage.getItem(`stage_${stageId}_video_watched`) === 'true';
+            
+            // 動画ボタンの初期状態を設定
+            if (videoWatched) {
+                videoBtn.textContent = '✅ 動画視聴済み';
+                videoBtn.disabled = true;
+            }
+            
+            // 動画ボタンのクリックイベント
+            videoBtn.onclick = function() {
+                // 動画URLを新しいタブで開く
+                window.open(staticInfo.videoUrl, '_blank');
+                
+                // 動画視聴フラグをローカルストレージに保存
+                localStorage.setItem(`stage_${stageId}_video_watched`, 'true');
+                
+                // ボタンのテキストを変更
+                videoBtn.textContent = '✅ 動画視聴済み';
+                videoBtn.disabled = true;
+            };
+            
+            // お題ボタンのクリックイベント
+            questBtn.onclick = async function() {
+                // 動画視聴チェック
+                const videoWatchedNow = localStorage.getItem(`stage_${stageId}_video_watched`) === 'true';
+                if (!videoWatchedNow) {
+                    alert('先に動画を視聴してください');
+                    return;
+                }
+                
+                // フォームURLを新しいタブで開く
+                window.open(staticInfo.formUrl, '_blank');
+                
+                // ステータスをpending_approvalに更新
+                const success = await saveUserProgress(currentUserId, stageId, 'pending_approval', {
+                    google_form_submitted: true,
+                    submitted_at: new Date().toISOString()
+                });
+                
+                if (success) {
+                    updateStageDisplay();
+                    closeStageModal();
+                    
+                    setTimeout(() => {
+                        alert('お題を提出しました！管理者の承認をお待ちください。');
+                    }, 100);
+                } else {
+                    alert('進捗の保存に失敗しました。');
+                }
+            };
+        }
+        
+
+        // 既存のイベントリスナーを更新
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM Content Loaded - Starting quest.html initialization');
+            
+            // 初期ローディングを非表示にする
+            showLoading(false);
+            
+            // 既存の初期化処理...
+            createSkyObjects();
+            
+            // authManagerが利用可能になるまで待つ（タイムアウト付き）
+            let authWaitAttempts = 0;
+            const maxAuthWaitAttempts = 50; // 5秒間待機
+            
+            function waitForAuthManager() {
+                console.log(`🔄 Waiting for auth manager (attempt ${authWaitAttempts + 1}/${maxAuthWaitAttempts})`);
+                
+                if (window.authManager) {
+                    console.log('✅ Auth manager found, initializing...');
+                    initializeWithAuthManager();
+                } else if (authWaitAttempts < maxAuthWaitAttempts) {
+                    authWaitAttempts++;
+                    setTimeout(waitForAuthManager, 100);
+                } else {
+                    console.log('⚠️ Auth manager timeout, initializing without auth...');
+                    initializeWithoutAuth();
+                }
+            }
+            
+            function initializeWithAuthManager() {
+                try {
+                    // 認証状態に基づく初期化
+                    const user = authManager.getCurrentUser();
+                    console.log('👤 Current user:', !!user);
+                    
+                    if (user) {
+                        initializeQuestMap();
+                    } else {
+                        showDemoQuestMap();
+                    }
+                    
+                    setupEventListeners();
+                } catch (error) {
+                    console.error('❌ Error in auth manager initialization:', error);
+                    initializeWithoutAuth();
+                }
+            }
+            
+            function initializeWithoutAuth() {
+                console.log('🎮 Initializing without auth manager...');
+                try {
+                    currentUserId = null;
+                    showDemoQuestMap();
+                    setupEventListeners();
+                    
+                    // 認証ボタンの手動設定
+                    const loginBtn = document.querySelector('[data-auth-action="login"]');
+                    if (loginBtn) {
+                        loginBtn.onclick = function() {
+                            alert('認証システムの読み込みに失敗しました。ページをリロードしてください。');
+                            location.reload();
+                        };
+                    }
+                } catch (error) {
+                    console.error('❌ Error in no-auth initialization:', error);
+                } finally {
+                    // 必ずローディングを非表示にする
+                    showLoading(false);
+                }
+            }
+            
+            function setupEventListeners() {
+                console.log('🎯 Setting up event listeners...');
+                try {
+                    // モーダル関連のイベントリスナー
+                    modalCloseBtn.addEventListener('click', closeStageModal);
+                    stageModal.addEventListener('click', (e) => {
+                        if (e.target === stageModal) closeStageModal();
+                    });
+                    
+                    // ステージノードのクリックイベント
+                    document.querySelectorAll('.stage-node').forEach(node => {
+                        node.addEventListener('click', () => {
+                            const stageId = parseInt(node.dataset.stageId);
+                            
+                            // ステージ1は未ログインでもアクセス可能
+                            if (stageId === 1 || currentUserId) {
+                                openStageModal(stageId);
+                            } else {
+                                // 他のステージで未ログインの場合
+                                if (confirm('このステージにアクセスするにはログインが必要です。ログインしますか？')) {
+                                    if (window.authManager) {
+                                        authManager.showAuthModal();
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // メインクエストボタン
+                    if (mainQuestButton) {
+                        mainQuestButton.addEventListener('click', () => {
+                            if (!currentUserId) {
+                                // ログインしていない場合はステージ1を体験
+                                openStageModal(1);
+                                return;
+                            }
+                            
+                            const currentStageEntry = Object.entries(userProgress).find(([_, status]) => 
+                                status === 'current' || status === 'pending_approval'
+                            );
+                            
+                            if (currentStageEntry) {
+                                openStageModal(parseInt(currentStageEntry[0]));
+                            } else if (Object.values(userProgress).every(s => s === 'completed') && Object.keys(userProgress).length >= TOTAL_STAGES) {
+                                // 全クリア済み
+                            } else {
+                                const firstNonCompleted = Object.entries(userProgress).find(([id, stat]) => 
+                                    stat === 'locked' || stat === 'current'
+                                );
+                                if (firstNonCompleted) {
+                                    openStageModal(parseInt(firstNonCompleted[0]));
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 冒険ログボタン
+                    const adventureLogBtn = document.getElementById('adventureLogBtn');
+                    if (adventureLogBtn) {
+                        adventureLogBtn.addEventListener('click', showAdventureLog);
+                    }
+                    
+                    // ハンバーガーメニューの初期化
+                    setupHamburgerMenu();
+                    
+                    console.log('✅ Event listeners set up successfully');
+                } catch (error) {
+                    console.error('❌ Error setting up event listeners:', error);
+                }
+            }
+            
+            function setupHamburgerMenu() {
+                console.log('🍔 Setting up hamburger menu...');
+                
+                const hamburgerMenu = document.getElementById('hamburgerMenu');
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebarOverlay');
+                
+                if (hamburgerMenu && sidebar && sidebarOverlay) {
+                    // クリックイベントの重複を防ぐため、既存のリスナーを削除
+                    const newHamburger = hamburgerMenu.cloneNode(true);
+                    hamburgerMenu.parentNode.replaceChild(newHamburger, hamburgerMenu);
+                    
+                    newHamburger.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🍔 Hamburger clicked');
+                        
+                        newHamburger.classList.toggle('active');
+                        sidebar.classList.toggle('active');
+                        sidebarOverlay.classList.toggle('active');
+                    });
+                    
+                    sidebarOverlay.addEventListener('click', () => {
+                        newHamburger.classList.remove('active');
+                        sidebar.classList.remove('active');
+                        sidebarOverlay.classList.remove('active');
+                    });
+                    
+                    // サイドバーのリンククリックでメニューを閉じる
+                    sidebar.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', () => {
+                            newHamburger.classList.remove('active');
+                            sidebar.classList.remove('active');
+                            sidebarOverlay.classList.remove('active');
+                        });
+                    });
+                    
+                    console.log('✅ Hamburger menu set up successfully');
+                } else {
+                    console.error('❌ Hamburger menu elements not found');
+                }
+            }
+            
+            waitForAuthManager();
+        });
+
+        // 冒険ログの表示（更新版）
+        function showAdventureLog() {
+            let logText = "📖 これまでの冒険の記録\n\n";
+            let completedCount = 0;
+            let pendingCount = 0;
+            
+            for (let i = 1; i <= TOTAL_STAGES; i++) {
+                const status = userProgress[i];
+                if (status === 'completed') {
+                    logText += `ステージ${i}: ${stageStaticData[i].title} - ✅ クリア済み\n`;
+                    completedCount++;
+                } else if (status === 'current') {
+                    logText += `ステージ${i}: ${stageStaticData[i].title} - 🎯 挑戦中\n`;
+                } else if (status === 'pending_approval') {
+                    logText += `ステージ${i}: ${stageStaticData[i].title} - ⏳ 承認待ち\n`;
+                    pendingCount++;
+                }
+            }
+            
+            if (completedCount === 0 && !Object.values(userProgress).some(s => s === 'current' || s === 'pending_approval')) {
+                logText += 'まだ冒険は始まったばかりです！';
+            }
+            
+            if (pendingCount > 0) {
+                logText += `\n⏳ ${pendingCount}個のクエストが承認待ちです`;
+            }
+            
+            alert(logText);
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // ファイルプロトコル（file://）ではServiceWorkerを登録しない
+                if (window.location.protocol === 'file:') {
+                    console.log('ServiceWorker registration skipped: file protocol not supported');
+                    return;
+                }
+                
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => { console.log('SW registered: ', registration.scope); })
+                    .catch(registrationError => { console.log('SW registration failed: ', registrationError); });
+            });
+        }
+    </script>
+    
+    <!-- パーシャルインクルード機能 -->
+    <script src="js/include.js?v=20250119-001"></script>
+    
+    <!-- manifest.jsonを動的に読み込む -->
+    <script>
+    function loadManifestWhenReady() {
+        // file://プロトコルの場合はmanifest.jsonを読み込まない
+        if (window.location.protocol === 'file:') {
+            console.log('Manifest loading skipped: file protocol not supported');
+            return;
+        }
+        
+        // HTTP/HTTPSの場合のみmanifest.jsonを読み込む
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = 'manifest.json?v=20250119-001';
+            document.head.appendChild(link);
+        }
+    }
+    loadManifestWhenReady();
+    </script>
+    
+    <!-- Supabaseライブラリの読み込み完了後にsupabase.jsとauth.jsを読み込む -->
+    <script>
+        function loadSupabaseAndAuth() {
+            console.log('🔧 Loading auth.js...');
+            
+            // Supabaseクライアントが既に存在することを確認
+            if (window.supabase && window.supabase.createClient) {
+                console.log('✅ Supabase client available, loading auth.js...');
+                
+                // auth.jsを読み込む
+                const authScript = document.createElement('script');
+                authScript.src = 'js/auth.js?v=20250119-001';
+                
+                authScript.onload = function() {
+                    console.log('✅ auth.js loaded successfully');
+                    
+                    // authManagerの初期化を待つ
+                    function waitForAuthManager(attempts = 0) {
+                        if (window.authManager) {
+                            console.log('✅ AuthManager initialized');
+                            updateAuthButtons();
+                            
+                            // 認証状態変更リスナーを再設定
+                            if (window.authManager.getCurrentUser()) {
+                                console.log('👤 User already logged in');
+                                // 既にログイン済みの場合の処理
+                            }
+                        } else if (attempts < 50) { // 5秒間待機
+                            setTimeout(() => waitForAuthManager(attempts + 1), 100);
+                        } else {
+                            console.error('❌ AuthManager initialization timeout');
+                            setupFallbackAuth();
+                        }
+                    }
+                    
+                    waitForAuthManager();
+                };
+                
+                authScript.onerror = function(error) {
+                    console.error('❌ Failed to load auth.js:', error);
+                    setupFallbackAuth();
+                };
+                
+                document.body.appendChild(authScript);
+            } else {
+                console.warn('⚠️ Supabase not ready, retrying...');
+                setTimeout(loadSupabaseAndAuth, 100);
+            }
+        }
+        
+        // フォールバック認証設定
+        function setupFallbackAuth() {
+            console.log('🔄 Setting up fallback auth...');
+            const loginBtn = document.querySelector('[data-auth-action="login"]');
+            if (loginBtn) {
+                loginBtn.onclick = (e) => {
+                    e.preventDefault();
+                    alert('認証システムの読み込みに失敗しました。ページをリロードしてお試しください。');
+                    location.reload();
+                };
+                console.log('✅ Fallback auth button configured');
+            }
+        }
+        
+        // 認証ボタンの更新関数（改善版）
+        function updateAuthButtons() {
+            console.log('🔧 Updating auth buttons...');
+            const loginBtn = document.querySelector('[data-auth-action="login"]');
+            const logoutBtn = document.querySelector('[data-auth-action="logout"]');
+            
+            if (!loginBtn) {
+                console.warn('⚠️ Login button not found');
+                return;
+            }
+            
+            if (window.authManager) {
+                console.log('✅ AuthManager found, configuring buttons...');
+                
+                // 現在のユーザー状態を確認
+                const user = window.authManager.getCurrentUser();
+                console.log('👤 Current user status:', !!user);
+                
+                if (user) {
+                    // ログイン済みの場合
+                    loginBtn.style.display = 'none';
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'block';
+                        logoutBtn.onclick = () => authManager.logout();
+                    }
+                } else {
+                    // 未ログインの場合
+                    loginBtn.style.display = 'block';
+                    loginBtn.onclick = (e) => {
+                        e.preventDefault();
+                        console.log('🔑 Login button clicked');
+                        authManager.showAuthModal();
+                    };
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'none';
+                    }
+                }
+                
+                console.log('✅ Login button configured successfully');
+            } else {
+                console.warn('⚠️ AuthManager not available, setting fallback handler');
+                // フォールバック処理
+                loginBtn.onclick = (e) => {
+                    e.preventDefault();
+                    console.log('🔑 Login button clicked (fallback)');
+                    if (window.authManager) {
+                        authManager.showAuthModal();
+                    } else {
+                        alert('認証システムの読み込み中です。しばらくお待ちください...');
+                        // 1秒後に再試行
+                        setTimeout(() => {
+                            if (window.authManager) {
+                                authManager.showAuthModal();
+                            } else {
+                                alert('認証システムの読み込みに失敗しました。ページをリロードしてください。');
+                            }
+                        }, 1000);
+                    }
+                };
+            }
+        }
+        
+        // DOMContentLoaded後に実行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM loaded, starting auth initialization...');
+            
+            // ログインボタンの存在確認
+            const loginBtn = document.querySelector('[data-auth-action="login"]');
+            console.log('🔍 Login button found:', !!loginBtn);
+            if (loginBtn) {
+                console.log('🔍 Login button HTML:', loginBtn.outerHTML);
+            }
+            
+            // Supabaseライブラリの確認
+            console.log('🔍 Supabase library available:', !!(window.supabase && window.supabase.createClient));
+            
+            loadSupabaseAndAuth();
+        });
+        
+        // 定期的な認証状態チェック（デバッグ用）
+        setInterval(() => {
+            if (window.authManager) {
+                const user = window.authManager.getCurrentUser();
+                console.log('📊 Auth status check:', {
+                    hasAuthManager: !!window.authManager,
+                    hasUser: !!user,
+                    userId: user?.id
+                });
+            }
+        }, 30000); // 30秒ごと
+    </script>
+    
+    <!-- 横画面強制表示機能 -->
+    <script>
+    // 横画面強制表示機能
+    function initLandscapeMode() {
+        // スマートフォンかどうかの判定
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
+            return mobileKeywords.some(keyword => userAgent.includes(keyword)) || 
+                   (window.innerWidth <= 770 && 'ontouchstart' in window);
+        }
+        
+        // 画面の向きをチェックして表示を切り替える
+        function checkOrientation() {
+            const rotationNotice = document.querySelector('.rotation-notice');
+            const isLandscape = window.innerHeight < window.innerWidth;
+            const isMobile = isMobileDevice();
+            
+            if (isMobile && !isLandscape) {
+                // スマートフォンで縦画面の場合
+                rotationNotice.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                // 横画面またはデスクトップの場合
+                rotationNotice.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // 初期チェック
+        checkOrientation();
+        
+        // 画面回転・リサイズ時のイベントリスナー
+        window.addEventListener('orientationchange', () => {
+            setTimeout(checkOrientation, 100); // 少し遅らせて正確な値を取得
+        });
+        
+        window.addEventListener('resize', checkOrientation);
+        
+        // VisibilityChange イベントでもチェック（アプリ切り替え時など）
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                setTimeout(checkOrientation, 100);
+            }
+        });
+    }
+    
+    // 初期化
+    document.addEventListener('DOMContentLoaded', initLandscapeMode);
+    </script>
+
+
+</body>
+</html>

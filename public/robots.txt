@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# PWA関連ファイル
+Allow: /manifest.json
+Allow: /sw.js
+Allow: /workbox-*.js
+
+# アイコンファイル
+Allow: /icon-*.png
+Allow: /apple-touch-icon.png
+Allow: /favicon.ico
+
+# 管理画面は非公開
+Disallow: /admin/
+
+# オフラインページは検索対象外
+Disallow: /offline
+
+# API エンドポイントは非公開
+Disallow: /api/
+
+# Sitemapの場所
+Sitemap: https://claft.vercel.app/sitemap.xml 

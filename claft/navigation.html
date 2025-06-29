@@ -1,0 +1,59 @@
+<!-- ハンバーガーメニュー -->
+<div class="hamburger-menu" id="hamburgerMenu" aria-label="メニューを開く">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- サイドバー -->
+<nav class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-item">
+        <i class="fas fa-home"></i>
+        <span>ホーム</span>
+    </a>
+    <a href="profile.html" class="sidebar-item">
+        <i class="fas fa-magic"></i>
+        <span>プロフィール</span>
+    </a>
+    <a href="quest.html" class="sidebar-item">
+        <i class="fas fa-scroll"></i>
+        <span>クエスト</span>
+    </a>
+    <a href="yononaka.html" class="sidebar-item">
+        <i class="fas fa-globe"></i>
+        <span>Yononaka</span>
+    </a>
+    <a href="mirai.html" class="sidebar-item">
+        <i class="fas fa-rocket"></i>
+        <span>ミライクラフト</span>
+    </a>
+</nav>
+
+<script>
+    // ハンバーガーメニューの動作
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    function toggleSidebar() {
+        hamburgerMenu.classList.toggle('active');
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+    }
+
+    hamburgerMenu.addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    // リンクにタイムスタンプを追加してキャッシュを回避
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = link.getAttribute('href');
+            const timestamp = new Date().getTime();
+            window.location.href = `${href}?t=${timestamp}`;
+        });
+    });
+</script>
