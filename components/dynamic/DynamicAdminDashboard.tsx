@@ -97,7 +97,8 @@ const AdminDashboardLoadingFallback: React.FC = () => (
 // ==========================================
 
 export const DynamicAdminDashboard: React.FC<AdminDashboardProps> = (props) => {
-  return <AdminDashboardComponent {...props} />
+  // AdminDashboardは現在propsを受け取らない設計のため、propsなしで呼び出し
+  return <AdminDashboardComponent />
 }
 
 // ==========================================

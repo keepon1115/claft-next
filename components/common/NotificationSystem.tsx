@@ -305,36 +305,36 @@ const NotificationSystemRenderer: React.FC<NotificationSystemRendererProps> = ({
   };
 
   return (
-    <div className={`fixed z-[1001] ${getPositionClasses()} ${className}`}>
-      <div className="flex flex-col gap-3">
-        <AnimatePresence mode="popLayout">
-          {notifications.map((notification, index) => (
-            <NotificationCard
-              key={notification.id}
-              notification={notification}
-              onRemove={removeNotification}
-              index={index}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
+      <div className={`fixed z-[1001] ${getPositionClasses()} ${className}`}>
+        <div className="flex flex-col gap-3">
+          <AnimatePresence mode="popLayout">
+            {notifications.map((notification, index) => (
+              <NotificationCard
+                key={notification.id}
+                notification={notification}
+                onRemove={removeNotification}
+                index={index}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
 
-      {/* クリアオールボタン */}
-      {notifications.length > 1 && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          onClick={clearAllNotifications}
-          className="
-            mt-3 w-full px-3 py-2 bg-black/70 hover:bg-black/80
-            text-white text-xs rounded-lg transition-colors
-          "
-        >
-          すべてクリア
-        </motion.button>
-      )}
-    </div>
+        {/* クリアオールボタン */}
+        {notifications.length > 1 && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={clearAllNotifications}
+            className="
+              mt-3 w-full px-3 py-2 bg-black/70 hover:bg-black/80
+              text-white text-xs rounded-lg transition-colors
+            "
+          >
+            すべてクリア
+          </motion.button>
+        )}
+      </div>
   );
 };
 

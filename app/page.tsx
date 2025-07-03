@@ -1,78 +1,101 @@
+'use client'
+
+import { useState } from 'react'
 import ProfileCard from '@/components/home/ProfileCard'
+import CraftStory from '@/components/home/CraftStory'
 import JibunCraft from '@/components/home/JibunCraft'
+import HamburgerMenu from '@/components/common/HamburgerMenu'
+import { Sidebar } from '@/components/common/Sidebar'
+import BackgroundAnimations from '@/components/common/BackgroundAnimations'
+import { AuthButton } from '@/components/auth/AuthButton'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* メインコンテンツエリア */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ヘッダーセクション */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Welcome to 
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> CLAFT</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            自分らしく、クリエイティブに成長するプラットフォーム
-          </p>
-        </div>
-
-        {/* コンテンツグリッド */}
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-          
-          {/* 左側: メイン機能エリア */}
-          <div className="space-y-6">
-            {/* JibunCraft本格復活！ */}
-            <JibunCraft />
-          </div>
-
-          {/* 右側: プロフィール・サイドバー */}
-          <div className="space-y-6">
-            {/* ProfileCard統合（userStore拡張版連携） */}
-            <ProfileCard />
-
-            {/* 進捗表示カード */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-green-800 mb-4">
-                <i className="fas fa-trophy mr-2"></i>
-                Phase 3完了！🎉
-              </h3>
-              <div className="space-y-2 text-sm text-green-700">
-                <div className="flex items-center gap-2">
-                  <i className="fas fa-check-circle text-green-500"></i>
-                  <span>userStore拡張版復活</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <i className="fas fa-check-circle text-green-500"></i>
-                  <span>JibunCraft完全復活</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <i className="fas fa-check-circle text-green-500"></i>
-                  <span>5つの力メーター実装</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <i className="fas fa-check-circle text-green-500"></i>
-                  <span>スキルタブシステム</span>
-                </div>
-                <div className="flex items-center gap-2 mt-3 p-2 bg-green-100 rounded">
-                  <i className="fas fa-rocket text-green-600"></i>
-                  <span className="font-medium">メモリ22%削減達成 (462MB)</span>
-                </div>
+    <>
+      {/* 背景アニメーション */}
+      <BackgroundAnimations />
+      
+      <main className="min-h-screen relative">
+        {/* ハンバーガーメニュー */}
+        <HamburgerMenu 
+          isOpen={sidebarOpen} 
+          onToggle={toggleSidebar}
+        />
+        
+        {/* サイドバー */}
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={closeSidebar}
+        />
+        
+        {/* ヘッダー */}
+        <header className="header">
+          <div className="header-content">
+            <div className="player-info">
+              <div className="greeting-section">
+                <h1>こんにちは、クラフター！</h1>
+                <p>今日も一緒に未来をつくっていこう 🚀</p>
+              </div>
+            </div>
+            
+            {/* ログインボタン（右上） */}
+            <div className="auth-section">
+              <AuthButton 
+                variant="compact"
+                size="md"
+                redirectTo="/"
+                defaultTab="login"
+                enableUserMenu={true}
+                showAdminLink={true}
+              />
+            </div>
+            
+            <div className="achievements">
+              <div className="achievement-badge gold">
+                🏆
+                <div className="tooltip">初回ログイン達成</div>
+              </div>
+              <div className="achievement-badge silver">
+                ⭐
+                <div className="tooltip">プロフィール完成</div>
+              </div>
+              <div className="achievement-badge bronze">
+                🎯
+                <div className="tooltip">クエスト参加</div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* 下部情報セクション */}
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm">
-            <i className="fas fa-star text-yellow-500"></i>
-            <span>Phase 3完了: 重要機能復活成功</span>
+          
+          {/* 経験値バー */}
+          <div className="exp-bar-container">
+            <div className="exp-bar"></div>
+          </div>
+        </header>
+        
+        {/* メインコンテンツ */}
+        <div className="main-content">
+          {/* 左側: プロフィールカード（50%） */}
+          <ProfileCard />
+          
+          {/* 右側: クラフトストーリー & JibunCraft */}
+          <div className="content-area">
+            <CraftStory />
+            <JibunCraft />
           </div>
         </div>
       </main>
-    </div>
+    </>
   )
 }
 

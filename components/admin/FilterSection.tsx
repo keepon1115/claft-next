@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 import { Search, Filter, Calendar, X } from 'lucide-react'
 
 // =====================================================
@@ -25,6 +25,48 @@ interface FilterSectionProps {
   /** デバウンス時間（ミリ秒）デフォルト: 500 */
   debounceMs?: number
 }
+
+// =====================================================
+// メモ化されたフィルターグループコンポーネント
+// =====================================================
+
+const FilterGroup = memo(({ 
+  label, 
+  icon: Icon, 
+  children 
+}: { 
+  label: string
+  icon: any
+  children: React.ReactNode 
+}) => (
+  <div className="flex flex-col gap-2">
+    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <Icon size={16} />
+      {label}
+    </label>
+    {children}
+  </div>
+))
+
+FilterGroup.displayName = 'FilterGroup'
+
+// =====================================================
+// メモ化されたフィルターバッジコンポーネント
+// =====================================================
+
+const FilterBadge = memo(({ 
+  count 
+}: { 
+  count: number 
+}) => (
+  count > 0 ? (
+    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-purple-600 rounded-full">
+      {count}
+    </span>
+  ) : null
+))
+
+FilterBadge.displayName = 'FilterBadge'
 
 // =====================================================
 // カスタムフック: デバウンス処理
@@ -152,19 +194,33 @@ export default function FilterSection({
   // =====================================================
 
   return (
-    <div className="filter-section">
-      {/* フィルター入力エリア */}
-      <div className="filter-controls">
+    <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+          <Filter size={20} />
+          フィルター
+          <FilterBadge count={activeFilterCount} />
+        </h3>
+        {activeFilterCount > 0 && (
+          <button
+            onClick={handleClearFilters}
+            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          >
+            <X size={14} />
+            クリア
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* ユーザー検索 */}
-        <div className="filter-group">
-          <label className="filter-label">
-            <Search size={16} />
-            ユーザー検索
-          </label>
-          <div className="search-input-wrapper">
+        <FilterGroup label="ユーザー検索" icon={Search}>
+          <div className="relative">
             <input
               type="text"
-              className={`filter-input ${loading ? 'loading' : ''}`}
+              className={`w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               value={filters.userSearch}
               onChange={(e) => handleUserSearchChange(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -173,8 +229,8 @@ export default function FilterSection({
             />
             {filters.userSearch && (
               <button
-                className="clear-search-btn"
                 onClick={() => handleUserSearchChange('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 type="button"
                 aria-label="検索をクリア"
               >
@@ -182,16 +238,14 @@ export default function FilterSection({
               </button>
             )}
           </div>
-        </div>
+        </FilterGroup>
 
         {/* ステージフィルター */}
-        <div className="filter-group">
-          <label className="filter-label">
-            <Filter size={16} />
-            ステージ
-          </label>
+        <FilterGroup label="ステージ" icon={Filter}>
           <select
-            className="filter-select"
+            className={`w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             value={filters.stageFilter || ''}
             onChange={(e) => handleStageFilterChange(e.target.value)}
             disabled={loading}
@@ -202,16 +256,14 @@ export default function FilterSection({
               </option>
             ))}
           </select>
-        </div>
+        </FilterGroup>
 
         {/* 日付フィルター */}
-        <div className="filter-group">
-          <label className="filter-label">
-            <Calendar size={16} />
-            提出日
-          </label>
+        <FilterGroup label="期間" icon={Calendar}>
           <select
-            className="filter-select"
+            className={`w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             value={filters.dateFilter}
             onChange={(e) => handleDateFilterChange(e.target.value)}
             disabled={loading}
@@ -222,303 +274,8 @@ export default function FilterSection({
               </option>
             ))}
           </select>
-        </div>
+        </FilterGroup>
       </div>
-
-      {/* フィルターアクション */}
-      <div className="filter-actions">
-        {activeFilterCount > 0 && (
-          <div className="active-filters-indicator">
-            <span className="filter-count">{activeFilterCount}個のフィルタを適用中</span>
-          </div>
-        )}
-        
-        <div className="filter-buttons">
-          <button
-            className="filter-btn clear"
-            onClick={handleClearFilters}
-            disabled={loading || activeFilterCount === 0}
-            type="button"
-          >
-            <X size={16} />
-            クリア
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .filter-section {
-          background: #f8f9fa;
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 20px;
-          border: 1px solid #e0e0e0;
-        }
-
-        .filter-controls {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-          align-items: flex-end;
-          margin-bottom: 16px;
-        }
-
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          min-width: 200px;
-          flex: 1;
-        }
-
-        .filter-label {
-          font-size: 14px;
-          font-weight: 700;
-          color: #666;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .search-input-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-
-        .filter-input {
-          width: 100%;
-          padding: 12px 16px;
-          border: 2px solid #e0e0e0;
-          border-radius: 8px;
-          background: white;
-          font-size: 14px;
-          transition: all 0.3s ease;
-          padding-right: 40px;
-        }
-
-        .filter-input:focus {
-          outline: none;
-          border-color: #673AB7;
-          box-shadow: 0 0 0 3px rgba(103, 58, 183, 0.1);
-        }
-
-        .filter-input.loading {
-          background: #f5f5f5;
-          cursor: not-allowed;
-        }
-
-        .filter-input:disabled {
-          background: #f5f5f5;
-          cursor: not-allowed;
-          opacity: 0.6;
-        }
-
-        .clear-search-btn {
-          position: absolute;
-          right: 12px;
-          background: none;
-          border: none;
-          color: #999;
-          cursor: pointer;
-          padding: 2px;
-          border-radius: 50%;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .clear-search-btn:hover {
-          background: #f0f0f0;
-          color: #666;
-        }
-
-        .filter-select {
-          width: 100%;
-          padding: 12px 16px;
-          border: 2px solid #e0e0e0;
-          border-radius: 8px;
-          background: white;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .filter-select:focus {
-          outline: none;
-          border-color: #673AB7;
-          box-shadow: 0 0 0 3px rgba(103, 58, 183, 0.1);
-        }
-
-        .filter-select:disabled {
-          background: #f5f5f5;
-          cursor: not-allowed;
-          opacity: 0.6;
-        }
-
-        .filter-actions {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-top: 16px;
-          border-top: 1px solid #e0e0e0;
-        }
-
-        .active-filters-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .filter-count {
-          background: #673AB7;
-          color: white;
-          padding: 4px 12px;
-          border-radius: 16px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .filter-buttons {
-          display: flex;
-          gap: 8px;
-        }
-
-        .filter-btn {
-          padding: 10px 20px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 600;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .filter-btn.clear {
-          background: #6c757d;
-          color: white;
-        }
-
-        .filter-btn.clear:hover:not(:disabled) {
-          background: #5a6268;
-          transform: translateY(-1px);
-        }
-
-        .filter-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        /* レスポンシブ対応 */
-        @media (max-width: 768px) {
-          .filter-section {
-            padding: 16px;
-          }
-
-          .filter-controls {
-            flex-direction: column;
-            align-items: stretch;
-          }
-
-          .filter-group {
-            min-width: unset;
-          }
-
-          .filter-actions {
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-          }
-
-          .filter-buttons {
-            justify-content: center;
-          }
-
-          .active-filters-indicator {
-            justify-content: center;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .filter-controls {
-            gap: 12px;
-          }
-
-          .filter-input,
-          .filter-select {
-            padding: 10px 12px;
-            font-size: 16px; /* iOSのズーム防止 */
-          }
-
-          .filter-btn {
-            padding: 12px 16px;
-            font-size: 14px;
-          }
-        }
-
-        /* フォーカス時のアニメーション */
-        .filter-input:focus,
-        .filter-select:focus {
-          transform: translateY(-1px);
-        }
-
-        /* 読み込み中のアニメーション */
-        .filter-input.loading::after {
-          content: '';
-          position: absolute;
-          right: 16px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 16px;
-          height: 16px;
-          border: 2px solid #673AB7;
-          border-top: 2px solid transparent;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: translateY(-50%) rotate(0deg); }
-          100% { transform: translateY(-50%) rotate(360deg); }
-        }
-
-        /* アクセシビリティ改善 */
-        .filter-btn:focus,
-        .clear-search-btn:focus {
-          outline: 2px solid #673AB7;
-          outline-offset: 2px;
-        }
-
-        /* ダークモード対応（将来の拡張用） */
-        @media (prefers-color-scheme: dark) {
-          .filter-section {
-            background: #2a2a2a;
-            border-color: #444;
-          }
-
-          .filter-input,
-          .filter-select {
-            background: #333;
-            border-color: #555;
-            color: white;
-          }
-
-          .filter-label {
-            color: #ccc;
-          }
-
-          .clear-search-btn:hover {
-            background: #444;
-          }
-        }
-      `}</style>
     </div>
   )
 }

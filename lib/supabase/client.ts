@@ -4,18 +4,72 @@ import { type Database } from '@/types/index'
 import { type NextRequest, type NextResponse } from 'next/server'
 import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
+// グローバル変数の型定義
+declare global {
+  var supabaseDevWarningShown: boolean | undefined
+}
+
+/**
+ * 開発モード用のモッククライアント
+ * 環境変数が設定されていない場合に使用
+ */
+function createMockSupabaseClient() {
+  return {
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      signInWithPassword: () => Promise.resolve({ data: null, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+    },
+    from: () => ({
+      select: () => ({ data: null, error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+      upsert: () => ({ data: null, error: null }),
+      eq: function() { return this },
+      order: function() { return this },
+      limit: function() { return this }
+    }),
+    rpc: () => Promise.resolve({ data: null, error: null }),
+    storage: {
+      from: () => ({
+        upload: () => Promise.resolve({ data: null, error: null }),
+        download: () => Promise.resolve({ data: null, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } })
+      })
+    }
+  } as any
+}
+
 // 環境変数の型安全な取得
 function getEnvVars() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const isDev = process.env.NODE_ENV === 'development'
   
   if (!url || !anonKey) {
-    throw new Error(
-      'Supabase環境変数が設定されていません。.env.localファイルを確認してください。\n' +
-      '必要な環境変数:\n' +
-      '- NEXT_PUBLIC_SUPABASE_URL\n' +
-      '- NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    )
+    if (isDev) {
+      // 開発モードでは警告のみを表示（初回のみ）
+      if (!global.supabaseDevWarningShown) {
+        console.warn(
+          '🔧 開発モード: Supabase環境変数が未設定です。\n' +
+          '本格的な開発を行う場合は .env.local を設定してください。\n' +
+          '必要な環境変数:\n' +
+          '- NEXT_PUBLIC_SUPABASE_URL\n' +
+          '- NEXT_PUBLIC_SUPABASE_ANON_KEY'
+        )
+        global.supabaseDevWarningShown = true
+      }
+      return null
+    } else {
+      throw new Error(
+        'Supabase環境変数が設定されていません。.env.localファイルを確認してください。\n' +
+        '必要な環境変数:\n' +
+        '- NEXT_PUBLIC_SUPABASE_URL\n' +
+        '- NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      )
+    }
   }
   
   return { url, anonKey }
@@ -27,7 +81,14 @@ function getEnvVars() {
  */
 export function createBrowserSupabaseClient() {
   try {
-    const { url, anonKey } = getEnvVars()
+    const envVars = getEnvVars()
+    
+    // 開発モードで環境変数が設定されていない場合はモッククライアントを返す
+    if (!envVars) {
+      return createMockSupabaseClient()
+    }
+    
+    const { url, anonKey } = envVars
     
     return createBrowserClient<Database>(url, anonKey, {
       auth: {
@@ -43,6 +104,10 @@ export function createBrowserSupabaseClient() {
       }
     })
   } catch (error) {
+    // 開発モードではエラーをキャッチしてモッククライアントを返す
+    if (process.env.NODE_ENV === 'development') {
+      return createMockSupabaseClient()
+    }
     console.error('❌ ブラウザSupabaseクライアントの初期化に失敗:', error)
     throw error
   }

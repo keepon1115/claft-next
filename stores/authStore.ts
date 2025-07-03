@@ -125,9 +125,9 @@ export const useAuthStore = create<AuthState>()(
                 })
                 console.log('🔧 開発モード: 認証機能を無効化して動作継続')
               } else {
-                set((state) => {
+              set((state) => {
                   state.error = error instanceof Error ? error.message : '認証初期化に失敗しました'
-                })
+              })
               }
             } finally {
               set((state) => {

@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestStore } from '@/stores/questStore'
-import StageNode from '@/components/quest/StageNode'
+import QuestMap from '@/components/quest/QuestMap'
 import { DynamicStageModal } from '@/components/dynamic/DynamicStageModal'
 import { Map, Compass, Star, Trophy, Zap } from 'lucide-react'
 import type { StageProgress } from '@/stores/questStore'
+import HamburgerMenu from '@/components/common/HamburgerMenu'
+import { Sidebar } from '@/components/common/Sidebar'
+import { AuthButton } from '@/components/auth/AuthButton'
 
 // ==========================================
 // クエストページメインコンポーネント
@@ -25,24 +28,38 @@ export default function QuestPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // ステージ詳細を配列に変換
   const stages: StageProgress[] = Object.values(stageDetails).sort((a, b) => a.stageId - b.stageId)
 
+  // 開発環境での認証チェック緩和
+  const isDevMode = process.env.NODE_ENV === 'development'
+  const shouldAllowAccess = isDevMode || isAuthenticated
+
   // 認証確認とデータロード
   useEffect(() => {
-    if (!isAuthenticated) {
+    // 本番環境でのみ厳密な認証チェック
+    if (!isDevMode && !isAuthenticated) {
       router.push('/')
       return
     }
 
-    if (user?.id) {
-      initialize(user.id)
+    // ユーザーIDがある場合のみ初期化（開発環境ではダミーID使用）
+    const userId = user?.id || (isDevMode ? 'dev-user' : null)
+    if (userId) {
+      initialize(userId)
     }
-  }, [isAuthenticated, user?.id, router, initialize])
+  }, [isAuthenticated, user?.id, router, initialize, isDevMode])
 
   // ステージクリック処理
   const handleStageClick = (stageId: number) => {
+    // 未認証でステージ1以外をクリックした場合の処理
+    if (!isAuthenticated && stageId > 1) {
+      alert('ステージ2以降は冒険者登録が必要です！まずはログインしてください。')
+      return
+    }
+    
     setSelectedStageId(stageId)
     setIsModalOpen(true)
   }
@@ -54,6 +71,9 @@ export default function QuestPage() {
       setSelectedStageId(null)
     }, 300)
   }
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  const closeSidebar = () => setSidebarOpen(false)
 
   // ローディング状態
   if (isLoading) {
@@ -67,85 +87,61 @@ export default function QuestPage() {
     )
   }
 
-  // 認証されていない場合
-  if (!isAuthenticated) {
+  // 本番環境で認証されていない場合
+  if (!shouldAllowAccess) {
     return null
   }
 
   // メインレンダリング
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 pt-20 pb-10">
-      {/* ヘッダーセクション */}
-      <div className="container mx-auto px-4 mb-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-lg flex items-center justify-center gap-4">
-            <Map className="w-12 h-12 md:w-16 md:h-16" />
-            🗺️ 冒険マップ
-          </h1>
-          <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-            あなたの冒険の軌跡。ステージをクリアして新しい冒険へ進もう！
-          </p>
-          
-          {/* プログレス統計 */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl px-6 py-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-300" />
-                <span className="text-white font-semibold">
-                  現在のステージ: {statistics.currentStage || 1}
-                </span>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl px-6 py-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-300" />
-                <span className="text-white font-semibold">
-                  クリア済み: {statistics.completedStages}
-                </span>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl px-6 py-3 border border-white/20">
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-300" />
-                <span className="text-white font-semibold">
-                  総ステージ数: {statistics.totalStages}
-                </span>
-              </div>
-            </div>
-          </div>
+    <>
+      <main className="min-h-screen quest-page">
+        {/* ハンバーガーメニュー */}
+        <HamburgerMenu 
+          isOpen={sidebarOpen} 
+          onToggle={toggleSidebar}
+        />
+        
+        {/* サイドバー */}
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={closeSidebar}
+        />
+
+        {/* 認証ボタン（右上固定） */}
+        <div className="quest-auth-section">
+          <AuthButton 
+            variant="compact"
+            size="md"
+            redirectTo="/quest"
+            defaultTab="login"
+            enableUserMenu={true}
+            showAdminLink={true}
+          />
         </div>
 
-        {/* クエストマップグリッド */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 max-w-4xl mx-auto">
-            {stages.map((stage: StageProgress, index: number) => (
-              <div key={stage.stageId} className="flex justify-center">
-                <StageNode
-                  stage={stage}
-                  onClick={handleStageClick}
-                  showPathLine={true}
-                  gridPosition={index + 1}
-                  className="quest-map-node"
-                />
-              </div>
-            ))}
-          </div>
+        <div className="container">
+          <header className="map-header">
+            <h1>🗺️ CLAFT クエストマップ</h1>
+            <p>きみだけの冒険物語をつくろう！</p>
+            <button className="adventure-log-button">
+              これまでの冒険を振り返る
+            </button>
+          </header>
 
-          {/* フッター情報 */}
-          <div className="mt-12 text-center">
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Compass className="w-6 h-6 text-white/80" />
-                <h3 className="text-lg font-bold text-white">冒険のヒント</h3>
-              </div>
-              <p className="text-white/80 text-sm leading-relaxed">
-                各ステージをクリックして詳細を確認できます。<br />
-                ステージを順番にクリアして、あなただけの冒険ストーリーを進めましょう！
-              </p>
-            </div>
-          </div>
+          {/* クエストマップ表示 */}
+          <QuestMap
+            stages={stages}
+            statistics={statistics}
+            onStageClick={handleStageClick}
+          />
         </div>
-      </div>
+
+        {/* 次の冒険ボタン */}
+        <button className="quest-button">
+          🔥 次の冒険へ進む！
+        </button>
+      </main>
 
       {/* ステージ詳細モーダル */}
       {isModalOpen && selectedStageId && (
@@ -156,39 +152,122 @@ export default function QuestPage() {
         />
       )}
 
-      {/* カスタムスタイル */}
+      {/* ピクセルアート風スタイル */}
       <style jsx>{`
-        .quest-map-node {
-          transform-origin: center;
-          transition: all 0.3s ease;
+        .quest-page {
+          font-family: var(--font-dot-gothic), var(--font-m-plus-rounded), sans-serif;
+          background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+          min-height: 100vh;
+          position: relative;
+          padding-bottom: 100px;
+          image-rendering: pixelated;
+          image-rendering: -moz-crisp-edges;
+          image-rendering: crisp-edges;
         }
 
-        .quest-map-node:hover {
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 80px 16px 40px;
+          position: relative;
           z-index: 10;
         }
 
-        /* グリッドアニメーション */
-        .quest-map-node:nth-child(1) { animation-delay: 0.1s; }
-        .quest-map-node:nth-child(2) { animation-delay: 0.2s; }
-        .quest-map-node:nth-child(3) { animation-delay: 0.3s; }
-        .quest-map-node:nth-child(4) { animation-delay: 0.4s; }
-        .quest-map-node:nth-child(5) { animation-delay: 0.5s; }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .map-header {
+          text-align: center;
+          margin-bottom: 30px;
         }
 
-        .quest-map-node {
-          animation: fadeInUp 0.6s ease-out both;
+        .map-header h1 {
+          font-size: 2.5rem;
+          color: #FFF;
+          margin-bottom: 16px;
+          text-shadow: 2px 2px 0 #4DB6F7, 4px 4px 0 #3A8BC4, 6px 6px 8px rgba(0,0,0,0.3);
+          letter-spacing: 2px;
+          animation: float_title 3s ease-in-out infinite;
+        }
+
+        @keyframes float_title {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+
+        .map-header p {
+          font-size: 1.1rem;
+          color: #FFF;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          background: rgba(0,0,0,0.2);
+          display: inline-block;
+          padding: 4px 16px;
+          border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .adventure-log-button {
+          display: inline-block;
+          margin: 20px auto 0;
+          padding: 12px 32px;
+          background: #FFD700;
+          border: 3px solid #B8860B;
+          color: #654321;
+          font-weight: bold;
+          font-size: 1rem;
+          cursor: pointer;
+          box-shadow: 0 0 0 1px #DAA520, 4px 4px 0 0 rgba(0,0,0,0.3);
+          transition: all 0.1s ease;
+        }
+
+        .adventure-log-button::before {
+          content: '📖';
+          margin-right: 8px;
+        }
+
+        .adventure-log-button:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: 0 0 0 1px #DAA520, 6px 6px 0 0 rgba(0,0,0,0.3);
+        }
+
+        .quest-button {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          padding: 16px 32px;
+          background: #FF6B6B;
+          border: 4px solid #DC143C;
+          color: white;
+          font-size: 1.2rem;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 0 0 2px #FF8787, 6px 6px 0 0 rgba(0,0,0,0.3);
+          transition: all 0.1s ease;
+          animation: pulse_button 2s ease-in-out infinite;
+          z-index: 900;
+        }
+
+        @keyframes pulse_button {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+
+        .quest-button:hover {
+          transform: translate(-2px, -2px) scale(1.02);
+          box-shadow: 0 0 0 2px #FF8787, 8px 8px 0 0 rgba(0,0,0,0.3);
+          animation: none;
+        }
+
+        .quest-button:active {
+          transform: translate(2px, 2px);
+          box-shadow: 0 0 0 2px #FF8787, 2px 2px 0 0 rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 767px) {
+          .quest-button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            bottom: 20px;
+            right: 20px;
+          }
         }
       `}</style>
-    </div>
+    </>
   )
 } 

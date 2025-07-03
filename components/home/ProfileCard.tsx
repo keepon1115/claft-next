@@ -1,109 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { AuthButton } from '@/components/auth/AuthButton';
 import { useUserStore, useUserProfile, useUserStats } from '@/stores/userStore';
-
-// =====================================================
-// 型定義
-// =====================================================
 
 interface ProfileCardProps {
   className?: string;
 }
 
-// =====================================================
-// サブコンポーネント
-// =====================================================
-
-const ProfileAvatar: React.FC<{ character: string }> = ({ character }) => {
-  const getCharacterIcon = (char: string): string => {
-    if (char.includes('創造') || char.includes('クリエイティブ')) return 'fa-palette';
-    if (char.includes('冒険') || char.includes('チャレンジ')) return 'fa-compass';
-    if (char.includes('学習') || char.includes('学者')) return 'fa-book';
-    return 'fa-user';
-  };
-
-  const iconClass = getCharacterIcon(character);
-  
-  return (
-    <div className="relative w-24 h-24 mx-auto mb-4">
-      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-        <i className={`fas ${iconClass} text-white text-2xl`}></i>
-      </div>
-      <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-2 border-white rounded-full"></div>
-    </div>
-  );
-};
-
-const SkillTag: React.FC<{ skill: string }> = ({ skill }) => {
-  return (
-    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
-      {skill}
-    </span>
-  );
-};
-
-const ProfileSection: React.FC<{ icon: string; label: string; value: string }> = ({ 
-  icon, 
-  label, 
-  value 
-}) => {
-  return (
-    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-      <div className="text-lg">{icon}</div>
-      <div className="flex-1">
-        <div className="text-sm font-medium text-gray-600">{label}</div>
-        <div className="text-gray-800">{value || '未設定'}</div>
-      </div>
-    </div>
-  );
-};
-
-const ExperienceBar: React.FC<{ level: number; experience: number; experienceToNext: number }> = ({
-  level,
-  experience,
-  experienceToNext
-}) => {
-  const progress = (experience / (experience + experienceToNext)) * 100;
-  
-  return (
-    <div className="mb-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-600">レベル {level}</span>
-        <span className="text-xs text-gray-500">次のレベルまで {experienceToNext}XP</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
-
-const AchievementBadge: React.FC<{ achievement: any }> = ({ achievement }) => {
-  if (!achievement.isUnlocked) return null;
-  
-  const badgeColor = {
-    gold: 'from-yellow-400 to-yellow-600',
-    silver: 'from-gray-300 to-gray-500',
-    bronze: 'from-orange-400 to-orange-600'
-  }[achievement.type];
-
-  return (
-    <div className={`inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r ${badgeColor} text-white text-xs rounded-full mr-1 mb-1`}>
-      <i className={`fas ${achievement.iconClass}`}></i>
-      <span>{achievement.title}</span>
-    </div>
-  );
-};
-
-// =====================================================
-// メインコンポーネント
-// =====================================================
-
 const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
   const { initialize, addExperience } = useUserStore();
   const { profileData, isLoading, error } = useUserProfile();
   const { userStats } = useUserStats();
@@ -118,19 +29,35 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   }, [initialize]);
 
   const handleEditClick = async () => {
-    // デモ：経験値追加機能をテスト
-    const result = await addExperience(10, 'プロフィール編集');
-    if (result.success) {
-      console.log('経験値追加成功！', result.levelUp ? '(レベルアップ!)' : '');
+    if (isAuthenticated) {
+      // 認証済み：プロフィールページに移動
+      router.push('/profile');
+      
+      // デモ：経験値追加機能をテスト
+      const result = await addExperience(10, 'プロフィール編集アクセス');
+      if (result.success) {
+        console.log('経験値追加成功！', result.levelUp ? '(レベルアップ!)' : '');
+      }
+    } else {
+      // 未認証：ログインモーダル表示
+      setShowAuthModal(true);
     }
+  };
+
+  const handleAuthSuccess = () => {
+    // 認証成功後：モーダルを閉じてプロフィールページに移動
+    setShowAuthModal(false);
+    router.push('/profile');
   };
 
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-2xl shadow-lg p-8 border border-gray-100 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-500">読み込み中...</p>
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-gray-500">読み込み中...</p>
+          </div>
         </div>
       </div>
     );
@@ -138,10 +65,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
 
   if (error) {
     return (
-      <div className={`bg-white rounded-2xl shadow-lg p-8 border border-red-200 ${className}`}>
-        <div className="text-center text-red-600">
-          <i className="fas fa-exclamation-triangle text-2xl mb-4"></i>
-          <p>{error}</p>
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="text-center text-red-600">
+            <i className="fas fa-exclamation-triangle text-2xl mb-4"></i>
+            <p>{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -149,153 +78,156 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
 
   // userStore拡張版のデータを使用
   const displayData = profileData || {
-    nickname: 'ゲスト',
-    character: '冒険者',
-    skills: [],
-    weakness: '',
-    favoritePlace: '',
-    energyCharge: '',
-    companion: '',
-    catchphrase: '',
-    message: '',
-    profileCompletion: 0
+    nickname: isAuthenticated ? (user?.email?.split('@')[0] || 'CLAFT冒険者') : 'CLAFT冒険者',
+    character: '創造的チャレンジャー',
+    skills: ['創造力', '学習', '挑戦'],
+    weakness: 'ついつい夜更かし',
+    favoritePlace: '静かなカフェ',
+    energyCharge: 'コーヒーを飲む',
+    companion: 'クリエイティブな仲間',
+    catchphrase: '今日も新しいことにチャレンジ！',
+    message: '新しい挑戦をしながら、自分らしいキャリアを築いていきたいです。',
+    profileCompletion: 85
   };
 
   const stats = userStats || {
-    level: 1,
-    experience: 0,
-    experienceToNext: 100
+    level: 3,
+    experience: 250,
+    experienceToNext: 150
   };
 
-  // 解除済み実績のみ表示
-  const unlockedAchievements = achievements.filter(achievement => achievement.isUnlocked);
-
   return (
-    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${className}`}>
-      {/* ヘッダー部分 */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 text-center">
-        <ProfileAvatar character={displayData.character} />
-        
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {displayData.nickname}
-        </h2>
-        
-        <p className="text-purple-600 font-medium mb-3">
-          {displayData.character}
-        </p>
-
-        {displayData.catchphrase && (
-          <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium inline-block">
-            💭 {displayData.catchphrase}
+    <>
+      <div className={`profile-card ${className}`}>
+        {/* プロフィール基本情報エリア */}
+        <div className="profile-header">
+          <div className="profile-avatar">
+            <div className="avatar-container">
+              <i className="fas fa-user-astronaut"></i>
+            </div>
+            <div className="status-indicator"></div>
           </div>
-        )}
-      </div>
-
-      {/* コンテンツ部分 */}
-      <div className="p-6 space-y-6">
-        {/* レベル・経験値 */}
-        <ExperienceBar 
-          level={stats.level}
-          experience={stats.experience}
-          experienceToNext={stats.experienceToNext}
-        />
-
-        {/* スキル */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            💪 とくいなこと
-          </h3>
-          <div className="flex flex-wrap">
-            {displayData.skills.length > 0 ? (
-              displayData.skills.map((skill, index) => (
-                <SkillTag key={index} skill={skill} />
-              ))
-            ) : (
-              <span className="text-gray-400 text-sm">スキルを設定してください</span>
-            )}
-          </div>
+          
+          <h2 className="profile-name">{displayData.nickname}</h2>
+          <p className="profile-character">
+            <span>{displayData.character}</span>
+          </p>
+          
+          {displayData.catchphrase && (
+            <div className="profile-catchphrase">
+              <span className="profile-catchphrase-text">{displayData.catchphrase}</span>
+            </div>
+          )}
         </div>
 
-        {/* プロフィール詳細 */}
-        <div className="space-y-3">
-          <ProfileSection
-            icon="😅"
-            label="ちょっと苦手"
-            value={displayData.weakness}
-          />
-          
-          <ProfileSection
-            icon="🏖️"
-            label="好きな場所・時間"
-            value={displayData.favoritePlace}
-          />
-          
-          <ProfileSection
-            icon="⚡"
-            label="エネルギーチャージ方法"
-            value={displayData.energyCharge}
-          />
-          
-          <ProfileSection
-            icon="🤝"
-            label="一緒に冒険したい人"
-            value={displayData.companion}
-          />
-        </div>
-
-        {/* 実績バッジ */}
-        {unlockedAchievements.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-              🏆 獲得実績
-            </h4>
-            <div className="flex flex-wrap">
-              {unlockedAchievements.map(achievement => (
-                <AchievementBadge key={achievement.id} achievement={achievement} />
-              ))}
+        {/* プロフィール詳細情報エリア */}
+        <div className="profile-details">
+          {/* 能力・特性エリア */}
+          <div className="profile-abilities">
+            <div className="ability-card strength">
+              <div className="ability-header">
+                <div className="ability-icon">💪</div>
+                <div className="ability-title">とくい</div>
+              </div>
+              <div className="ability-tags">
+                {displayData.skills.map((skill, index) => (
+                  <span key={index} className="ability-tag">{skill}</span>
+                ))}
+              </div>
+            </div>
+            
+            <div className="ability-card weakness">
+              <div className="ability-header">
+                <div className="ability-icon">😅</div>
+                <div className="ability-title">よわみ</div>
+              </div>
+              <div className="ability-tags">
+                <span className="ability-tag">{displayData.weakness}</span>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* メッセージ */}
-        {displayData.message && (
-          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">📝 ひとこと</h4>
-            <p className="text-blue-700 text-sm">{displayData.message}</p>
+          {/* パーソナル情報エリア */}
+          <div className="profile-personal">
+            <div className="personal-item">
+              <div className="personal-label">
+                <span>🏖️</span>
+                <span>すきな時間・場所</span>
+              </div>
+              <div className="personal-value">{displayData.favoritePlace}</div>
+            </div>
+            
+            <div className="personal-item">
+              <div className="personal-label">
+                <span>⚡</span>
+                <span>エネルギーチャージ方法</span>
+              </div>
+              <div className="personal-value">{displayData.energyCharge}</div>
+            </div>
           </div>
-        )}
 
-        {/* プロフィール完成度 */}
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-green-800">プロフィール完成度</span>
-            <span className="text-sm text-green-600">{displayData.profileCompletion}%</span>
+          {/* 一緒に冒険したい人 */}
+          <div className="adventure-partner">
+            <div className="adventure-partner-content">
+              <div className="adventure-partner-label">
+                <span>🤝</span>
+                <span>一緒に冒険したい人</span>
+              </div>
+              <div className="adventure-partner-value">{displayData.companion}</div>
+            </div>
           </div>
-          <div className="w-full bg-green-200 rounded-full h-2">
-            <div 
-              className="bg-green-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${displayData.profileCompletion}%` }}
-            ></div>
+
+          {/* ひとことエリア */}
+          <div className="profile-comment">
+            <div className="comment-header">
+              <span>📝</span>
+              <span>ひとこと</span>
+            </div>
+            <div className="comment-text">{displayData.message}</div>
           </div>
-        </div>
 
-        {/* 編集ボタン（経験値デモ機能付き） */}
-        <button 
-          onClick={handleEditClick}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-colors duration-200 flex items-center justify-center gap-2"
-        >
-          <i className="fas fa-pencil-alt"></i>
-          プロフィール編集（+10XP）
-        </button>
-
-        {/* 開発モード表示 */}
-        <div className="text-xs text-gray-400 text-center border-t pt-4">
-          <i className="fas fa-info-circle mr-1"></i>
-          Phase 3: userStore拡張版連携中 (Lv.{stats.level}, {stats.experience}XP)
+          {/* 編集ボタン - 認証ガード付き */}
+          <button onClick={handleEditClick} className="edit-profile-btn">
+            <i className={`fas ${isAuthenticated ? 'fa-pencil-alt' : 'fa-sign-in-alt'}`}></i>
+            {isAuthenticated ? 'プロフィール編集' : 'ログインして編集'}
+          </button>
         </div>
       </div>
-    </div>
+
+      {/* 認証モーダル（未認証時のみ表示） */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                🚪 ログインが必要です
+              </h2>
+              <p className="text-gray-600">
+                プロフィール編集には冒険者登録が必要です。
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <AuthButton 
+                variant="default"
+                size="lg"
+                redirectTo="/profile"
+                defaultTab="login"
+                className="w-full"
+              />
+              
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="w-full px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
-export default ProfileCard; 
+export default ProfileCard;

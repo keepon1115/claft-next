@@ -21,6 +21,7 @@ export interface StageProgress {
   videoUrl?: string
   formUrl?: string
   iconImage?: string
+  iconUrl?: string
   fallbackIcon: string
   completedAt?: string
   submittedAt?: string
@@ -82,7 +83,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「勉強という二文字を忘れよう」',
     videoUrl: 'https://vimeo.com/1096785134/fc1a254212',
     formUrl: 'https://forms.gle/DX3GDXH9E62wVWTz7',
-    iconImage: 'https://via.placeholder.com/64x64/8B4513/FFFFFF?text=House',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '🏠'
   },
   2: {
@@ -93,7 +95,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「君は武器や道具をどう使う？」',
     videoUrl: 'https://youtube.com/watch?v=stage2video',
     formUrl: 'https://forms.google.com/your-form-2',
-    iconImage: 'https://via.placeholder.com/64x64/228B22/FFFFFF?text=Forest',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '🌲'
   },
   3: {
@@ -104,7 +107,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「自分のキャラは、自分で決めよう」',
     videoUrl: 'https://youtube.com/watch?v=stage3video',
     formUrl: 'https://forms.google.com/your-form-3',
-    iconImage: 'https://via.placeholder.com/64x64/4169E1/FFFFFF?text=Sword',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '⚔️'
   },
   4: {
@@ -115,7 +119,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「だれかと違うのは怖いことじゃない」',
     videoUrl: 'https://youtube.com/watch?v=stage4video',
     formUrl: 'https://forms.google.com/your-form-4',
-    iconImage: 'https://via.placeholder.com/64x64/FFD700/000000?text=Shield',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '🛡️'
   },
   5: {
@@ -126,7 +131,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「"もやもや"がアイデアをつくる！！」',
     videoUrl: 'https://youtube.com/watch?v=stage5video',
     formUrl: 'https://forms.google.com/your-form-5',
-    iconImage: 'https://via.placeholder.com/64x64/32CD32/FFFFFF?text=Team',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '👥'
   },
   6: {
@@ -137,7 +143,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     message: '「小さな一歩が、大きな未来につながる」',
     videoUrl: 'https://youtube.com/watch?v=stage6video',
     formUrl: 'https://forms.google.com/your-form-6',
-    iconImage: 'https://via.placeholder.com/64x64/8B0000/FFFFFF?text=Boss',
+    iconImage: undefined,
+    iconUrl: undefined,
     fallbackIcon: '🏰'
   }
 }
@@ -285,9 +292,14 @@ export const useQuestStore = create<QuestState>()(
               })
 
             } catch (error) {
-              console.error('クエストストア初期化エラー:', error)
+              // 開発モードでは警告レベルで表示
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('🔧 開発モード: クエストストアをデモモードで初期化しています')
+              } else {
+                console.error('クエストストア初期化エラー:', error)
+              }
               set((state) => {
-                state.error = error instanceof Error ? error.message : '初期化に失敗しました'
+                state.error = process.env.NODE_ENV === 'development' ? null : (error instanceof Error ? error.message : '初期化に失敗しました')
               })
               // エラーが発生してもデモモードで表示
               get().setDemoMode()
