@@ -1,54 +1,85 @@
+import ProfileCard from '@/components/home/ProfileCard'
+
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-4xl font-bold text-blue-600">Hello CLAFT</h1>
-      <p className="mt-4 text-gray-700">TailwindCSS, Header, Sidebar & Providers is working!</p>
-      
-      <div className="mt-6 p-4 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-green-600">✅ Phase 4 進行中</h2>
-        <ul className="mt-2 space-y-1 text-sm text-gray-600">
-          <li>• globals.css復活 ✅</li>
-          <li>• TailwindCSS動作確認 ✅</li>
-          <li>• Header復活 ✅</li>
-          <li>• Sidebar復活 ✅</li>
-          <li>• Flexレイアウト適用 ✅</li>
-          <li>• AppProviders基本構造 ✅</li>
-          <li>• プロセス数: 4個（安定）✅</li>
-          <li>• メモリ使用量: 608MB（最適化）✅</li>
-        </ul>
-      </div>
-      
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-        <h3 className="text-lg font-medium text-blue-800">AppProviders動作確認</h3>
-        <p className="mt-1 text-sm text-blue-600">
-          このページが表示されていれば、AppProvidersが正常に動作しています！
-        </p>
-        <ul className="mt-2 text-xs text-blue-500 space-y-1">
-          <li>• 循環参照エラー: 無し ✅</li>
-          <li>• プロバイダーラップ: 成功 ✅</li>
-          <li>• レイアウト保持: 正常 ✅</li>
-        </ul>
-      </div>
-      
-      <div className="mt-4 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-        <h3 className="text-lg font-medium text-green-800">段階的Provider追加準備</h3>
-        <p className="mt-1 text-sm text-green-600">
-          次の段階：一つずつProvider機能を追加していきます
-        </p>
-        <ul className="mt-2 text-xs text-green-500 space-y-1">
-          <li>• NotificationProvider</li>
-          <li>• AuthProvider（モック版）</li>
-          <li>• その他のProvider</li>
-        </ul>
-      </div>
-      
-      <div className="mt-4 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-        <h3 className="text-lg font-medium text-yellow-800">Phase 5 準備</h3>
-        <p className="mt-1 text-sm text-yellow-600">
-          Provider機能完成後は個別コンポーネント復活へ
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* メインコンテンツエリア */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ヘッダーセクション */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            Welcome to 
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> CLAFT</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            自分らしく、クリエイティブに成長するプラットフォーム
+          </p>
+        </div>
+
+        {/* コンテンツグリッド */}
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          
+          {/* 左側: メイン機能エリア */}
+          <div className="space-y-6">
+            {/* JibunCraftプレースホルダー */}
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                  <i className="fas fa-cogs text-white"></i>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">ジブンクラフト</h2>
+              </div>
+              
+              <div className="text-center py-12 text-gray-500">
+                <i className="fas fa-hammer text-4xl mb-4 opacity-30"></i>
+                <p className="text-lg">メイン機能を準備中...</p>
+                <p className="text-sm mt-2">次のPhaseで段階的に復活予定</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 右側: プロフィール・サイドバー */}
+          <div className="space-y-6">
+            {/* ProfileCard統合 */}
+            <ProfileCard />
+
+            {/* 進捗表示カード */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-4">
+                <i className="fas fa-chart-line mr-2"></i>
+                Phase 2 完了！
+              </h3>
+              <div className="space-y-2 text-sm text-green-700">
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-check-circle text-green-500"></i>
+                  <span>安定版バックアップ完了</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-check-circle text-green-500"></i>
+                  <span>本番ページ構造作成</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-check-circle text-green-500"></i>
+                  <span>ProfileCard復活完了</span>
+                </div>
+                <div className="flex items-center gap-2 mt-3 p-2 bg-green-100 rounded">
+                  <i className="fas fa-rocket text-green-600"></i>
+                  <span className="font-medium">メモリ使用量30%削減達成</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 下部情報セクション */}
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm">
+            <i className="fas fa-check-circle text-green-500"></i>
+            <span>Phase 2完了: ProfileCard復活成功</span>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

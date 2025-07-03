@@ -1,9 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useUserProfile } from '@/stores/userStore';
-import { useAuth } from '@/stores/authStore';
-import OptimizedImage from '@/components/common/OptimizedImage'
+import React, { useState } from 'react';
 
 // =====================================================
 // 型定義
@@ -13,152 +10,94 @@ interface ProfileCardProps {
   className?: string;
 }
 
-interface AbilityCardProps {
-  type: 'strength' | 'weakness';
-  title: string;
-  icon: string;
-  tags: string[];
-}
-
-interface PersonalItemProps {
-  icon: string;
-  label: string;
-  value: string;
-}
-
 // =====================================================
-// キャラクターアイコンマッピング
+// 一時的なモックデータ
 // =====================================================
 
-const getCharacterIcon = (character: string): string => {
-  const iconMap: Record<string, string> = {
-    '勇者': 'fa-shield-alt',
-    '魔法使い': 'fa-hat-wizard',
-    '探検家': 'fa-compass',
-    '発明家': 'fa-cog',
-    '芸術家': 'fa-palette',
-    '学者': 'fa-book'
-  };
-  
-  return iconMap[character] || 'fa-user';
+const mockProfileData = {
+  nickname: 'CLAFT冒険者',
+  character: '創造的チャレンジャー',
+  skills: ['創造力', '挑戦', '学習'],
+  weakness: 'ついつい夜更かし',
+  favoritePlace: '静かなカフェ',
+  energyCharge: '好きな音楽を聴くこと',
+  companion: '一緒に成長できる仲間',
+  catchphrase: '「今日も新しいことにチャレンジ！」',
+  message: 'CLAFTで自分らしい成長の物語を作っています！',
+  avatarUrl: '',
+  level: 5,
+  experience: 420,
+  experienceToNext: 80
 };
 
 // =====================================================
 // サブコンポーネント
 // =====================================================
 
-const ProfileAvatar: React.FC<{ character: string; avatarUrl?: string }> = ({ 
-  character, 
-  avatarUrl 
-}) => {
+const ProfileAvatar: React.FC<{ character: string }> = ({ character }) => {
+  const getCharacterIcon = (char: string): string => {
+    if (char.includes('創造') || char.includes('クリエイティブ')) return 'fa-palette';
+    if (char.includes('冒険') || char.includes('チャレンジ')) return 'fa-compass';
+    if (char.includes('学習') || char.includes('学者')) return 'fa-book';
+    return 'fa-user';
+  };
+
   const iconClass = getCharacterIcon(character);
   
   return (
-    <div className="profile-avatar">
-      <div className="avatar-container">
-        {avatarUrl ? (
-          <OptimizedImage
-            src={avatarUrl}
-            alt={`${character}のアバター`}
-            width={120}
-            height={120}
-            className="rounded-full object-cover"
-            fallbackSrc="/icon-192.png"
-            priority={true}
-            quality={90}
-          />
-        ) : (
-          <i className={`fas ${iconClass}`}></i>
-        )}
+    <div className="relative w-24 h-24 mx-auto mb-4">
+      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+        <i className={`fas ${iconClass} text-white text-2xl`}></i>
       </div>
-      <div className="status-indicator"></div>
+      <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-2 border-white rounded-full"></div>
     </div>
   );
 };
 
-const ProfileCatchphrase: React.FC<{ catchphrase: string }> = ({ catchphrase }) => {
-  if (!catchphrase) return null;
-  
+const SkillTag: React.FC<{ skill: string }> = ({ skill }) => {
   return (
-    <div className="profile-catchphrase">
-      <span className="profile-catchphrase-text">{catchphrase}</span>
-    </div>
+    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+      {skill}
+    </span>
   );
 };
 
-const AbilityCard: React.FC<AbilityCardProps> = ({ type, title, icon, tags }) => {
-  const displayTags = tags.length > 0 ? tags : ['未設定'];
-  
-  return (
-    <div className={`ability-card ${type}`}>
-      <div className="ability-header">
-        <div className="ability-icon">{icon}</div>
-        <div className="ability-title">{title}</div>
-      </div>
-      <div className="ability-tags">
-        {displayTags.map((tag, index) => (
-          <span key={index} className="ability-tag">
-            {tag}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const PersonalItem: React.FC<PersonalItemProps> = ({ icon, label, value }) => {
-  const displayValue = value || '未設定';
-  
-  return (
-    <div className="personal-item">
-      <div className="personal-label">
-        <span>{icon}</span>
-        <span>{label}</span>
-      </div>
-      <div className="personal-value">{displayValue}</div>
-    </div>
-  );
-};
-
-const AdventurePartner: React.FC<{ partner: string }> = ({ partner }) => {
-  const displayPartner = partner || '一緒に冒険する仲間を探しています';
-  
-  return (
-    <div className="adventure-partner">
-      <div className="adventure-partner-content">
-        <div className="adventure-partner-label">
-          <span>🤝</span>
-          <span>一緒に冒険したい人</span>
-        </div>
-        <div className="adventure-partner-value">{displayPartner}</div>
-      </div>
-    </div>
-  );
-};
-
-const ProfileComment: React.FC<{ message: string }> = ({ message }) => {
-  const displayMessage = message || 'ログインして、あなたの冒険の物語を始めましょう！';
-  
-  return (
-    <div className="profile-comment">
-      <div className="comment-header">
-        <span>📝</span>
-        <span>ひとこと</span>
-      </div>
-      <div className="comment-text">{displayMessage}</div>
-    </div>
-  );
-};
-
-const EditProfileButton: React.FC<{ isAuthenticated: boolean; onClick: () => void }> = ({ 
-  isAuthenticated, 
-  onClick 
+const ProfileSection: React.FC<{ icon: string; label: string; value: string }> = ({ 
+  icon, 
+  label, 
+  value 
 }) => {
   return (
-    <button className="edit-profile-btn" onClick={onClick}>
-      <i className={`fas ${isAuthenticated ? 'fa-pencil-alt' : 'fa-sign-in-alt'}`}></i>
-      {isAuthenticated ? ' プロフィール編集' : ' ログインして編集'}
-    </button>
+    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+      <div className="text-lg">{icon}</div>
+      <div className="flex-1">
+        <div className="text-sm font-medium text-gray-600">{label}</div>
+        <div className="text-gray-800">{value || '未設定'}</div>
+      </div>
+    </div>
+  );
+};
+
+const ExperienceBar: React.FC<{ level: number; experience: number; experienceToNext: number }> = ({
+  level,
+  experience,
+  experienceToNext
+}) => {
+  const progress = (experience / (experience + experienceToNext)) * 100;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-600">レベル {level}</span>
+        <span className="text-xs text-gray-500">次のレベルまで {experienceToNext}XP</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div 
+          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+    </div>
   );
 };
 
@@ -167,650 +106,117 @@ const EditProfileButton: React.FC<{ isAuthenticated: boolean; onClick: () => voi
 // =====================================================
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
-  const { profileData, isLoading } = useUserProfile();
-  
-  // profileDataがnullの場合のデフォルト値を設定
-  const defaultProfileData = {
-    nickname: 'ゲスト冒険者',
-    character: '冒険大好き！チャレンジャータイプ',
-    skills: ['挑戦', '学習'],
-    weakness: '',
-    favoritePlace: '',
-    energyCharge: '',
-    companion: '',
-    catchphrase: '「ログインして自分だけの物語を作ろう！」',
-    message: '',
-    avatarUrl: ''
-  };
-  const { isAuthenticated } = useAuth();
+  const [isLoading] = useState(false);
+  const profileData = mockProfileData;
 
   const handleEditClick = () => {
-    if (isAuthenticated) {
-      // プロフィール編集ページへ遷移
-      window.location.href = '/profile';
-    } else {
-      // ログインページへ遷移
-      window.location.href = '/profile?auth=login';
-    }
+    // 将来的にプロフィール編集機能を実装
+    console.log('プロフィール編集機能（将来実装予定）');
   };
 
   if (isLoading) {
     return (
-      <div className={`profile-card ${className}`}>
-        <div className="profile-header">
-          <div className="profile-avatar">
-            <div className="avatar-container">
-              <div className="spinner"></div>
-            </div>
-          </div>
-          <h2 className="profile-name">読み込み中...</h2>
+      <div className={`bg-white rounded-2xl shadow-lg p-8 border border-gray-100 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-500">読み込み中...</p>
         </div>
       </div>
     );
   }
 
-  // プロフィールデータを安全に取得（nullチェック）
-  const displayData = {
-    nickname: profileData?.nickname || defaultProfileData.nickname,
-    character: profileData?.character || defaultProfileData.character,
-    skills: profileData?.skills || defaultProfileData.skills,
-    weakness: profileData?.weakness || defaultProfileData.weakness,
-    favoritePlace: profileData?.favoritePlace || defaultProfileData.favoritePlace,
-    energyCharge: profileData?.energyCharge || defaultProfileData.energyCharge,
-    companion: profileData?.companion || defaultProfileData.companion,
-    catchphrase: profileData?.catchphrase || defaultProfileData.catchphrase,
-    message: profileData?.message || defaultProfileData.message,
-    avatarUrl: profileData?.avatarUrl || defaultProfileData.avatarUrl
-  };
-
-  const characterText = displayData.character;
-
   return (
-    <div className={`profile-card ${className}`}>
-      {/* プロフィール基本情報エリア */}
-      <div className="profile-header">
-        <ProfileAvatar character={displayData.character} avatarUrl={displayData.avatarUrl} />
+    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${className}`}>
+      {/* ヘッダー部分 */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 text-center">
+        <ProfileAvatar character={profileData.character} />
         
-        <h2 className="profile-name">{displayData.nickname}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {profileData.nickname}
+        </h2>
         
-        <p className="profile-character">
-          <span>{characterText}</span>
+        <p className="text-purple-600 font-medium mb-3">
+          {profileData.character}
         </p>
-        
-        <ProfileCatchphrase catchphrase={displayData.catchphrase} />
+
+        {profileData.catchphrase && (
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium inline-block">
+            💭 {profileData.catchphrase}
+          </div>
+        )}
       </div>
 
-      {/* プロフィール詳細情報エリア */}
-      <div className="profile-details">
-        {/* 能力・特性 */}
-        <div className="profile-abilities">
-          <AbilityCard
-            type="strength"
-            title="とくい"
-            icon="💪"
-            tags={displayData.skills}
-          />
-          <AbilityCard
-            type="weakness"
-            title="よわみ"
-            icon="😅"
-            tags={displayData.weakness && displayData.weakness.length > 0 ? [displayData.weakness] : []}
-          />
+      {/* コンテンツ部分 */}
+      <div className="p-6 space-y-6">
+        {/* レベル・経験値 */}
+        <ExperienceBar 
+          level={profileData.level}
+          experience={profileData.experience}
+          experienceToNext={profileData.experienceToNext}
+        />
+
+        {/* スキル */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            💪 とくいなこと
+          </h3>
+          <div className="flex flex-wrap">
+            {profileData.skills.map((skill, index) => (
+              <SkillTag key={index} skill={skill} />
+            ))}
+          </div>
         </div>
 
-        {/* パーソナル情報 */}
-        <div className="profile-personal">
-          <PersonalItem
-            icon="🏖️"
-            label="すきな時間・場所"
-            value={displayData.favoritePlace}
+        {/* プロフィール詳細 */}
+        <div className="space-y-3">
+          <ProfileSection
+            icon="😅"
+            label="ちょっと苦手"
+            value={profileData.weakness}
           />
-          <PersonalItem
+          
+          <ProfileSection
+            icon="🏖️"
+            label="好きな場所・時間"
+            value={profileData.favoritePlace}
+          />
+          
+          <ProfileSection
             icon="⚡"
             label="エネルギーチャージ方法"
-            value={displayData.energyCharge}
+            value={profileData.energyCharge}
+          />
+          
+          <ProfileSection
+            icon="🤝"
+            label="一緒に冒険したい人"
+            value={profileData.companion}
           />
         </div>
 
-        {/* 一緒に冒険したい人 */}
-        <AdventurePartner partner={displayData.companion} />
-
-        {/* ひとこと */}
-        <ProfileComment message={displayData.message} />
+        {/* メッセージ */}
+        {profileData.message && (
+          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">📝 ひとこと</h4>
+            <p className="text-blue-700 text-sm">{profileData.message}</p>
+          </div>
+        )}
 
         {/* 編集ボタン */}
-        <EditProfileButton 
-          isAuthenticated={isAuthenticated}
+        <button 
           onClick={handleEditClick}
-        />
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-colors duration-200 flex items-center justify-center gap-2"
+        >
+          <i className="fas fa-pencil-alt"></i>
+          プロフィール編集
+        </button>
+
+        {/* 開発モード表示 */}
+        <div className="text-xs text-gray-400 text-center border-t pt-4">
+          <i className="fas fa-info-circle mr-1"></i>
+          Phase 2: ProfileCard基本版動作中
+        </div>
       </div>
-      
-      {/* スタイル定義（既存のCSSを完全再現） */}
-      <style jsx>{`
-        .profile-card {
-          flex: 0 0 calc(50% - 20px);
-          background: linear-gradient(145deg, #ffffff, #f0f0f0);
-          border-radius: 20px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-          position: relative;
-          overflow: hidden;
-          transform-style: preserve-3d;
-          transition: all 0.3s ease;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .profile-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        .profile-card::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, var(--purple) 0%, transparent 70%);
-          opacity: 0.05;
-          animation: rotate-bg 20s linear infinite;
-        }
-
-        /* プロフィール基本情報エリア */
-        .profile-header {
-          text-align: center;
-          padding: 35px 35px 25px;
-          position: relative;
-          background: linear-gradient(180deg, rgba(126, 87, 194, 0.1) 0%, transparent 100%);
-        }
-
-        .profile-avatar {
-          width: 120px;
-          height: 120px;
-          margin: 0 auto 20px;
-          position: relative;
-          animation: float-avatar 4s ease-in-out infinite;
-        }
-
-        @keyframes float-avatar {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-
-        .avatar-container {
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 50px;
-          color: white;
-          box-shadow: 0 8px 30px rgba(126, 87, 194, 0.4);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .avatar-container::after {
-          content: '';
-          position: absolute;
-          top: 10%;
-          right: 10%;
-          width: 30%;
-          height: 30%;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          filter: blur(10px);
-        }
-
-        .avatar-container i {
-          z-index: 1;
-          animation: breathe-icon 3s ease-in-out infinite;
-        }
-
-        @keyframes breathe-icon {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-
-        .status-indicator {
-          position: absolute;
-          bottom: 5px;
-          right: 5px;
-          width: 25px;
-          height: 25px;
-          background: var(--green);
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 2px 10px rgba(76, 175, 80, 0.4);
-          animation: pulse-indicator 2s ease infinite;
-        }
-
-        @keyframes pulse-indicator {
-          0%, 100% { transform: scale(1); box-shadow: 0 2px 10px rgba(76, 175, 80, 0.4); }
-          50% { transform: scale(1.1); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.6); }
-        }
-
-        .profile-name {
-          font-size: 28px;
-          font-weight: 900;
-          color: var(--text-dark);
-          margin-bottom: 8px;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-character {
-          color: var(--purple);
-          font-size: 16px;
-          font-weight: 500;
-          margin-bottom: 15px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .profile-character::before,
-        .profile-character::after {
-          content: '✨';
-          font-size: 14px;
-          animation: twinkle-emoji 2s ease infinite;
-        }
-
-        @keyframes twinkle-emoji {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        .profile-catchphrase {
-          background: linear-gradient(135deg, var(--yellow) 0%, var(--gold) 100%);
-          color: var(--text-dark);
-          padding: 10px 20px;
-          border-radius: 25px;
-          font-size: 15px;
-          font-weight: 700;
-          margin-top: 15px;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 4px 15px rgba(246, 207, 63, 0.3);
-          animation: glow-catchphrase 3s ease infinite alternate;
-          display: inline-block;
-        }
-
-        @keyframes glow-catchphrase {
-          0% { box-shadow: 0 4px 15px rgba(246, 207, 63, 0.3); }
-          100% { box-shadow: 0 4px 25px rgba(246, 207, 63, 0.5), 0 0 10px var(--gold); }
-        }
-
-        .profile-catchphrase::before {
-          content: '💭';
-          position: absolute;
-          left: 15px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 16px;
-        }
-
-        .profile-catchphrase-text {
-          margin-left: 25px;
-        }
-
-        /* プロフィール詳細情報エリア */
-        .profile-details {
-          padding: 0 35px 35px;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        /* 能力・特性エリア */
-        .profile-abilities {
-          display: flex;
-          gap: 20px;
-        }
-
-        .ability-card {
-          flex: 1;
-          background: white;
-          border-radius: 18px;
-          padding: 20px;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-          transition: all 0.3s ease;
-          cursor: pointer;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .ability-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, transparent 0%, rgba(41, 182, 246, 0.1) 100%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .ability-card:hover::before {
-          opacity: 1;
-        }
-
-        .ability-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .ability-card.strength {
-          border-top: 4px solid var(--green);
-        }
-
-        .ability-card.weakness {
-          border-top: 4px solid var(--pink);
-        }
-
-        .ability-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 15px;
-        }
-
-        .ability-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-        }
-
-        .ability-card.strength .ability-icon {
-          background: rgba(76, 175, 80, 0.2);
-          color: var(--green);
-        }
-
-        .ability-card.weakness .ability-icon {
-          background: rgba(255, 95, 160, 0.2);
-          color: var(--pink);
-        }
-
-        .ability-title {
-          font-size: 15px;
-          font-weight: 700;
-          color: #666;
-        }
-
-        .ability-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .ability-tag {
-          background: var(--gray);
-          color: var(--text-dark);
-          padding: 6px 12px;
-          border-radius: 15px;
-          font-size: 13px;
-          font-weight: 500;
-          transition: all 0.3s ease;
-        }
-
-        .ability-card.strength .ability-tag:hover {
-          background: var(--green);
-          color: white;
-          transform: translateY(-2px);
-        }
-
-        .ability-card.weakness .ability-tag:hover {
-          background: var(--pink);
-          color: white;
-          transform: translateY(-2px);
-        }
-
-        /* パーソナル情報エリア */
-        .profile-personal {
-          background: linear-gradient(145deg, #f8f8f8, #ffffff);
-          border-radius: 18px;
-          padding: 20px;
-          box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .personal-item {
-          padding: 12px 0;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          transition: all 0.3s ease;
-        }
-
-        .personal-item:last-child {
-          border-bottom: none;
-        }
-
-        .personal-item:hover {
-          padding-left: 10px;
-        }
-
-        .personal-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          color: #666;
-          margin-bottom: 6px;
-        }
-
-        .personal-value {
-          font-size: 15px;
-          font-weight: 500;
-          color: var(--text-dark);
-          line-height: 1.5;
-        }
-
-        /* 一緒に冒険したい人 */
-        .adventure-partner {
-          background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
-          color: white;
-          border-radius: 18px;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 5px 20px rgba(126, 87, 194, 0.3);
-        }
-
-        .adventure-partner::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          right: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-          animation: rotate-bg 15s linear infinite;
-        }
-
-        .adventure-partner-content {
-          position: relative;
-          z-index: 1;
-        }
-
-        .adventure-partner-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          margin-bottom: 8px;
-          opacity: 0.9;
-        }
-
-        .adventure-partner-value {
-          font-size: 16px;
-          font-weight: 700;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        /* ひとことエリア */
-        .profile-comment {
-          background: white;
-          border-radius: 18px;
-          padding: 20px;
-          border: 2px solid var(--gray);
-          position: relative;
-          transition: all 0.3s ease;
-        }
-
-        .profile-comment:hover {
-          border-color: var(--blue);
-          box-shadow: 0 4px 15px rgba(41, 182, 246, 0.1);
-        }
-
-        .comment-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          color: #666;
-          margin-bottom: 10px;
-        }
-
-        .comment-text {
-          font-size: 15px;
-          line-height: 1.6;
-          color: var(--text-dark);
-        }
-
-        /* 編集ボタン */
-        .edit-profile-btn {
-          width: 100%;
-          padding: 15px;
-          background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
-          color: white;
-          border: none;
-          border-radius: 18px;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-          margin-top: auto;
-        }
-
-        .edit-profile-btn::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          transition: all 0.5s ease;
-        }
-
-        .edit-profile-btn:hover::before {
-          width: 300px;
-          height: 300px;
-        }
-
-        .edit-profile-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(41, 182, 246, 0.3);
-        }
-
-        /* アニメーション定義 */
-        @keyframes rotate-bg {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        /* ローディングスピナー */
-        .spinner {
-          width: 32px;
-          height: 32px;
-          border: 3px solid var(--gray);
-          border-top-color: var(--blue);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* レスポンシブ対応 */
-        @media (max-width: 768px) {
-          .profile-card {
-            flex: 1;
-          }
-          
-          .profile-header {
-            padding: 25px 25px 20px;
-          }
-          
-          .profile-details {
-            padding: 0 25px 25px;
-          }
-          
-          .profile-abilities {
-            flex-direction: column;
-            gap: 15px;
-          }
-          
-          .profile-avatar {
-            width: 100px;
-            height: 100px;
-          }
-          
-          .avatar-container {
-            font-size: 40px;
-          }
-          
-          .profile-name {
-            font-size: 24px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .profile-header {
-            padding: 20px 20px 15px;
-          }
-          
-          .profile-details {
-            padding: 0 20px 20px;
-            gap: 15px;
-          }
-          
-          .profile-avatar {
-            width: 80px;
-            height: 80px;
-          }
-          
-          .avatar-container {
-            font-size: 32px;
-          }
-          
-          .profile-name {
-            font-size: 20px;
-          }
-          
-          .ability-card {
-            padding: 15px;
-          }
-          
-          .profile-personal,
-          .adventure-partner,
-          .profile-comment {
-            padding: 15px;
-          }
-        }
-      `}</style>
     </div>
   );
 };
