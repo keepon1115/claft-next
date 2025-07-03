@@ -1,7 +1,14 @@
-import { create } from 'zustand'
+'use client'
 
-interface UserProfile {
-  id: string
+import { create } from 'zustand'
+import { devtools, persist } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
+
+// =====================================================
+// 型定義
+// =====================================================
+
+export interface ProfileData {
   nickname: string
   character: string
   skills: string[]
@@ -12,59 +19,392 @@ interface UserProfile {
   catchphrase: string
   message: string
   avatarUrl?: string
+  profileCompletion: number
+}
+
+export interface ExtendedUserStats {
+  userId: string
+  loginCount: number
+  lastLoginDate: string
+  totalPlayTime: number
   level: number
-  exp: number
-  achievements: string[]
+  experience: number
+  experienceToNext: number
+  questsCompleted: number
+  questsInProgress: number
+  currentStreak: number
+  maxStreak: number
+  achievementCount: number
+  goldBadges: number
+  silverBadges: number
+  bronzeBadges: number
+  createdAt: string
+  updatedAt: string
 }
 
-interface UserStore {
-  profile: UserProfile | null
+export interface Achievement {
+  id: string
+  title: string
+  description: string
+  type: 'gold' | 'silver' | 'bronze'
+  iconClass: string
+  unlockedAt?: string
+  isUnlocked: boolean
+}
+
+export interface UserActivity {
+  id: string
+  userId: string
+  activityType: 'login' | 'quest_complete' | 'profile_update' | 'level_up'
+  description: string
+  experienceGained?: number
+  timestamp: string
+}
+
+// =====================================================
+// デフォルト値
+// =====================================================
+
+const defaultProfileData: ProfileData = {
+  nickname: 'CLAFT冒険者',
+  character: '創造的チャレンジャー',
+  skills: ['創造力', '学習', '挑戦'],
+  weakness: 'ついつい夜更かし',
+  favoritePlace: '静かなカフェ',
+  energyCharge: '好きな音楽を聴くこと',
+  companion: '一緒に成長できる仲間',
+  catchphrase: '「今日も新しいことにチャレンジ！」',
+  message: 'CLAFTで自分らしい成長の物語を作っています！',
+  avatarUrl: '',
+  profileCompletion: 85,
+}
+
+const defaultExtendedStats: ExtendedUserStats = {
+  userId: 'dev-user-001',
+  loginCount: 12,
+  lastLoginDate: new Date().toISOString(),
+  totalPlayTime: 1800, // 30分
+  level: 5,
+  experience: 420,
+  experienceToNext: 80,
+  questsCompleted: 3,
+  questsInProgress: 2,
+  currentStreak: 3,
+  maxStreak: 7,
+  achievementCount: 4,
+  goldBadges: 1,
+  silverBadges: 2,
+  bronzeBadges: 1,
+  createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30日前
+  updatedAt: new Date().toISOString(),
+}
+
+// 事前定義された実績
+const predefinedAchievements: Achievement[] = [
+  {
+    id: 'first_login',
+    title: '初回ログイン',
+    description: 'CLAFTへようこそ！',
+    type: 'bronze',
+    iconClass: 'fa-star',
+    isUnlocked: true,
+    unlockedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'profile_complete',
+    title: 'プロフィール完成',
+    description: 'プロフィールを完成させた',
+    type: 'silver',
+    iconClass: 'fa-user-check',
+    isUnlocked: true,
+    unlockedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'first_quest',
+    title: '初クエスト',
+    description: '最初のクエストをクリアした',
+    type: 'bronze',
+    iconClass: 'fa-flag-checkered',
+    isUnlocked: true,
+    unlockedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'level_5',
+    title: 'レベル5達成',
+    description: 'レベル5に到達した',
+    type: 'silver',
+    iconClass: 'fa-level-up-alt',
+    isUnlocked: true,
+    unlockedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'quest_master',
+    title: 'クエストマスター',
+    description: '10個のクエストをクリアした',
+    type: 'gold',
+    iconClass: 'fa-crown',
+    isUnlocked: false,
+  },
+  {
+    id: 'streak_7',
+    title: '7日連続',
+    description: '7日連続でログインした',
+    type: 'gold',
+    iconClass: 'fa-fire',
+    isUnlocked: false,
+  },
+]
+
+// =====================================================
+// ユーザーストアの型定義
+// =====================================================
+
+interface UserState {
+  // プロフィール情報
+  profileData: ProfileData
+  extendedStats: ExtendedUserStats | null
+  achievements: Achievement[]
+  recentActivities: UserActivity[]
+  
+  // 状態管理
   isLoading: boolean
-  setProfile: (profile: UserProfile | null) => void
-  updateExp: (exp: number) => void
-  initialize: () => void
+  isSaving: boolean
+  error: string | null
+  lastSyncTime: string | null
+  isInitialized: boolean
+  
+  // 基本アクション
+  initialize: (userId?: string) => Promise<void>
+  updateProfile: (updates: Partial<ProfileData>) => Promise<{ success: boolean; error?: string }>
+  addExperience: (amount: number, reason?: string) => Promise<{ success: boolean; levelUp?: boolean; error?: string }>
+  calculateProfileCompletion: () => number
+  clearError: () => void
 }
 
-export const useUserStore = create<UserStore>((set) => ({
-  profile: null,
-  isLoading: false,
-  setProfile: (profile) => set({ profile }),
-  updateExp: (exp) => set((state) => ({
-    profile: state.profile ? { ...state.profile, exp } : null
-  })),
-  initialize: () => {
-    // 開発モック用のデフォルトプロフィール
-    const mockProfile: UserProfile = {
-      id: 'mock-user-id',
-      nickname: 'テスト冒険者',
-      character: '冒険大好き！チャレンジャータイプ',
-      skills: ['問題解決', 'コミュニケーション'],
-      weakness: '朝が苦手',
-      favoritePlace: 'カフェでコーディング',
-      energyCharge: 'コーヒーを飲む',
-      companion: '一緒に学び合える仲間',
-      catchphrase: '「今日も新しいことを学ぼう！」',
-      message: 'よろしくお願いします！',
-      avatarUrl: '',
-      level: 1,
-      exp: 0,
-      achievements: ['初回ログイン']
-    }
-    
-    set({ 
-      profile: mockProfile, 
-      isLoading: false 
-    })
-    
-    console.log('🔧 userStore: モックプロフィールで初期化完了')
-  }
-}))
+// =====================================================
+// レベル・経験値計算ユーティリティ
+// =====================================================
 
-// 利便性のためのフック
+const calculateLevel = (experience: number): number => {
+  return Math.floor(experience / 100) + 1
+}
+
+const calculateExperienceToNext = (experience: number): number => {
+  const currentLevel = calculateLevel(experience)
+  const nextLevelExp = currentLevel * 100
+  return nextLevelExp - experience
+}
+
+// =====================================================
+// Zustandユーザーストア
+// =====================================================
+
+export const useUserStore = create<UserState>()(
+  devtools(
+    immer(
+      persist(
+        (set, get) => ({
+          // 初期状態
+          profileData: { ...defaultProfileData },
+          extendedStats: null,
+          achievements: [...predefinedAchievements],
+          recentActivities: [],
+          isLoading: false,
+          isSaving: false,
+          error: null,
+          lastSyncTime: null,
+          isInitialized: false,
+
+          // =====================================================
+          // 初期化
+          // =====================================================
+          initialize: async (userId: string = 'dev-user-001') => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              console.log('🔧 開発モード: userStoreを拡張版で初期化')
+              
+              // モックデータで初期化
+              set((state) => {
+                state.profileData = { ...defaultProfileData }
+                state.extendedStats = { ...defaultExtendedStats, userId }
+                state.achievements = predefinedAchievements.map(achievement => ({ ...achievement }))
+                state.recentActivities = [
+                  {
+                    id: '1',
+                    userId,
+                    activityType: 'profile_update',
+                    description: 'プロフィールを更新しました',
+                    experienceGained: 5,
+                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                  },
+                  {
+                    id: '2',
+                    userId,
+                    activityType: 'quest_complete',
+                    description: '「自己紹介」クエストをクリアしました',
+                    experienceGained: 20,
+                    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                  },
+                ]
+                state.isInitialized = true
+                state.lastSyncTime = new Date().toISOString()
+                state.error = null
+              })
+              
+              console.log('✅ userStore: 拡張版初期化完了')
+              
+            } catch (error) {
+              console.error('❌ userStore初期化エラー:', error)
+              set((state) => {
+                state.error = 'userStore初期化に失敗しました'
+              })
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // プロフィール更新
+          // =====================================================
+          updateProfile: async (updates: Partial<ProfileData>) => {
+            set((state) => {
+              state.isSaving = true
+              state.error = null
+            })
+
+            try {
+              // プロフィールデータを更新
+              set((state) => {
+                Object.assign(state.profileData, updates)
+              })
+
+              // プロフィール完成度を再計算
+              const completion = get().calculateProfileCompletion()
+              set((state) => {
+                state.profileData.profileCompletion = completion
+                state.lastSyncTime = new Date().toISOString()
+              })
+
+              console.log('✅ プロフィール更新完了')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'プロフィール更新に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isSaving = false
+              })
+            }
+          },
+
+          // =====================================================
+          // 経験値追加
+          // =====================================================
+          addExperience: async (amount: number, reason?: string) => {
+            const { extendedStats } = get()
+            if (!extendedStats) {
+              return { success: false, error: '統計データが初期化されていません' }
+            }
+
+            try {
+              const newExperience = extendedStats.experience + amount
+              const oldLevel = extendedStats.level
+              const newLevel = calculateLevel(newExperience)
+              const experienceToNext = calculateExperienceToNext(newExperience)
+              
+              set((state) => {
+                if (state.extendedStats) {
+                  state.extendedStats.experience = newExperience
+                  state.extendedStats.level = newLevel
+                  state.extendedStats.experienceToNext = experienceToNext
+                  state.extendedStats.updatedAt = new Date().toISOString()
+                }
+              })
+
+              console.log(`✅ 経験値追加: +${amount}XP ${reason ? `(${reason})` : ''}`)
+              
+              const levelUp = newLevel > oldLevel
+              if (levelUp) {
+                console.log(`🎉 レベルアップ！ Lv.${oldLevel} → Lv.${newLevel}`)
+              }
+
+              return { success: true, levelUp }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : '経験値追加に失敗しました'
+              return { success: false, error: errorMessage }
+            }
+          },
+
+          // =====================================================
+          // プロフィール完成度計算
+          // =====================================================
+          calculateProfileCompletion: () => {
+            const profile = get().profileData
+            const fields = [
+              profile.nickname,
+              profile.character,
+              profile.skills.length > 0 ? 'filled' : '',
+              profile.weakness,
+              profile.favoritePlace,
+              profile.energyCharge,
+              profile.companion,
+              profile.catchphrase,
+              profile.message
+            ]
+            
+            const filledFields = fields.filter(field => field && field.length > 0).length
+            return Math.round((filledFields / fields.length) * 100)
+          },
+
+          // =====================================================
+          // エラークリア
+          // =====================================================
+          clearError: () => {
+            set((state) => {
+              state.error = null
+            })
+          },
+        }),
+        {
+          name: 'claft-user-store',
+          version: 1,
+        }
+      )
+    ),
+    {
+      name: 'CLAFT User Store',
+    }
+  )
+)
+
+// =====================================================
+// 利便性フック
+// =====================================================
+
 export const useUserProfile = () => {
-  const { profile, isLoading } = useUserStore()
+  const { profileData, isLoading, error } = useUserStore()
   return {
-    profileData: profile,
+    profileData,
+    isLoading,
+    error
+  }
+}
+
+export const useUserStats = () => {
+  const { extendedStats, isLoading } = useUserStore()
+  return {
+    userStats: extendedStats,
     isLoading
   }
 } 
