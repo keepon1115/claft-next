@@ -1,101 +1,105 @@
-import { Metadata } from 'next'
-import { pageMetadata, generateStructuredData } from '@/lib/utils/seo'
-
 // ==========================================
-// メタデータ設定
-// ==========================================
-
-export const metadata: Metadata = pageMetadata.profile()
-
-// ==========================================
-// 構造化データ
-// ==========================================
-
-const structuredData = generateStructuredData({
-  type: 'Article',
-  name: 'CLAFTプロフィール',
-  description: 'あなたのクラフト冒険者プロフィールを管理しましょう。能力、特性、成長記録を確認できます。',
-  url: '/profile',
-  category: 'プロフィール管理',
-})
-
-// ==========================================
-// プロフィールページコンポーネント
+// プロフィールページコンポーネント（Server Component）
 // ==========================================
 
 export default function ProfilePage() {
   return (
-    <>
-      {/* 構造化データ */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData),
-        }}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 pt-20 pb-10 px-5">
+      <div className="max-w-4xl mx-auto text-center">
+        <h1 className="text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
+          🧙‍♀️ 冒険者プロフィール
+        </h1>
+        <p className="text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
+          あなたのクラフト冒険者としての成長を確認しましょう
+        </p>
+        
+        {/* プロフィールコンテンツ */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20 shadow-2xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            {/* 基本情報カード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">👤</div>
+              <h3 className="text-xl font-bold text-white mb-2">基本情報</h3>
+              <p className="text-white/80 text-sm">
+                アカウント情報と<br />
+                プロフィール設定
+              </p>
+            </div>
 
-      <div className="profile-page">
-        <div className="profile-container">
-          <h1 className="page-title">🧙‍♀️ 冒険者プロフィール</h1>
-          <p className="page-description">
-            あなたのクラフト冒険者としての成長を確認しましょう
-          </p>
-          
-          {/* TODO: プロフィールコンテンツの実装 */}
-          <div className="profile-content">
-            <p>プロフィール機能は開発中です...</p>
+            {/* ステータスカード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-bold text-white mb-2">ステータス</h3>
+              <p className="text-white/80 text-sm">
+                レベルと経験値<br />
+                スキルポイント
+              </p>
+            </div>
+
+            {/* 実績カード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">🏆</div>
+              <h3 className="text-xl font-bold text-white mb-2">実績</h3>
+              <p className="text-white/80 text-sm">
+                達成したクエスト<br />
+                獲得バッジ
+              </p>
+            </div>
+
+            {/* 装備カード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">⚔️</div>
+              <h3 className="text-xl font-bold text-white mb-2">装備</h3>
+              <p className="text-white/80 text-sm">
+                現在の装備<br />
+                アイテムインベントリ
+              </p>
+            </div>
+
+            {/* フレンドカード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">👥</div>
+              <h3 className="text-xl font-bold text-white mb-2">フレンド</h3>
+              <p className="text-white/80 text-sm">
+                冒険者仲間<br />
+                ギルド情報
+              </p>
+            </div>
+
+            {/* 設定カード */}
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+              <div className="text-4xl mb-4">⚙️</div>
+              <h3 className="text-xl font-bold text-white mb-2">設定</h3>
+              <p className="text-white/80 text-sm">
+                通知設定<br />
+                プライバシー設定
+              </p>
+            </div>
+
+          </div>
+
+          {/* 開発中メッセージ */}
+          <div className="mt-12 p-6 bg-yellow-500/20 rounded-2xl border border-yellow-500/30">
+            <div className="text-3xl mb-3">🚧</div>
+            <h3 className="text-lg font-bold text-white mb-2">プロフィール機能開発中</h3>
+            <p className="text-white/80 text-sm">
+              詳細なプロフィール機能は現在開発中です。<br />
+              しばらくお待ちください。
+            </p>
+          </div>
+
+          {/* アクションボタン */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+              プロフィール編集
+            </button>
+            <button className="bg-transparent text-white px-8 py-3 rounded-full font-semibold border-2 border-white/50 hover:bg-white/10 hover:border-white transition-all duration-300">
+              設定変更
+            </button>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .profile-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 80px 20px 40px;
-        }
-
-        .profile-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .page-title {
-          font-size: 3rem;
-          font-weight: 900;
-          color: white;
-          margin-bottom: 1rem;
-          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .page-description {
-          font-size: 1.25rem;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 3rem;
-          max-width: 600px;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .profile-content {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border-radius: 20px;
-          padding: 3rem;
-          color: white;
-        }
-
-        @media (max-width: 768px) {
-          .page-title {
-            font-size: 2.5rem;
-          }
-
-          .profile-content {
-            padding: 2rem;
-          }
-        }
-      `}</style>
-    </>
+    </div>
   )
 } 

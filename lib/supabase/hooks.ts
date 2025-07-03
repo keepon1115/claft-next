@@ -2,7 +2,7 @@
 
 import { createBrowserSupabaseClient, safeSupabaseQuery, SupabaseError } from './client'
 import { useEffect, useState, useCallback } from 'react'
-import type { UserProfile, Database } from '@/types'
+import type { UserProfile, Database } from '@/types/index'
 import type { User as AuthUser } from '@supabase/supabase-js'
 
 /**
@@ -196,7 +196,7 @@ export function useRealtimeData<
         const { data: fetchedData, error } = await query
 
         if (error) throw error
-        setData((fetchedData as RowType[]) || [])
+        setData((fetchedData as unknown as RowType[]) || [])
       } catch (err) {
         setError(err as Error)
       } finally {
@@ -402,14 +402,11 @@ export function useQuestProgress(userId?: string) {
           .single()
       })
 
-      // 進行状況を更新
+      // 進行状況を更新 - null安全処理
       setProgress(prev => {
-        const updated = prev.filter(p => p.stage_id !== stageId)
-        return [...updated, newProgress].sort((a, b) => {
-          const aStageId = a?.stage_id ?? 0
-          const bStageId = b?.stage_id ?? 0
-          return aStageId - bStageId
-        })
+        // 安全な処理: null値を除外し、対象ステージを更新
+        const filtered = prev.filter((p): p is NonNullable<typeof p> => p !== null && p.stage_id !== stageId)
+        return [...filtered, newProgress]
       })
 
       return { data: newProgress, error: null }

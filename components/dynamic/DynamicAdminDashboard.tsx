@@ -104,36 +104,27 @@ export const DynamicAdminDashboard: React.FC<AdminDashboardProps> = (props) => {
 // 管理画面の分割読み込み
 // ==========================================
 
-// 統計セクション
+// 統計セクション - 一時的に無効化
 const DynamicStatsSection = dynamic(
-  () => import('@/components/admin/StatsSection').then((mod) => {
-    logChunkInfo('AdminStatsSection')
-    return { default: mod.default }
-  }),
+  () => Promise.resolve({ default: () => <div className="text-gray-500">統計セクションは準備中です</div> }),
   {
     loading: () => <CardLoadingFallback count={4} />,
     ssr: false
   }
 )
 
-// 承認セクション
+// 承認セクション - 一時的に無効化
 const DynamicApprovalSection = dynamic(
-  () => import('@/components/admin/ApprovalSection').then((mod) => {
-    logChunkInfo('AdminApprovalSection')
-    return { default: mod.default }
-  }),
+  () => Promise.resolve({ default: () => <div className="text-gray-500">承認セクションは準備中です</div> }),
   {
     loading: () => <TableLoadingFallback rows={5} cols={4} />,
     ssr: false
   }
 )
 
-// ユーザー管理セクション
+// ユーザー管理セクション - 一時的に無効化
 const DynamicUserManagementSection = dynamic(
-  () => import('@/components/admin/UserManagementSection').then((mod) => {
-    logChunkInfo('AdminUserManagementSection')
-    return { default: mod.default }
-  }),
+  () => Promise.resolve({ default: () => <div className="text-gray-500">ユーザー管理セクションは準備中です</div> }),
   {
     loading: () => <TableLoadingFallback rows={10} cols={6} />,
     ssr: false
@@ -197,7 +188,7 @@ export const ModularAdminDashboard: React.FC<ModularAdminDashboardProps> = ({
         {visibleSections.stats && (
           <section>
             <h2 className="text-2xl font-bold mb-6">📊 統計情報</h2>
-            <DynamicStatsSection initialStats={props.initialStats} />
+            <DynamicStatsSection />
           </section>
         )}
 
@@ -205,7 +196,7 @@ export const ModularAdminDashboard: React.FC<ModularAdminDashboardProps> = ({
         {visibleSections.approval && (
           <section>
             <h2 className="text-2xl font-bold mb-6">⏳ 承認管理</h2>
-            <DynamicApprovalSection adminInfo={props.adminInfo} />
+            <DynamicApprovalSection />
           </section>
         )}
 

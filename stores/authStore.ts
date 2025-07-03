@@ -54,14 +54,15 @@ export const useAuthStore = create<AuthState>()(
           // 初期化
           // =====================================================
           initialize: async () => {
-            const supabase = createBrowserSupabaseClient()
-            
             set((state) => {
               state.isLoading = true
               state.error = null
             })
 
             try {
+              // Supabaseクライアントの初期化を試行
+              const supabase = createBrowserSupabaseClient()
+              
               // 現在のセッションを取得
               const { data: { session }, error: sessionError } = await supabase.auth.getSession()
               
@@ -104,15 +105,30 @@ export const useAuthStore = create<AuthState>()(
                 }
               })
 
+              console.log('✅ Supabase認証初期化完了')
               set((state) => {
                 state.isInitialized = true
               })
 
             } catch (error) {
-              console.error('認証初期化エラー:', error)
-              set((state) => {
-                state.error = error instanceof Error ? error.message : '初期化に失敗しました'
-              })
+              console.warn('⚠️ Supabase初期化失敗、開発モックモードで動作します:', error)
+              
+              // 開発環境でのモックモード
+              if (process.env.NODE_ENV === 'development') {
+                set((state) => {
+                  state.isInitialized = true
+                  state.error = '開発モード: Supabase設定なしで動作中'
+                  state.user = null
+                  state.profile = null
+                  state.stats = null
+                  state.isAdmin = false
+                })
+                console.log('🔧 開発モード: 認証機能を無効化して動作継続')
+              } else {
+                set((state) => {
+                  state.error = error instanceof Error ? error.message : '認証初期化に失敗しました'
+                })
+              }
             } finally {
               set((state) => {
                 state.isLoading = false
@@ -124,8 +140,6 @@ export const useAuthStore = create<AuthState>()(
           // ログイン
           // =====================================================
           login: async (email: string, password: string) => {
-            const supabase = createBrowserSupabaseClient()
-            
             set((state) => {
               state.isLoading = true
               state.error = null
@@ -137,6 +151,47 @@ export const useAuthStore = create<AuthState>()(
                 throw new Error('メールアドレスとパスワードを入力してください')
               }
 
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: モックログイン実行')
+                
+                // モックユーザーを作成
+                const mockUser = {
+                  id: 'mock-user-id',
+                  email: email.trim(),
+                  user_metadata: {
+                    display_name: 'テストユーザー'
+                  }
+                } as any
+
+                set((state) => {
+                  state.user = mockUser
+                  state.profile = {
+                    id: 'mock-user-id',
+                    email: email.trim(),
+                    nickname: 'テストユーザー',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  }
+                  state.stats = {
+                    id: 'mock-stats-id',
+                    user_id: 'mock-user-id',
+                    login_count: 1,
+                    last_login_date: new Date().toISOString().split('T')[0],
+                    quest_clear_count: 0,
+                    total_exp: 0,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  }
+                  state.isAdmin = false
+                  state.error = '開発モード: モックログイン中'
+                })
+
+                return { success: true }
+              }
+
+              // 実際のSupabaseログイン
+              const supabase = createBrowserSupabaseClient()
               const { data, error } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password
@@ -237,14 +292,29 @@ export const useAuthStore = create<AuthState>()(
           // ログアウト
           // =====================================================
           logout: async () => {
-            const supabase = createBrowserSupabaseClient()
-            
             set((state) => {
               state.isLoading = true
               state.error = null
             })
 
             try {
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: モックログアウト実行')
+                
+                set((state) => {
+                  state.user = null
+                  state.profile = null
+                  state.stats = null
+                  state.isAdmin = false
+                  state.error = '開発モード: Supabase設定なしで動作中'
+                })
+
+                return { success: true }
+              }
+
+              // 実際のSupabaseログアウト
+              const supabase = createBrowserSupabaseClient()
               const { error } = await supabase.auth.signOut()
               
               if (error) {

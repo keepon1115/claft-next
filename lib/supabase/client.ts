@@ -1,6 +1,6 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
-import { type Database } from '@/types'
+import { type Database } from '@/types/index'
 import { type NextRequest, type NextResponse } from 'next/server'
 import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 

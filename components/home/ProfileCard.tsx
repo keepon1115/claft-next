@@ -168,6 +168,20 @@ const EditProfileButton: React.FC<{ isAuthenticated: boolean; onClick: () => voi
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   const { profileData, isLoading } = useUserProfile();
+  
+  // profileDataがnullの場合のデフォルト値を設定
+  const defaultProfileData = {
+    nickname: 'ゲスト冒険者',
+    character: '冒険大好き！チャレンジャータイプ',
+    skills: ['挑戦', '学習'],
+    weakness: '',
+    favoritePlace: '',
+    energyCharge: '',
+    companion: '',
+    catchphrase: '「ログインして自分だけの物語を作ろう！」',
+    message: '',
+    avatarUrl: ''
+  };
   const { isAuthenticated } = useAuth();
 
   const handleEditClick = () => {
@@ -195,34 +209,35 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
     );
   }
 
-  // デフォルトデータ（非ログイン時用）
-  const defaultData = {
-    nickname: isAuthenticated ? (profileData.nickname || 'ゲスト冒険者') : 'ゲスト冒険者',
-    character: isAuthenticated ? (profileData.character || '冒険大好き！挑戦者タイプ') : '冒険大好き！挑戦者タイプ',
-    skills: isAuthenticated ? (profileData.skills || []) : [],
-    weakness: isAuthenticated ? (profileData.weakness || '') : '',
-    favoritePlace: isAuthenticated ? (profileData.favoritePlace || '') : '',
-    energyCharge: isAuthenticated ? (profileData.energyCharge || '') : '',
-    companion: isAuthenticated ? (profileData.companion || '') : '',
-    catchphrase: isAuthenticated ? (profileData.catchphrase || '「新しいことにチャレンジだ！」') : '「ログインして自分だけの物語を作ろう！」',
-    message: isAuthenticated ? (profileData.message || '') : ''
+  // プロフィールデータを安全に取得（nullチェック）
+  const displayData = {
+    nickname: profileData?.nickname || defaultProfileData.nickname,
+    character: profileData?.character || defaultProfileData.character,
+    skills: profileData?.skills || defaultProfileData.skills,
+    weakness: profileData?.weakness || defaultProfileData.weakness,
+    favoritePlace: profileData?.favoritePlace || defaultProfileData.favoritePlace,
+    energyCharge: profileData?.energyCharge || defaultProfileData.energyCharge,
+    companion: profileData?.companion || defaultProfileData.companion,
+    catchphrase: profileData?.catchphrase || defaultProfileData.catchphrase,
+    message: profileData?.message || defaultProfileData.message,
+    avatarUrl: profileData?.avatarUrl || defaultProfileData.avatarUrl
   };
 
-  const characterText = defaultData.character;
+  const characterText = displayData.character;
 
   return (
     <div className={`profile-card ${className}`}>
       {/* プロフィール基本情報エリア */}
       <div className="profile-header">
-        <ProfileAvatar character={defaultData.character} avatarUrl={profileData.avatarUrl} />
+        <ProfileAvatar character={displayData.character} avatarUrl={displayData.avatarUrl} />
         
-        <h2 className="profile-name">{defaultData.nickname}</h2>
+        <h2 className="profile-name">{displayData.nickname}</h2>
         
         <p className="profile-character">
           <span>{characterText}</span>
         </p>
         
-        <ProfileCatchphrase catchphrase={defaultData.catchphrase} />
+        <ProfileCatchphrase catchphrase={displayData.catchphrase} />
       </div>
 
       {/* プロフィール詳細情報エリア */}
@@ -233,13 +248,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
             type="strength"
             title="とくい"
             icon="💪"
-            tags={defaultData.skills}
+            tags={displayData.skills}
           />
           <AbilityCard
             type="weakness"
             title="よわみ"
             icon="😅"
-            tags={defaultData.weakness && defaultData.weakness.length > 0 ? [defaultData.weakness] : []}
+            tags={displayData.weakness && displayData.weakness.length > 0 ? [displayData.weakness] : []}
           />
         </div>
 
@@ -248,20 +263,20 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
           <PersonalItem
             icon="🏖️"
             label="すきな時間・場所"
-            value={defaultData.favoritePlace}
+            value={displayData.favoritePlace}
           />
           <PersonalItem
             icon="⚡"
             label="エネルギーチャージ方法"
-            value={defaultData.energyCharge}
+            value={displayData.energyCharge}
           />
         </div>
 
         {/* 一緒に冒険したい人 */}
-        <AdventurePartner partner={defaultData.companion} />
+        <AdventurePartner partner={displayData.companion} />
 
         {/* ひとこと */}
-        <ProfileComment message={defaultData.message} />
+        <ProfileComment message={displayData.message} />
 
         {/* 編集ボタン */}
         <EditProfileButton 

@@ -1,4 +1,4 @@
-import { getCLS, getFID, getFCP, getLCP, getTTFB, type Metric } from 'web-vitals'
+import { onCLS, onFID, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals'
 
 // ==========================================
 // パフォーマンス測定設定
@@ -34,7 +34,7 @@ export interface WebVitalsData {
   timestamp: number
   url: string
   userAgent: string
-  connection?: NetworkInformation['effectiveType']
+  connection?: string
 }
 
 export interface PerformanceSummary {
@@ -183,11 +183,11 @@ function handleMetric(metric: Metric) {
 
 export function startWebVitalsTracking() {
   try {
-    getCLS(handleMetric)
-    getFID(handleMetric)
-    getFCP(handleMetric)
-    getLCP(handleMetric)
-    getTTFB(handleMetric)
+    onCLS(handleMetric)
+    onFID(handleMetric)
+    onFCP(handleMetric)
+    onLCP(handleMetric)
+    onTTFB(handleMetric)
 
     if (config.debug) {
       console.log('🚀 Web Vitals測定を開始しました')

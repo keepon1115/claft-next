@@ -20,12 +20,11 @@ const DynamicAdminDashboard = dynamic(
   () => import('./AdminDashboard'),
   {
     loading: () => (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-5 text-gray-600">
+        <div className="w-10 h-10 border-4 border-gray-300 border-t-purple-600 rounded-full animate-spin"></div>
         <p>管理画面を読み込み中...</p>
       </div>
-    ),
-    ssr: false
+    )
   }
 )
 
@@ -49,10 +48,9 @@ async function checkAdminPermission() {
       .from('admin_users')
       .select('user_id, email, is_active, created_at')
       .eq('user_id', session.user.id)
-      .eq('is_active', true)
       .single()
     
-    if (adminError || !adminUser) {
+    if (adminError || !adminUser || adminUser.is_active !== true) {
       redirect('/unauthorized')
     }
     
@@ -135,7 +133,7 @@ export default async function AdminPage() {
   const initialStats = await getInitialStats()
   
   return (
-    <div className="admin-page">
+    <div className="min-h-screen bg-gray-100">
       <Suspense fallback={<PageLoadingFallback title="管理画面を読み込み中..." />}>
         <DynamicAdminDashboard
           user={user}
@@ -143,37 +141,6 @@ export default async function AdminPage() {
           initialStats={initialStats}
         />
       </Suspense>
-      
-      <style jsx>{`
-        .admin-page {
-          min-height: 100vh;
-          background-color: #f5f5f5;
-        }
-        
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          gap: 20px;
-          color: #666;
-        }
-        
-        .loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #673AB7;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

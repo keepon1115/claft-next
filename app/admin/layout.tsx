@@ -123,205 +123,34 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   })
 
   return (
-    <div className="admin-layout">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       {/* 管理画面専用ヘッダー */}
-      <div className="admin-header">
-        <h1>🛠️ CLAFT管理画面</h1>
-        <div className="admin-user-info">
-          <span className="admin-user-name">{adminUser.nickname || adminUser.email}</span>
-          <span className="admin-badge">管理者</span>
+      <div className="bg-slate-800 text-white px-6 py-4 flex justify-between items-center shadow-lg z-50">
+        <h1 className="text-2xl font-semibold">🛠️ CLAFT管理画面</h1>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-gray-200">{adminUser.nickname || adminUser.email}</span>
+          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">管理者</span>
         </div>
       </div>
       
-      <div className="admin-main">
+      <div className="flex flex-1">
         {/* 管理画面サイドバー */}
-        <nav className="admin-nav">
-          <ul>
-            <li><a href="/admin" className="nav-link">📊 ダッシュボード</a></li>
-            <li><a href="/admin/users" className="nav-link">👥 ユーザー管理</a></li>
-            <li><a href="/admin/quests" className="nav-link">🗺️ クエスト管理</a></li>
-            <li><a href="/admin/settings" className="nav-link">⚙️ システム設定</a></li>
+        <nav className="w-64 bg-slate-700 py-5 shadow-xl">
+          <ul className="space-y-1">
+            <li><a href="/admin" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">📊 ダッシュボード</a></li>
+            <li><a href="/admin/users" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">👥 ユーザー管理</a></li>
+            <li><a href="/admin/quests" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">🗺️ クエスト管理</a></li>
+            <li><a href="/admin/settings" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">⚙️ システム設定</a></li>
           </ul>
         </nav>
         
         {/* メインコンテンツエリア */}
-        <main className="admin-content">
-          <div className="admin-content-inner">
+        <main className="flex-1 bg-white m-4 rounded-lg shadow-lg overflow-hidden">
+          <div className="p-8 min-h-full">
             {children}
           </div>
         </main>
       </div>
-      
-      <style jsx>{`
-        .admin-layout {
-          min-height: 100vh;
-          background: #f8f9fa;
-          display: flex;
-          flex-direction: column;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-        }
-        
-        .admin-header {
-          background: #2c3e50;
-          color: white;
-          padding: 16px 24px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-          z-index: 100;
-        }
-        
-        .admin-header h1 {
-          margin: 0;
-          font-size: 1.5rem;
-          font-weight: 600;
-        }
-        
-        .admin-user-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 0.9rem;
-        }
-        
-        .admin-user-name {
-          color: #ecf0f1;
-        }
-        
-        .admin-badge {
-          background: #e74c3c;
-          color: white;
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-        
-        .admin-main {
-          flex: 1;
-          display: flex;
-          min-height: calc(100vh - 64px);
-        }
-        
-        .admin-nav {
-          width: 250px;
-          background: #34495e;
-          padding: 20px 0;
-          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .admin-nav ul {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-        }
-        
-        .admin-nav li {
-          margin: 0;
-        }
-        
-        .nav-link {
-          display: block;
-          padding: 16px 24px;
-          color: #ecf0f1;
-          text-decoration: none;
-          transition: all 0.2s ease;
-          border-left: 3px solid transparent;
-        }
-        
-        .nav-link:hover {
-          background-color: #2c3e50;
-          border-left-color: #3498db;
-          color: white;
-        }
-        
-        .admin-content {
-          flex: 1;
-          background: #ffffff;
-          margin: 16px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-        
-        .admin-content-inner {
-          padding: 32px;
-          min-height: 100%;
-        }
-        
-        /* レスポンシブ対応 */
-        @media (max-width: 768px) {
-          .admin-header {
-            padding: 12px 16px;
-          }
-          
-          .admin-header h1 {
-            font-size: 1.25rem;
-          }
-          
-          .admin-user-info {
-            gap: 8px;
-            font-size: 0.8rem;
-          }
-          
-          .admin-main {
-            flex-direction: column;
-            min-height: calc(100vh - 56px);
-          }
-          
-          .admin-nav {
-            width: 100%;
-            padding: 12px 0;
-            order: 2;
-          }
-          
-          .admin-nav ul {
-            display: flex;
-            overflow-x: auto;
-            padding: 0 16px;
-          }
-          
-          .admin-nav li {
-            flex-shrink: 0;
-          }
-          
-          .nav-link {
-            padding: 12px 16px;
-            white-space: nowrap;
-            border-left: none;
-            border-bottom: 3px solid transparent;
-          }
-          
-          .nav-link:hover {
-            border-left-color: transparent;
-            border-bottom-color: #3498db;
-          }
-          
-          .admin-content {
-            margin: 8px;
-            border-radius: 4px;
-            order: 1;
-          }
-          
-          .admin-content-inner {
-            padding: 20px;
-          }
-        }
-        
-        /* ダークモード対応（将来の拡張用） */
-        @media (prefers-color-scheme: dark) {
-          .admin-layout {
-            background: #1a1a1a;
-          }
-          
-          .admin-content {
-            background: #2d2d2d;
-            color: #ecf0f1;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          }
-        }
-      `}</style>
     </div>
   )
 } 
