@@ -479,7 +479,9 @@ export default function AdminDashboard() {
   const loadApprovalHistory = useCallback(async () => {
     try {
       setHistoryLoading(true)
-      const { data, error } = await supabase
+      
+      // まず quest_progress だけを取得
+      const { data: questData, error } = await supabase
         .from('quest_progress')
         .select(`
           id,
@@ -490,11 +492,7 @@ export default function AdminDashboard() {
           rejected_at,
           approved_by,
           rejected_by,
-          created_at,
-          users_profile (
-            nickname,
-            email
-          )
+          created_at
         `)
         .in('status', ['completed', 'rejected'])
         .order('approved_at', { ascending: false, nullsLast: true })
@@ -503,7 +501,29 @@ export default function AdminDashboard() {
 
       if (error) throw error
 
-      setApprovalHistory((data as unknown as ApprovalHistory[]) || [])
+      // 別途 users_profile を取得
+      const userIds = questData?.map(q => q.user_id) || []
+      let userProfiles: any[] = []
+      
+      if (userIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('users_profile')
+          .select('id, nickname, email')
+          .in('id', userIds)
+        
+        userProfiles = profileData || []
+      }
+
+      // データを結合
+      const combinedData = questData?.map(quest => ({
+        ...quest,
+        users_profile: userProfiles.find(profile => profile.id === quest.user_id) || {
+          nickname: null,
+          email: 'unknown@example.com'
+        }
+      })) || []
+
+      setApprovalHistory(combinedData as ApprovalHistory[])
     } catch (error) {
       console.error('承認履歴読み込みエラー:', error)
       showNotification('error', 'エラー', '承認履歴の取得に失敗しました')

@@ -175,6 +175,7 @@ export default function ApprovalTable({
       setLoading(true)
       setError(null)
 
+      // まず quest_progress だけを取得
       let query = supabase
         .from('quest_progress')
         .select(`
@@ -183,11 +184,7 @@ export default function ApprovalTable({
           stage_id,
           status,
           submitted_at,
-          google_form_submitted,
-          users_profile (
-            nickname,
-            email
-          )
+          google_form_submitted
         `, { count: 'exact' })
         .eq('status', 'pending_approval')
         .order('submitted_at', { ascending: false })
@@ -207,20 +204,47 @@ export default function ApprovalTable({
           .lt('submitted_at', nextDay.toISOString())
       }
 
-      if (filters?.userSearch) {
-        query = query.textSearch('users_profile.nickname', filters.userSearch)
-      }
-
       // ページネーション
       const startIndex = (pagination.currentPage - 1) * pageSize
       query = query.range(startIndex, startIndex + pageSize - 1)
 
-      const { data, error: fetchError, count } = await query
+      const { data: questData, error: fetchError, count } = await query
 
       if (fetchError) throw fetchError
 
-      // 型安全性のため、unknownを経由してPendingApproval[]にキャスト
-      setPendingApprovals((data as unknown as PendingApproval[]) || [])
+      // 別途 users_profile を取得
+      const userIds = questData?.map(q => q.user_id) || []
+      let userProfiles: any[] = []
+      
+      if (userIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('users_profile')
+          .select('id, nickname, email')
+          .in('id', userIds)
+        
+        userProfiles = profileData || []
+      }
+
+      // データを結合
+      const combinedData = questData?.map(quest => ({
+        ...quest,
+        users_profile: userProfiles.find(profile => profile.id === quest.user_id) || {
+          nickname: null,
+          email: 'unknown@example.com'
+        }
+      })) || []
+
+      // フィルター適用（ユーザー検索）
+      let filteredData = combinedData
+      if (filters?.userSearch) {
+        const searchTerm = filters.userSearch.toLowerCase()
+        filteredData = combinedData.filter(item => 
+          item.users_profile?.nickname?.toLowerCase().includes(searchTerm) ||
+          item.users_profile?.email?.toLowerCase().includes(searchTerm)
+        )
+      }
+
+      setPendingApprovals(filteredData as PendingApproval[])
       setPagination(prev => ({
         ...prev,
         totalItems: count || 0,
@@ -230,12 +254,13 @@ export default function ApprovalTable({
     } catch (error) {
       console.error('データ取得エラー:', error)
       setError('データの取得に失敗しました')
+      setPendingApprovals([])
     } finally {
       setLoading(false)
     }
-  }, [supabase, filters, pagination.currentPage, pageSize])
+  }, [supabase, filters?.stageFilter, filters?.dateFilter, filters?.userSearch, pagination.currentPage, pageSize])
 
-  // 初期化
+  // 初期化（依存配列を最小限に）
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -243,7 +268,6 @@ export default function ApprovalTable({
         if (session?.user?.id) {
           setCurrentAdminId(session.user.id)
         }
-        await loadPendingApprovals()
       } catch (error) {
         console.error('初期化エラー:', error)
         setError('初期化に失敗しました')
@@ -251,12 +275,12 @@ export default function ApprovalTable({
     }
 
     initialize()
-  }, [])
+  }, [supabase])
 
-  // フィルター変更時の再読み込み
+  // データ読み込み専用のuseEffect（無限ループを防ぐ）
   useEffect(() => {
     loadPendingApprovals()
-  }, [filters, pagination.currentPage, pageSize])
+  }, [loadPendingApprovals])
 
   // 承認処理
   const handleApprove = async (id: string) => {

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { AuthButton } from '@/components/auth/AuthButton'
 import AdminDashboard from './AdminDashboard'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { grantAdminAccess } from './actions'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -13,6 +14,7 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminLoading, setAdminLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<{email: string, nickname?: string} | null>(null)
+  const [isGrantingAdmin, setIsGrantingAdmin] = useState(false)
 
   // 管理者権限チェック
   useEffect(() => {
@@ -63,6 +65,28 @@ export default function AdminPage() {
 
     checkAdminStatus()
   }, [isAuthenticated, user])
+
+  // 管理者権限付与処理
+  const handleGrantAdminAccess = async () => {
+    if (!user) return
+
+    setIsGrantingAdmin(true)
+    try {
+      const result = await grantAdminAccess(user.id, user.email || '')
+      
+      if (result.success) {
+        alert('管理者権限が付与されました！ページを再読み込みします。')
+        window.location.reload()
+      } else {
+        alert(`エラー: ${result.error}`)
+      }
+    } catch (error) {
+      alert('権限付与に失敗しました')
+      console.error('権限付与エラー:', error)
+    } finally {
+      setIsGrantingAdmin(false)
+    }
+  }
 
   // ローディング中（認証チェック中）
   if (isLoading || adminLoading) {
@@ -130,18 +154,38 @@ export default function AdminPage() {
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <p className="text-sm text-gray-600 mb-1">現在のアカウント:</p>
                 <p className="font-semibold text-gray-800">{user.email}</p>
+                
+                {/* デバッグ情報：ユーザーID表示 */}
+                <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                  <p className="text-xs text-blue-600 mb-1">管理者権限付与用ID:</p>
+                  <code className="text-xs font-mono bg-blue-100 px-2 py-1 rounded text-blue-800 break-all">
+                    {user.id}
+                  </code>
+                  <p className="text-xs text-blue-600 mt-2">
+                    このIDをSupabaseダッシュボードで admin_users テーブルに追加してください
+                  </p>
+                </div>
               </div>
             )}
           </div>
           
           <div className="space-y-3">
-                       <AuthButton 
-             variant="compact"
-             size="md"
-             redirectTo="/admin"
-             defaultTab="login"
-             className="w-full"
-           />
+            <AuthButton 
+              variant="compact"
+              size="md"
+              redirectTo="/admin"
+              defaultTab="login"
+              className="w-full"
+            />
+            
+            {/* 管理者権限自動付与ボタン（開発・セットアップ用） */}
+            <button
+              onClick={handleGrantAdminAccess}
+              disabled={isGrantingAdmin}
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isGrantingAdmin ? '権限付与中...' : '🔧 管理者権限を自動付与'}
+            </button>
             
             <button
               onClick={() => router.push('/')}
