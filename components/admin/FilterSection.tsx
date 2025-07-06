@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback, memo, useRef } from 'react'
 import { Search, Filter, Calendar, X } from 'lucide-react'
 
 // =====================================================
@@ -99,6 +99,14 @@ export default function FilterSection({
   onReset,
   debounceMs = 500
 }: FilterSectionProps) {
+  // onFilterChangeの安定した参照を保持
+  const onFilterChangeRef = useRef(onFilterChange)
+  
+  // refを更新
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange
+  }, [onFilterChange])
+
   // フィルター状態管理
   const [filters, setFilters] = useState<FilterValues>({
     userSearch: initialFilters.userSearch || '',
@@ -115,8 +123,8 @@ export default function FilterSection({
       ...filters,
       userSearch: debouncedUserSearch
     }
-    onFilterChange?.(debouncedFilters)
-  }, [debouncedUserSearch, filters.stageFilter, filters.dateFilter, onFilterChange])
+    onFilterChangeRef.current?.(debouncedFilters)
+  }, [debouncedUserSearch, filters.stageFilter, filters.dateFilter])
 
   // =====================================================
   // イベントハンドラー
@@ -142,9 +150,9 @@ export default function FilterSection({
       dateFilter: ''
     }
     setFilters(clearedFilters)
-    onFilterChange?.(clearedFilters)
+    onFilterChangeRef.current?.(clearedFilters)
     onReset?.()
-  }, [onFilterChange, onReset])
+  }, [onReset])
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -154,9 +162,9 @@ export default function FilterSection({
         ...filters,
         userSearch: (e.target as HTMLInputElement).value
       }
-      onFilterChange?.(immediateFilters)
+      onFilterChangeRef.current?.(immediateFilters)
     }
-  }, [filters, onFilterChange])
+  }, [filters])
 
   // =====================================================
   // 選択肢データ

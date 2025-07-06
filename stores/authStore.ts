@@ -192,9 +192,26 @@ export const useAuthStore = create<AuthState>()(
 
               // 実際のSupabaseログイン
               const supabase = createBrowserSupabaseClient()
+              
+              console.log('🔧 Supabase認証開始:', { 
+                email: email.trim(), 
+                url: supabase.supabaseUrl,
+                timestamp: new Date().toISOString() 
+              })
+              
               const { data, error } = await supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password
+              })
+
+              console.log('🔧 Supabase認証レスポンス:', { 
+                hasData: !!data, 
+                hasUser: !!data?.user,
+                error: error ? { 
+                  message: error.message, 
+                  status: error.status,
+                  statusText: error.statusText 
+                } : null 
               })
 
               if (error) {
@@ -518,8 +535,10 @@ export const useAuthStore = create<AuthState>()(
                 })
               }
               
-              // 管理者権限チェック
-              await get().checkAdminStatus()
+              // 管理者権限チェック（非同期で実行、無限ループを防ぐ）
+              setTimeout(() => {
+                get().checkAdminStatus()
+              }, 100)
 
             } catch (error) {
               console.error('ログイン後処理エラー:', error)

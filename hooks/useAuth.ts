@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/authStore'
 import type { UserProfile, UserStats } from '@/types'
@@ -85,7 +85,7 @@ export const useAuth = (): UseAuthReturn => {
     if (!store.isInitialized) {
       store.initialize()
     }
-  }, [store.isInitialized, store.initialize])
+  }, [store.isInitialized])
   
   return {
     // 状態
@@ -355,10 +355,16 @@ export const useAuthStateChange = (
   callback: (isAuthenticated: boolean, user: AuthUser | null) => void
 ) => {
   const { isAuthenticated, user, isInitialized } = useAuth()
+  const callbackRef = useRef(callback)
+  
+  // refを更新
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [callback])
   
   useEffect(() => {
     if (isInitialized) {
-      callback(isAuthenticated, user)
+      callbackRef.current(isAuthenticated, user)
     }
-  }, [isAuthenticated, user, isInitialized, callback])
+  }, [isAuthenticated, user, isInitialized])
 } 

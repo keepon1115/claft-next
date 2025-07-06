@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-07-06T00:23:01.973Z",
+  "status": "HEALTHY",
+  "checks": {
+    "environment": {
+      "status": "✅ OK",
+      "details": "All required variables present"
+    },
+    "supabase": {
+      "status": "✅ OK",
+      "details": "Connection successful"
+    },
+    "localServer": {
+      "status": "✅ OK",
+      "details": "HTTP 200"
+    },
+    "adminEndpoint": {
+      "status": "✅ OK",
+      "details": "HTTP 200"
+    }
+  }
+}

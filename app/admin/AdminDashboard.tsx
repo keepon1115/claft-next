@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { 
   BarChart3, 
@@ -390,6 +390,9 @@ export default function AdminDashboard() {
 
   const supabase = createBrowserSupabaseClient()
 
+  // 安定したloadAllData参照
+  const loadAllDataRef = useRef<() => Promise<void>>()
+
   // 認証チェック
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -398,7 +401,7 @@ export default function AdminDashboard() {
         return
       }
       setLoading(false)
-      loadAllData()
+      loadAllDataRef.current?.()
     } else if (!isLoading && !isAuthenticated) {
       // 未認証の場合の処理はrender部分で行う
       setLoading(false)
@@ -433,8 +436,8 @@ export default function AdminDashboard() {
   } = useRealtimeUpdates({
     onNotification: showNotification,
     onDataUpdate: () => {
-      if (isAuthenticated && isAdmin) {
-        loadAllData()
+      if (isAuthenticated && isAdmin && !loading && loadAllDataRef.current) {
+        loadAllDataRef.current()
       }
     },
     currentAdminId: user?.id || null
@@ -583,6 +586,11 @@ export default function AdminDashboard() {
       loadUserData()
     ])
   }, [loadStats, loadApprovalHistory, loadUserData])
+
+  // refを更新
+  useEffect(() => {
+    loadAllDataRef.current = loadAllData
+  }, [loadAllData])
 
   // 全データリフレッシュ
   const handleRefreshAll = useCallback(async () => {

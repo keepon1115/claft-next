@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useQuestStore } from '@/stores/questStore'
 import { useAuth } from '@/hooks/useAuth'
-import { X, Video, FileText, Lock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { X, Video, FileText, Lock, CheckCircle, AlertTriangle, ArrowRight, Info } from 'lucide-react'
 
 // =====================================================
 // StageModal型定義
@@ -25,6 +25,7 @@ interface StageModalProps {
 
 export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   const [mounted, setMounted] = useState(false)
+  const [showSubmitGuide, setShowSubmitGuide] = useState(false)
   
   const { user, isAuthenticated } = useAuth()
   const { stageDetails, userProgress, completeStage, submitStage } = useQuestStore()
@@ -118,16 +119,21 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
 
   // ステージ提出処理
   const handleSubmit = async () => {
-    const result = await submitStage(stageId)
+    const result = await submitStage(stageId, { google_form_submitted: true })
     if (result.success) {
       onClose()
     }
   }
 
+  // Googleフォーム送信ガイドの表示
+  const handleFormClick = () => {
+    setShowSubmitGuide(true)
+  }
+
   // メインモーダル
   return createPortal(
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={handleBackdropClick}>
-      <div className="bg-white border-4 border-gray-800 p-8 max-w-2xl w-full mx-4 relative rounded-lg">
+      <div className="bg-white border-4 border-gray-800 p-8 max-w-2xl w-full mx-4 relative rounded-lg max-h-[90vh] overflow-y-auto">
         <button 
           className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
           onClick={onClose}
@@ -169,6 +175,52 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           )}
         </div>
 
+        {/* クエスト完了フローガイド */}
+        {status === 'current' && (
+          <div className="bg-blue-50 border-2 border-blue-200 p-6 mb-8 rounded-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <Info className="text-blue-600" size={20} />
+              <h3 className="text-lg font-bold text-blue-800">📋 クエスト完了の流れ</h3>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                <span className="text-blue-700">まず動画を見て学習しましょう</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                <span className="text-blue-700">「クエストに挑む」でGoogleフォームを送信</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                <span className="text-blue-700">フォーム送信後、このページで「クエストを提出する」を押す</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">✓</div>
+                <span className="text-green-700 font-medium">承認待ち状態になり、管理者が確認します</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 提出ガイド（フォームクリック後に表示） */}
+        {showSubmitGuide && status === 'current' && (
+          <div className="bg-green-50 border-2 border-green-200 p-6 mb-8 rounded-lg animate-pulse">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle className="text-green-600" size={20} />
+              <h3 className="text-lg font-bold text-green-800">✅ 次のステップ</h3>
+            </div>
+            <p className="text-green-700 mb-4">
+              Googleフォームを送信したら、このページに戻って<br />
+              <strong>「クエストを提出する」ボタン</strong>を押してください！
+            </p>
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <ArrowRight size={16} />
+              <span>この手順を忘れると管理者に通知されません</span>
+            </div>
+          </div>
+        )}
+
         {/* アクションボタン */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {stage.videoUrl && (
@@ -188,6 +240,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
               href={stage.formUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleFormClick}
               className="flex items-center justify-center gap-2 px-6 py-4 bg-green-500 text-white border-2 border-green-700 font-bold hover:bg-green-600 transition-colors rounded-lg"
             >
               <FileText size={24} />
@@ -201,10 +254,25 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           <div className="mt-8 flex justify-center">
             <button
               onClick={handleSubmit}
-              className="px-8 py-3 bg-purple-500 text-white border-2 border-purple-700 font-bold hover:bg-purple-600 transition-colors rounded-lg"
+              className="px-8 py-3 bg-purple-500 text-white border-2 border-purple-700 font-bold hover:bg-purple-600 transition-colors rounded-lg flex items-center gap-2"
             >
+              <CheckCircle size={20} />
               クエストを提出する
             </button>
+          </div>
+        )}
+
+        {/* 重要な注意事項 */}
+        {status === 'current' && (
+          <div className="mt-6 p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="text-orange-600" size={18} />
+              <span className="font-bold text-orange-800">重要</span>
+            </div>
+            <p className="text-orange-700 text-sm">
+              Googleフォームの送信だけでは承認プロセスは開始されません。<br />
+              必ず「クエストを提出する」ボタンを押して完了してください。
+            </p>
           </div>
         )}
       </div>

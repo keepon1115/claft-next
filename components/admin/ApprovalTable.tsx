@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback, memo, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { Check, X, Calendar, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { approveQuest, rejectQuest, bulkApprove } from '@/app/admin/actions'
@@ -141,6 +141,16 @@ export default function ApprovalTable({
   onApprovalChange,
   onNotification
 }: ApprovalTableProps) {
+  // onNotificationの安定した参照を保持
+  const onNotificationRef = useRef(onNotification)
+  const onApprovalChangeRef = useRef(onApprovalChange)
+  
+  // refを更新
+  useEffect(() => {
+    onNotificationRef.current = onNotification
+    onApprovalChangeRef.current = onApprovalChange
+  }, [onNotification, onApprovalChange])
+
   // ステート管理
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
   const [loading, setLoading] = useState(true)
@@ -162,12 +172,12 @@ export default function ApprovalTable({
 
   // 通知ヘルパー
   const showNotification = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
-    if (onNotification) {
-      onNotification(type, title, message)
+    if (onNotificationRef.current) {
+      onNotificationRef.current(type, title, message)
     } else {
       console.log(`[${type}] ${title}: ${message}`)
     }
-  }, [onNotification])
+  }, [])
 
   // データ読み込み
   const loadPendingApprovals = useCallback(async () => {
@@ -260,6 +270,14 @@ export default function ApprovalTable({
     }
   }, [supabase, filters?.stageFilter, filters?.dateFilter, filters?.userSearch, pagination.currentPage, pageSize])
 
+  // loadPendingApprovalsの安定した参照を保持
+  const loadPendingApprovalsRef = useRef(loadPendingApprovals)
+  
+  // refを更新
+  useEffect(() => {
+    loadPendingApprovalsRef.current = loadPendingApprovals
+  }, [loadPendingApprovals])
+
   // 初期化（依存配列を最小限に）
   useEffect(() => {
     const initialize = async () => {
@@ -279,8 +297,8 @@ export default function ApprovalTable({
 
   // データ読み込み専用のuseEffect（無限ループを防ぐ）
   useEffect(() => {
-    loadPendingApprovals()
-  }, [loadPendingApprovals])
+    loadPendingApprovalsRef.current?.()
+  }, [filters?.stageFilter, filters?.dateFilter, filters?.userSearch, pagination.currentPage, pageSize])
 
   // 承認処理
   const handleApprove = async (id: string) => {
@@ -294,8 +312,8 @@ export default function ApprovalTable({
       
       if (result.success) {
         showNotification('success', 'クエストを承認しました')
-        if (onApprovalChange) onApprovalChange()
-        await loadPendingApprovals()
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
@@ -323,8 +341,8 @@ export default function ApprovalTable({
       
       if (result.success) {
         showNotification('success', 'クエストを却下しました')
-        if (onApprovalChange) onApprovalChange()
-        await loadPendingApprovals()
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
@@ -358,8 +376,8 @@ export default function ApprovalTable({
       if (result.success) {
         showNotification('success', `${selectedItems.size}件のクエストを一括承認しました`)
         setSelectedItems(new Set())
-        if (onApprovalChange) onApprovalChange()
-        await loadPendingApprovals()
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
@@ -411,7 +429,7 @@ export default function ApprovalTable({
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={loadPendingApprovals}
+            onClick={() => loadPendingApprovalsRef.current?.()}
             className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           >
             <RefreshCw size={14} className="mr-1" />

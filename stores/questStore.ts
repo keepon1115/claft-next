@@ -404,7 +404,30 @@ export const useQuestStore = create<QuestState>()(
           // ステージ提出
           // =====================================================
           submitStage: async (stageId: number, submissionData?: Record<string, any>) => {
-            return await get().updateStageProgress(stageId, 'pending_approval')
+            const result = await get().updateStageProgress(stageId, 'pending_approval', true)
+            
+            // 追加のデータがある場合、追加で更新
+            if (result.success && submissionData && get().currentUserId) {
+              try {
+                const supabase = createBrowserSupabaseClient()
+                const { error } = await supabase
+                  .from('quest_progress')
+                  .update({
+                    google_form_submitted: submissionData.google_form_submitted || false,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('user_id', get().currentUserId)
+                  .eq('stage_id', stageId)
+                
+                if (error) {
+                  console.error('追加データ更新エラー:', error)
+                }
+              } catch (error) {
+                console.error('追加データ更新エラー:', error)
+              }
+            }
+            
+            return result
           },
 
           // =====================================================
