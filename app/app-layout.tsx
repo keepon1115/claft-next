@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import Header from '../components/common/Header'
-import Sidebar from '../components/common/Sidebar'
+import { Header } from '../components/common/Header'
+import { Sidebar } from '../components/common/Sidebar'
 
 // =====================================================
 // 型定義
@@ -17,6 +17,7 @@ interface LayoutState {
   userExp: number
   userLevel: number
   isLayoutReady: boolean
+  sidebarOpen: boolean
 }
 
 // =====================================================
@@ -57,13 +58,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [layoutState, setLayoutState] = useState<LayoutState>({
     userExp: 65,
     userLevel: 3,
-    isLayoutReady: false
+    isLayoutReady: false,
+    sidebarOpen: false
   })
 
   // クライアントサイドでのハイドレーション確認
   useEffect(() => {
     setLayoutState(prev => ({ ...prev, isLayoutReady: true }))
   }, [])
+
+  // サイドバーの開閉関数
+  const toggleSidebar = () => {
+    setLayoutState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))
+  }
+
+  const closeSidebar = () => {
+    setLayoutState(prev => ({ ...prev, sidebarOpen: false }))
+  }
 
   // 経験値更新関数（デモ用）
   const addExperience = (amount: number) => {
@@ -119,6 +130,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* サイドバー（ハンバーガーメニューを内包） */}
       <Sidebar 
+        isOpen={layoutState.sidebarOpen}
+        onClose={closeSidebar}
         className="z-[100]"
       />
 

@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useQuestStore } from '@/stores/questStore'
-import { useAuth } from '@/stores/authStore'
-import { X } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { X, Video, FileText, Lock, CheckCircle, AlertTriangle, ArrowRight, Info, Flame, MessageSquare } from 'lucide-react'
 
 // =====================================================
 // StageModal型定義
@@ -19,22 +20,25 @@ interface StageModalProps {
   isOpen: boolean
 }
 
+interface FeedbackData {
+  feedback_message: string | null
+  feedback_sent_at: string | null
+  feedback_sent_by: string | null
+}
+
 // =====================================================
 // StageModalコンポーネント
 // =====================================================
 
 export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
-  const [isVideoWatched, setIsVideoWatched] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showSubmitGuide, setShowSubmitGuide] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null)
+  const [loadingFeedback, setLoadingFeedback] = useState(false)
   
   const { user, isAuthenticated } = useAuth()
-  const { 
-    stageDetails, 
-    userProgress, 
-    updateStageProgress, 
-    submitStage,
-    isSyncing 
-  } = useQuestStore()
+  const { stageDetails, userProgress, completeStageWithConfirmation } = useQuestStore()
 
   // モーダル外クリック検出
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
@@ -53,7 +57,6 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
-      // モーダル開いている間はスクロール無効
       document.body.style.overflow = 'hidden'
     }
 
@@ -68,99 +71,39 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
     setMounted(true)
   }, [])
 
-  // 動画視聴状態をローカルストレージから復元
-  useEffect(() => {
-    if (stageId) {
-      const watched = localStorage.getItem(`stage_${stageId}_video_watched`) === 'true'
-      setIsVideoWatched(watched)
-    }
-  }, [stageId])
+  // フィードバックデータ取得
+  const fetchFeedback = useCallback(async () => {
+    if (!user?.id || !stageId) return
 
-  // 動画視聴ハンドラー
-  const handleVideoWatch = useCallback(() => {
-    if (!stageId || !stageDetails[stageId]?.videoUrl) return
-
-    // 動画URLを新しいタブで開く
-    window.open(stageDetails[stageId].videoUrl, '_blank')
-    
-    // ローカルストレージに視聴フラグを保存
-    localStorage.setItem(`stage_${stageId}_video_watched`, 'true')
-    setIsVideoWatched(true)
-  }, [stageId, stageDetails])
-
-  // クエスト挑戦ハンドラー
-  const handleQuestChallenge = useCallback(async () => {
-    if (!stageId) return
-
-    const stage = stageDetails[stageId]
-    if (!stage) return
-
-    // ゲストユーザーの場合の処理
-    if (!isAuthenticated) {
-      onClose()
-      setTimeout(() => {
-        const shouldLogin = confirm('クエストに挑戦するにはログインが必要です。ログインしますか？')
-        if (shouldLogin) {
-          // 認証モーダルを開く処理（既存のAuthModalコンポーネントとの連携が必要）
-          window.dispatchEvent(new CustomEvent('openAuthModal'))
-        }
-      }, 100)
-      return
-    }
-
-    // 動画視聴チェック
-    if (!isVideoWatched) {
-      alert('先に動画を視聴してください')
-      return
-    }
-
+    setLoadingFeedback(true)
     try {
-      // Googleフォームを新しいタブで開く
-      if (stage.formUrl) {
-        window.open(stage.formUrl, '_blank')
+      const supabase = createBrowserSupabaseClient()
+      const { data, error } = await supabase
+        .from('quest_progress')
+        .select('feedback_message, feedback_sent_at, feedback_sent_by')
+        .eq('user_id', user.id)
+        .eq('stage_id', stageId)
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('フィードバック取得エラー:', error)
+        return
       }
 
-      // ステータスをpending_approvalに更新
-      const result = await submitStage(stageId, {
-        google_form_submitted: true,
-        submitted_at: new Date().toISOString()
-      })
-
-      if (result.success) {
-        onClose()
-        setTimeout(() => {
-          alert('お題を提出しました！管理者の承認をお待ちください。')
-        }, 100)
-      } else {
-        alert(result.error || '進捗の保存に失敗しました。')
-      }
+      setFeedbackData(data || null)
     } catch (error) {
-      console.error('クエスト提出エラー:', error)
-      alert('クエストの提出に失敗しました。')
+      console.error('フィードバック取得エラー:', error)
+    } finally {
+      setLoadingFeedback(false)
     }
-  }, [stageId, stageDetails, isAuthenticated, isVideoWatched, onClose, submitStage])
+  }, [user?.id, stageId])
 
-  // ゲスト用動画視聴ハンドラー
-  const handleGuestVideoWatch = useCallback(() => {
-    onClose()
-    setTimeout(() => {
-      const shouldLogin = confirm('動画を視聴するにはログインが必要です。ログインしますか？')
-      if (shouldLogin) {
-        window.dispatchEvent(new CustomEvent('openAuthModal'))
-      }
-    }, 100)
-  }, [onClose])
-
-  // ゲスト用クエスト挑戦ハンドラー
-  const handleGuestQuestChallenge = useCallback(() => {
-    onClose()
-    setTimeout(() => {
-      const shouldLogin = confirm('クエストに挑戦するにはログインが必要です。ログインしますか？')
-      if (shouldLogin) {
-        window.dispatchEvent(new CustomEvent('openAuthModal'))
-      }
-    }, 100)
-  }, [onClose])
+  // ステージが完了している場合はフィードバックを取得
+  useEffect(() => {
+    if (stageId && userProgress[stageId] === 'completed') {
+      fetchFeedback()
+    }
+  }, [stageId, userProgress, fetchFeedback])
 
   // モーダルが閉じているか、ステージIDがない場合は何も表示しない
   if (!isOpen || !stageId || !mounted) {
@@ -176,138 +119,124 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   const isStage1 = stageId === 1
   const isGuest = !isAuthenticated && isStage1
 
+
+
   // ロックされているステージ（ステージ1以外）へのアクセス制御
   if (status === 'locked' && !isStage1) {
     return createPortal(
-      <div className="modal-overlay" onClick={handleBackdropClick}>
-        <div className="modal-content">
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={handleBackdropClick}>
+        <div className="bg-yellow-100 border-4 border-yellow-800 p-8 max-w-md w-full mx-4 relative rounded-lg">
           <button 
-            className="modal-close" 
+            className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
             onClick={onClose}
             aria-label="モーダルを閉じる"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
-          <h2 className="modal-title">🔒 ステージロック中</h2>
-          <p className="modal-description">
+          <div className="flex items-center justify-center mb-4">
+            <Lock className="w-12 h-12 text-yellow-800" />
+          </div>
+          <h2 className="text-2xl font-bold text-yellow-800 mb-4 text-center">ステージロック中</h2>
+          <p className="text-yellow-700 mb-6 text-center leading-relaxed">
             このステージはまだ開放されていません！<br />
             前のステージをクリアして進めましょう。
           </p>
-          <div className="modal-buttons">
-            <button className="modal-button quest" onClick={onClose}>
+          <div className="flex justify-center">
+            <button 
+              className="px-6 py-3 bg-blue-500 text-white border-2 border-blue-700 font-bold hover:bg-blue-600 transition-colors rounded"
+              onClick={onClose}
+            >
               戻る
             </button>
           </div>
         </div>
-        
-        <style jsx>{`
-          .modal-overlay {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1001;
-            align-items: center;
-            justify-content: center;
-          }
+      </div>,
+      document.body
+    )
+  }
+
+  // ステージ完了処理（確認ポップアップ付き）
+  const handleCompleteWithConfirmation = async () => {
+    const result = await completeStageWithConfirmation(stageId)
+    if (result.success) {
+      onClose()
+    } else if (!result.cancelled) {
+      // エラーが発生した場合（キャンセル以外）
+      alert(`エラー: ${result.error}`)
+    }
+  }
+
+  // Googleフォーム送信ガイドの表示
+  const handleFormClick = () => {
+    setShowSubmitGuide(true)
+  }
+
+  // フィードバック表示
+  const handleShowFeedback = () => {
+    setShowFeedback(true)
+  }
+
+  // フィードバックモーダル
+  if (showFeedback) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={handleBackdropClick}>
+        <div className="bg-white border-4 border-gray-800 p-8 max-w-lg w-full mx-4 relative rounded-lg">
+          <button 
+            className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
+            onClick={() => setShowFeedback(false)}
+            aria-label="フィードバックモーダルを閉じる"
+          >
+            <X size={16} />
+          </button>
           
-          .modal-content {
-            background: #F5F5DC;
-            border: 4px solid #8B4513;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 0 0 2px #A0522D, 8px 8px 0 0 rgba(0,0,0,0.5);
-            position: relative;
-          }
-          
-          .modal-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 32px;
-            height: 32px;
-            background: #DC143C;
-            border: 2px solid #8B0000;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-            font-weight: bold;
-            box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
-          }
-          
-          .modal-close:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 3px 3px 0 0 rgba(0,0,0,0.5);
-          }
-          
-          .modal-close:active {
-            transform: translate(1px, 1px);
-            box-shadow: 1px 1px 0 0 rgba(0,0,0,0.5);
-          }
-          
-          .modal-title {
-            font-size: 1.6rem;
-            color: #8B4513;
-            margin-bottom: 16px;
-            font-weight: bold;
-            text-align: center;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
-          }
-          
-          .modal-description {
-            color: #654321;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            text-align: center;
-          }
-          
-          .modal-buttons {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-          }
-          
-          .modal-button {
-            flex: 1;
-            padding: 12px 24px;
-            border: 3px solid;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            position: relative;
-          }
-          
-          .modal-button.quest {
-            background: #2196F3;
-            border-color: #1976D2;
-            color: white;
-            box-shadow: 0 0 0 1px #42A5F5, 4px 4px 0 0 rgba(0,0,0,0.3);
-          }
-          
-          .modal-button.quest:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 0 0 0 1px #42A5F5, 6px 6px 0 0 rgba(0,0,0,0.3);
-          }
-          
-          .modal-button:active {
-            transform: translate(1px, 1px);
-            box-shadow: 0 0 0 1px currentColor, 2px 2px 0 0 rgba(0,0,0,0.3);
-          }
-          
-          @media (max-width: 767px) {
-            .modal-buttons {
-              flex-direction: column;
-            }
-          }
-        `}</style>
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <MessageSquare className="w-8 h-8 text-blue-600" />
+              <h2 className="text-2xl font-bold text-gray-800">
+                ステージ{stageId} フィードバック
+              </h2>
+            </div>
+          </div>
+
+          {loadingFeedback ? (
+            <div className="text-center py-8">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">フィードバックを読み込み中...</p>
+            </div>
+          ) : feedbackData?.feedback_message ? (
+            <div>
+              <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-lg mb-4">
+                <h3 className="text-lg font-bold text-blue-800 mb-3">📝 管理者からのメッセージ</h3>
+                <p className="text-blue-700 whitespace-pre-wrap leading-relaxed">
+                  {feedbackData.feedback_message}
+                </p>
+              </div>
+              {feedbackData.feedback_sent_at && (
+                <p className="text-sm text-gray-500 text-center">
+                  送信日時: {new Date(feedbackData.feedback_sent_at).toLocaleString('ja-JP')}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">📭</div>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">フィードバック待ち</h3>
+              <p className="text-gray-600">
+                管理者からのフィードバックはまだ届いていません。<br />
+                しばらくお待ちください。
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => setShowFeedback(false)}
+              className="px-6 py-3 bg-gray-500 text-white border-2 border-gray-700 font-bold hover:bg-gray-600 transition-colors rounded-lg"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
       </div>,
       document.body
     )
@@ -315,218 +244,161 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
 
   // メインモーダル
   return createPortal(
-    <div className="modal-overlay" onClick={handleBackdropClick}>
-      <div className="modal-content">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={handleBackdropClick}>
+      <div className="bg-white border-4 border-gray-800 p-8 max-w-2xl w-full mx-4 relative rounded-lg max-h-[90vh] overflow-y-auto">
         <button 
-          className="modal-close" 
+          className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
           onClick={onClose}
           aria-label="モーダルを閉じる"
         >
-          <X size={20} />
+          <X size={16} />
         </button>
         
-        <h2 className="modal-title">
-          ステージ {stageId}: {stage.title}
-        </h2>
-        
-        <p className="modal-description">
-          {stage.description}
-        </p>
-        
-        <div className="modal-message">
-          {stage.message}
+        {/* ステージヘッダー */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-black text-gray-800 mb-2">
+            ステージ {stageId}: {stage.title}
+          </h2>
+          <p className="text-lg text-gray-600">
+            {stage.description}
+          </p>
         </div>
-        
-                 <div className="modal-buttons">
-           {/* 動画視聴ボタン - current状態またはゲストの場合のみ表示 */}
-           {(status === 'current' || isGuest) && (
-             <button
-               className="modal-button video"
-               onClick={isGuest ? handleGuestVideoWatch : handleVideoWatch}
-               disabled={isVideoWatched && !isGuest}
-             >
-               {isVideoWatched && !isGuest ? '✅ 動画視聴済み' : '🎬 動画を見る'}
-             </button>
-           )}
-           
-           {/* クエスト挑戦ボタン - current状態の場合 */}
-           {status === 'current' && !isGuest && (
-             <button
-               className="modal-button quest"
-               onClick={handleQuestChallenge}
-               disabled={isSyncing}
-             >
-               {isSyncing ? '⏳ 処理中...' : '⚔️ クエストに挑む'}
-             </button>
-           )}
-           
-           {/* ゲスト用クエストボタン */}
-           {isGuest && (
-             <button
-               className="modal-button quest"
-               onClick={handleGuestQuestChallenge}
-             >
-               ⚔️ クエストに挑む
-             </button>
-           )}
-           
-           {/* 承認待ち状態 - 動画ボタンは非表示、クエストボタンのみ表示 */}
-           {status === 'pending_approval' && (
-             <button
-               className="modal-button quest pending"
-               disabled
-             >
-               ⏳ 承認待ち
-             </button>
-           )}
-           
-           {/* 完了状態 - 両方のボタンを非表示（条件で制御済み） */}
-         </div>
+
+        {/* ステージメッセージ */}
+        <div className="bg-yellow-50 border-2 border-yellow-200 p-6 mb-8 rounded-lg">
+          <p className="text-xl text-yellow-800 font-medium text-center italic">
+            『{stage.message}』
+          </p>
+        </div>
+
+        {/* ステータスバッジ */}
+        <div className="flex justify-center mb-8">
+          {status === 'completed' && (
+            <div className="flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
+              <CheckCircle size={20} />
+              <span className="font-bold">クリア済み！</span>
+            </div>
+          )}
+          {status === 'pending_approval' && (
+            <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full">
+              <AlertTriangle size={20} />
+              <span className="font-bold">承認待ち</span>
+            </div>
+          )}
+        </div>
+
+        {/* クエスト完了フローガイド（挑戦中のみ） */}
+        {status === 'current' && (
+          <div className="bg-blue-50 border-2 border-blue-200 p-6 mb-8 rounded-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <Info className="text-blue-600" size={20} />
+              <h3 className="text-lg font-bold text-blue-800">📋 クエスト完了の流れ</h3>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                <span className="text-blue-700">まず「動画を見る」を押して学習しましょう</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                <span className="text-blue-700">「クエストに挑む」でGoogleフォームを送信</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                <span className="text-blue-700">フォーム送信後、「クエスト完了を報告」を押す</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">✓</div>
+                <span className="text-green-700 font-medium">即座に次のステージに進めます！</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 提出ガイド（フォームクリック後に表示） */}
+        {showSubmitGuide && status === 'current' && (
+          <div className="bg-green-50 border-2 border-green-200 p-6 mb-8 rounded-lg animate-pulse">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle className="text-green-600" size={20} />
+              <h3 className="text-lg font-bold text-green-800">✅ 次のステップ</h3>
+            </div>
+            <p className="text-green-700 mb-4">
+              Googleフォームを送信したら、このページに戻って<br />
+              <strong>「クエスト完了を報告」ボタン</strong>を押してください！
+            </p>
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <ArrowRight size={16} />
+              <span>報告後は即座に次のステージに進むことができます</span>
+            </div>
+          </div>
+        )}
+
+        {/* アクションボタン */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {stage.videoUrl && (
+            <a
+              href={stage.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-blue-500 text-white border-2 border-blue-700 font-bold hover:bg-blue-600 transition-colors rounded-lg"
+            >
+              <Video size={24} />
+              動画を見る
+            </a>
+          )}
+          
+          {stage.formUrl && (
+            <a
+              href={stage.formUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleFormClick}
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-green-500 text-black border-2 border-green-700 font-bold hover:bg-green-600 transition-colors rounded-lg"
+            >
+             <Flame size={24} />
+              クエストに挑む
+            </a>
+          )}
+
+          {/* フィードバック確認ボタン（完了済みの場合のみ） */}
+          {status === 'completed' && (
+            <button
+              onClick={handleShowFeedback}
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-purple-500 text-white border-2 border-purple-700 font-bold hover:bg-purple-600 transition-colors rounded-lg"
+            >
+              <MessageSquare size={24} />
+              フィードバック確認
+            </button>
+          )}
+        </div>
+
+        {/* 完了報告ボタン（挑戦中のみ） */}
+        {status === 'current' && (
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={handleCompleteWithConfirmation}
+              className="px-8 py-3 bg-amber-500 text-white border-2 border-amber-700 font-bold hover:bg-amber-600 transition-colors rounded-lg flex items-center gap-2"
+            >
+              <CheckCircle size={20} />
+              クエスト完了を報告
+            </button>
+          </div>
+        )}
+
+        {/* 重要な注意事項（挑戦中のみ） */}
+        {status === 'current' && (
+          <div className="p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="text-orange-600" size={18} />
+              <span className="font-bold text-orange-800">重要</span>
+            </div>
+            <p className="text-orange-700 text-sm">
+              Googleフォームの送信だけでは次のステージに進めません。<br />
+              必ず「クエスト完了を報告」ボタンを押して完了してください。
+            </p>
+          </div>
+        )}
       </div>
-      
-      <style jsx>{`
-        .modal-overlay {
-          display: flex;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.8);
-          z-index: 1001;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .modal-content {
-          background: #F5F5DC;
-          border: 4px solid #8B4513;
-          padding: 32px;
-          max-width: 500px;
-          width: 90%;
-          box-shadow: 0 0 0 2px #A0522D, 8px 8px 0 0 rgba(0,0,0,0.5);
-          position: relative;
-        }
-        
-        .modal-close {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          width: 32px;
-          height: 32px;
-          background: #DC143C;
-          border: 2px solid #8B0000;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-          color: white;
-          font-weight: bold;
-          box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
-        }
-        
-        .modal-close:hover {
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 0 rgba(0,0,0,0.5);
-        }
-        
-        .modal-close:active {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 0 rgba(0,0,0,0.5);
-        }
-        
-        .modal-title {
-          font-size: 1.6rem;
-          color: #8B4513;
-          margin-bottom: 16px;
-          font-weight: bold;
-          text-align: center;
-          text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
-        }
-        
-        .modal-description {
-          color: #654321;
-          margin-bottom: 20px;
-          line-height: 1.6;
-          text-align: center;
-        }
-        
-        .modal-message {
-          background: #FFF9C4;
-          border: 2px solid #F9A825;
-          padding: 16px;
-          margin-bottom: 24px;
-          text-align: center;
-          font-style: italic;
-          color: #5D4037;
-          box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
-        }
-        
-        .modal-buttons {
-          display: flex;
-          gap: 16px;
-          justify-content: center;
-        }
-        
-        .modal-button {
-          flex: 1;
-          padding: 12px 24px;
-          border: 3px solid;
-          font-size: 1rem;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.1s ease;
-          position: relative;
-        }
-        
-        .modal-button:disabled {
-          cursor: not-allowed;
-          opacity: 0.7;
-        }
-        
-        .modal-button.video {
-          background: #4CAF50;
-          border-color: #388E3C;
-          color: white;
-          box-shadow: 0 0 0 1px #66BB6A, 4px 4px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        .modal-button.video:hover:not(:disabled) {
-          transform: translate(-2px, -2px);
-          box-shadow: 0 0 0 1px #66BB6A, 6px 6px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        .modal-button.quest {
-          background: #2196F3;
-          border-color: #1976D2;
-          color: white;
-          box-shadow: 0 0 0 1px #42A5F5, 4px 4px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        .modal-button.quest:hover:not(:disabled) {
-          transform: translate(-2px, -2px);
-          box-shadow: 0 0 0 1px #42A5F5, 6px 6px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        .modal-button.quest.pending {
-          background: #ff9800;
-          border-color: #f57c00;
-          color: white;
-          box-shadow: 0 0 0 1px #ffb74d, 4px 4px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        .modal-button:active:not(:disabled) {
-          transform: translate(1px, 1px);
-          box-shadow: 0 0 0 1px currentColor, 2px 2px 0 0 rgba(0,0,0,0.3);
-        }
-        
-        @media (max-width: 767px) {
-          .modal-buttons {
-            flex-direction: column;
-          }
-        }
-      `}</style>
     </div>,
     document.body
   )

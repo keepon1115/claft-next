@@ -7,6 +7,7 @@ import type { User as AuthUser } from '@supabase/supabase-js'
 import type { UserProfile, UserStats } from '@/types'
 import AnimationProvider from '@/components/common/AnimationProvider'
 import { PerformanceProvider } from '@/components/common/PerformanceMonitor'
+import { NotificationProvider } from '@/components/common/NotificationSystem'
 
 // Vercel Analytics
 import { Analytics } from '@vercel/analytics/react'
@@ -347,32 +348,10 @@ class AuthErrorBoundary extends React.Component<AuthErrorBoundaryProps, AuthErro
  * ```
  */
 export function AppProviders({ children }: AppProvidersProps) {
-  // ページ読み込み完了の通知
-  useEffect(() => {
-    // パフォーマンス測定のため、ページ読み込み完了を通知
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('pageLoaded'))
-    }
-  }, [])
-
   return (
-    <AuthErrorBoundary>
-      <AuthProvider>
-        <PerformanceProvider>
-          <AnimationProvider>
-            {children}
-            
-            {/* Vercel Analytics（本番環境のみ） */}
-            {process.env.NODE_ENV === 'production' && (
-              <>
-                <Analytics />
-                <SpeedInsights />
-              </>
-            )}
-          </AnimationProvider>
-        </PerformanceProvider>
-      </AuthProvider>
-    </AuthErrorBoundary>
+    <NotificationProvider>
+      {children}
+    </NotificationProvider>
   )
 }
 

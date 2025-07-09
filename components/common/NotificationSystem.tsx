@@ -268,37 +268,24 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
 };
 
 // =====================================================
-// 通知システムコンポーネント
+// 通知システムレンダラー
 // =====================================================
 
-const NotificationSystem: React.FC<NotificationSystemProps> = ({
+interface NotificationSystemRendererProps {
+  notifications: Notification[];
+  removeNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  className?: string;
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center';
+}
+
+const NotificationSystemRenderer: React.FC<NotificationSystemRendererProps> = ({
+  notifications,
+  removeNotification,
+  clearAllNotifications,
   className = '',
-  position = 'top-right',
-  maxNotifications = 5
+  position = 'top-right'
 }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  const addNotification = useCallback((notificationData: Omit<Notification, 'id'>) => {
-    const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newNotification: Notification = {
-      ...notificationData,
-      id
-    };
-
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev];
-      return updated.slice(0, maxNotifications);
-    });
-  }, [maxNotifications]);
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-  }, []);
-
-  const clearAllNotifications = useCallback(() => {
-    setNotifications([]);
-  }, []);
-
   // ポジション設定
   const getPositionClasses = () => {
     switch (position) {
@@ -318,12 +305,6 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
   };
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      addNotification,
-      removeNotification,
-      clearAllNotifications
-    }}>
       <div className={`fixed z-[1001] ${getPositionClasses()} ${className}`}>
         <div className="flex flex-col gap-3">
           <AnimatePresence mode="popLayout">
@@ -354,7 +335,28 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
           </motion.button>
         )}
       </div>
-    </NotificationContext.Provider>
+  );
+};
+
+// =====================================================
+// 通知システムコンポーネント（後方互換性のため）
+// =====================================================
+
+const NotificationSystem: React.FC<NotificationSystemProps> = ({
+  className = '',
+  position = 'top-right',
+  maxNotifications = 5
+}) => {
+  const { notifications, removeNotification, clearAllNotifications } = useNotifications();
+
+  return (
+    <NotificationSystemRenderer
+      notifications={notifications}
+      removeNotification={removeNotification}
+      clearAllNotifications={clearAllNotifications}
+      className={className}
+      position={position}
+    />
   );
 };
 
@@ -363,11 +365,39 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
 // =====================================================
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const addNotification = useCallback((notificationData: Omit<Notification, 'id'>) => {
+    const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newNotification: Notification = {
+      ...notificationData,
+      id
+    };
+
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev];
+      return updated.slice(0, 5); // 最大5件
+    });
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  }, []);
+
+  const clearAllNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
   return (
-    <>
+    <NotificationContext.Provider value={{
+      notifications,
+      addNotification,
+      removeNotification,
+      clearAllNotifications
+    }}>
       {children}
-      <NotificationSystem />
-    </>
+      <NotificationSystemRenderer notifications={notifications} removeNotification={removeNotification} clearAllNotifications={clearAllNotifications} />
+    </NotificationContext.Provider>
   );
 };
 

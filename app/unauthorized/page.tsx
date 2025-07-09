@@ -4,15 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { AlertTriangle, Home, ArrowLeft, Shield } from 'lucide-react'
-import { Metadata } from 'next'
 import Link from 'next/link'
-import { pageMetadata } from '@/lib/utils/seo'
-
-// ==========================================
-// メタデータ設定（noindex）
-// ==========================================
-
-export const metadata: Metadata = pageMetadata.unauthorized()
 
 // ==========================================
 // 未承認ページコンポーネント
@@ -47,143 +39,68 @@ export default function UnauthorizedPage() {
   }
 
   return (
-    <div className="unauthorized-page">
-      <div className="container">
-        <div className="content">
-          <div className="icon">🚫</div>
-          <h1 className="title">アクセス拒否</h1>
-          <p className="description">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-5">
+      <div className="max-w-2xl w-full">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 text-center border border-white/20 shadow-2xl">
+          {/* アイコン */}
+          <div className="text-6xl mb-6">🚫</div>
+          
+          {/* タイトル */}
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
+            アクセス拒否
+          </h1>
+          
+          {/* 説明文 */}
+          <p className="text-xl text-white/90 mb-4 leading-relaxed">
             申し訳ございませんが、このページにアクセスする権限がありません。
           </p>
-          <p className="sub-description">
+          <p className="text-base text-white/80 mb-8 leading-relaxed">
             ログインするか、適切な権限を持つアカウントでアクセスしてください。
           </p>
           
-          <div className="actions">
-            <Link href="/" className="button primary">
+          {/* カウントダウン表示 */}
+          <div className="mb-8 p-4 bg-white/10 rounded-xl border border-white/20">
+            <p className="text-white/80 text-sm mb-2">自動リダイレクト</p>
+            <p className="text-2xl font-bold text-white">
+              {countdown > 0 ? `${countdown}秒後にホームページへ` : 'リダイレクト中...'}
+            </p>
+          </div>
+          
+          {/* アクションボタン */}
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <Link 
+              href="/" 
+              className="group bg-white text-blue-600 px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <Home className="w-5 h-5" />
               ホームに戻る
             </Link>
             <button 
               onClick={handleGoBack}
-              className="button secondary"
+              className="group bg-transparent text-white px-8 py-4 rounded-full font-semibold border-2 border-white/50 hover:bg-white/10 hover:border-white transition-all duration-300 flex items-center justify-center gap-2"
             >
+              <ArrowLeft className="w-5 h-5" />
               前のページに戻る
             </button>
           </div>
+          
+          {/* ユーザー情報（デバッグ用） */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-8 p-4 bg-black/20 rounded-xl text-left">
+              <p className="text-white/60 text-xs mb-2">Debug Info:</p>
+              <p className="text-white/80 text-sm">
+                認証状態: {isAuthenticated ? '✅ ログイン済み' : '❌ 未ログイン'}
+              </p>
+              <p className="text-white/80 text-sm">
+                管理者権限: {isAdmin ? '✅ 管理者' : '❌ 一般ユーザー'}
+              </p>
+              <p className="text-white/80 text-sm">
+                ユーザー名: {displayName || 'なし'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
-
-      <style jsx>{`
-        .unauthorized-page {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-
-        .container {
-          max-width: 600px;
-          width: 100%;
-        }
-
-        .content {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border-radius: 20px;
-          padding: 3rem;
-          text-align: center;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .icon {
-          font-size: 4rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .title {
-          font-size: 2.5rem;
-          font-weight: 900;
-          color: white;
-          margin-bottom: 1rem;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .description {
-          font-size: 1.25rem;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 1rem;
-          line-height: 1.6;
-        }
-
-        .sub-description {
-          font-size: 1rem;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 2.5rem;
-          line-height: 1.6;
-        }
-
-        .actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .button {
-          padding: 12px 24px;
-          border-radius: 25px;
-          font-weight: 600;
-          text-decoration: none;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 1rem;
-        }
-
-        .button.primary {
-          background: white;
-          color: #667eea;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .button.primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .button.secondary {
-          background: transparent;
-          color: white;
-          border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-
-        .button.secondary:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: white;
-        }
-
-        @media (max-width: 768px) {
-          .content {
-            padding: 2rem;
-          }
-
-          .title {
-            font-size: 2rem;
-          }
-
-          .actions {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .button {
-            width: 100%;
-            max-width: 250px;
-          }
-        }
-      `}</style>
     </div>
   )
 } 

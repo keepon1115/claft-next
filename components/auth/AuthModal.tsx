@@ -142,16 +142,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     clearError()
 
     try {
+      console.log('🔧 ログイン開始:', { email: data.email, timestamp: new Date().toISOString() })
+      
       const result = await login(data.email, data.password)
       
+      console.log('🔧 ログイン結果:', { success: result.success, error: result.error })
+      
       if (result.success) {
+        console.log('✅ ログイン成功')
         onClose()
         if (redirectTo && redirectTo !== '/') {
           router.push(redirectTo)
         }
+      } else {
+        console.error('❌ ログイン失敗:', result.error)
       }
     } catch (err) {
-      console.error('Login error:', err)
+      console.error('❌ ログイン例外:', err)
     } finally {
       setIsSubmitting(false)
     }

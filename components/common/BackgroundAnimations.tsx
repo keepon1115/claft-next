@@ -14,20 +14,20 @@ interface BackgroundAnimationsProps {
 // メインコンポーネント
 // =====================================================
 
-const BackgroundAnimations: React.FC<BackgroundAnimationsProps> = ({ className = '' }) => {
+export default function BackgroundAnimations({ className = '' }: BackgroundAnimationsProps) {
   return (
     <div className={`background-wrapper ${className}`}>
-      {/* 空レイヤー */}
+      {/* 空の層 */}
       <div className="parallax-layer sky-layer"></div>
       
-      {/* 雲レイヤー */}
+      {/* 雲の層 */}
       <div className="parallax-layer clouds">
         <div className="cloud cloud1"></div>
         <div className="cloud cloud2"></div>
         <div className="cloud cloud3"></div>
       </div>
       
-      {/* 都市シルエット */}
+      {/* 街のシルエット */}
       <div className="city-silhouette"></div>
       
       {/* スタイル定義（既存のCSSを完全再現） */}
@@ -274,6 +274,4 @@ const BackgroundAnimations: React.FC<BackgroundAnimationsProps> = ({ className =
       `}</style>
     </div>
   );
-};
-
-export default BackgroundAnimations; 
+} 

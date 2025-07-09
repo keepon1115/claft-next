@@ -65,46 +65,58 @@ export type Database = {
       }
       quest_progress: {
         Row: {
-          approved_at: string | null
-          approved_by: string | null
-          created_at: string | null
-          google_form_submitted: boolean | null
           id: string
-          rejected_at: string | null
-          rejected_by: string | null
+          user_id: string
           stage_id: number
           status: string
           submitted_at: string | null
-          updated_at: string | null
-          user_id: string
+          approved_at: string | null
+          rejected_at: string | null
+          approved_by: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          google_form_submitted: boolean | null
+          created_at: string
+          updated_at: string
+          feedback_message: string | null
+          feedback_sent_at: string | null
+          feedback_sent_by: string | null
         }
         Insert: {
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          google_form_submitted?: boolean | null
           id?: string
-          rejected_at?: string | null
-          rejected_by?: string | null
-          stage_id: number
-          status: string
-          submitted_at?: string | null
-          updated_at?: string | null
           user_id: string
+          stage_id: number
+          status?: string
+          submitted_at?: string | null
+          approved_at?: string | null
+          rejected_at?: string | null
+          approved_by?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          google_form_submitted?: boolean | null
+          created_at?: string
+          updated_at?: string
+          feedback_message?: string | null
+          feedback_sent_at?: string | null
+          feedback_sent_by?: string | null
         }
         Update: {
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          google_form_submitted?: boolean | null
           id?: string
-          rejected_at?: string | null
-          rejected_by?: string | null
+          user_id?: string
           stage_id?: number
           status?: string
           submitted_at?: string | null
-          updated_at?: string | null
-          user_id?: string
+          approved_at?: string | null
+          rejected_at?: string | null
+          approved_by?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          google_form_submitted?: boolean | null
+          created_at?: string
+          updated_at?: string
+          feedback_message?: string | null
+          feedback_sent_at?: string | null
+          feedback_sent_by?: string | null
         }
         Relationships: []
       }
@@ -164,6 +176,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data: Record<string, any>
+          is_read: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data?: Record<string, any>
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          data?: Record<string, any>
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
     Views: {

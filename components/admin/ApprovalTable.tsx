@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, memo, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { Check, X, Calendar, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, X, Calendar, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { approveQuest, rejectQuest, bulkApprove } from '@/app/admin/actions'
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates'
 
@@ -46,7 +46,93 @@ interface PaginationInfo {
 }
 
 // =====================================================
-// ApprovalTableコンポーネント
+// メモ化されたテーブル行コンポーネント
+// =====================================================
+
+const TableRow = memo(({ 
+  approval, 
+  isSelected, 
+  onSelect, 
+  onApprove, 
+  onReject,
+  isOptimistic
+}: { 
+  approval: PendingApproval
+  isSelected: boolean
+  onSelect: (id: string) => void
+  onApprove: (id: string) => void
+  onReject: (id: string) => void
+  isOptimistic: boolean
+}) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '日時不明'
+    return new Date(dateString).toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <tr className={`border-b hover:bg-gray-50 ${isOptimistic ? 'opacity-50' : ''}`}>
+      <td className="px-4 py-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(approval.id)}
+          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+        />
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+            {approval.users_profile?.nickname?.[0] || approval.users_profile?.email?.[0] || '?'}
+          </div>
+          <div>
+            <div className="font-medium">{approval.users_profile?.nickname || '名前未設定'}</div>
+            <div className="text-sm text-gray-500">{approval.users_profile?.email}</div>
+          </div>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          ステージ {approval.stage_id}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1 text-gray-500">
+          <Calendar size={14} />
+          <span className="text-sm">{formatDate(approval.submitted_at)}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2 justify-end">
+          <button
+            onClick={() => onApprove(approval.id)}
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <Check size={14} className="mr-1" />
+            承認
+          </button>
+          <button
+            onClick={() => onReject(approval.id)}
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <X size={14} className="mr-1" />
+            却下
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+})
+
+TableRow.displayName = 'TableRow'
+
+// =====================================================
+// メインコンポーネント
 // =====================================================
 
 export default function ApprovalTable({
@@ -55,6 +141,16 @@ export default function ApprovalTable({
   onApprovalChange,
   onNotification
 }: ApprovalTableProps) {
+  // onNotificationの安定した参照を保持
+  const onNotificationRef = useRef(onNotification)
+  const onApprovalChangeRef = useRef(onApprovalChange)
+  
+  // refを更新
+  useEffect(() => {
+    onNotificationRef.current = onNotification
+    onApprovalChangeRef.current = onApprovalChange
+  }, [onNotification, onApprovalChange])
+
   // ステート管理
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
   const [loading, setLoading] = useState(true)
@@ -74,65 +170,22 @@ export default function ApprovalTable({
   // Supabaseクライアント
   const supabase = createBrowserSupabaseClient()
 
-  // ヘルパー関数を先に定義
-  const showNotification = (type: 'success' | 'error' | 'info', title: string, message?: string) => {
-    if (onNotification) {
-      onNotification(type, title, message)
+  // 通知ヘルパー
+  const showNotification = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
+    if (onNotificationRef.current) {
+      onNotificationRef.current(type, title, message)
     } else {
       console.log(`[${type}] ${title}: ${message}`)
     }
-  }
-  
-  // Realtimeフックの統合
-  const {
-    isConnected: realtimeConnected,
-    notifications: realtimeNotifications,
-    unreadCount: realtimeUnreadCount,
-    markNotificationAsRead: markRealtimeNotificationAsRead,
-    clearNotifications: clearRealtimeNotifications,
-    reconnect: reconnectRealtime
-  } = useRealtimeUpdates({
-    onNotification: showNotification,
-    onDataUpdate: () => {
-      // データが更新された時にテーブルを再読み込み
-      loadPendingApprovals()
-    },
-    currentAdminId
-  })
-
-
-
-  // =====================================================
-  // 初期化とデータ取得
-  // =====================================================
-
-  useEffect(() => {
-    initializeComponent()
   }, [])
 
-  useEffect(() => {
-    loadPendingApprovals()
-  }, [filters, pagination.currentPage, pageSize])
-
-  const initializeComponent = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.id) {
-        setCurrentAdminId(session.user.id)
-      }
-      await loadPendingApprovals()
-    } catch (error) {
-      console.error('初期化エラー:', error)
-      setError('初期化に失敗しました')
-    }
-  }
-
+  // データ読み込み
   const loadPendingApprovals = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // 承認待ちクエストを取得
+      // まず quest_progress だけを取得
       let query = supabase
         .from('quest_progress')
         .select(`
@@ -146,6 +199,7 @@ export default function ApprovalTable({
         .eq('status', 'pending_approval')
         .order('submitted_at', { ascending: false })
 
+      // フィルター適用
       if (filters?.stageFilter) {
         query = query.eq('stage_id', filters.stageFilter)
       }
@@ -160,987 +214,377 @@ export default function ApprovalTable({
           .lt('submitted_at', nextDay.toISOString())
       }
 
+      // ページネーション
       const startIndex = (pagination.currentPage - 1) * pageSize
       query = query.range(startIndex, startIndex + pageSize - 1)
 
-      const { data: questData, error: questError, count } = await query
+      const { data: questData, error: fetchError, count } = await query
 
-      if (questError) throw questError
+      if (fetchError) throw fetchError
 
-      if (!questData || questData.length === 0) {
-        setPendingApprovals([])
-        setPagination(prev => ({
-          ...prev,
-          totalItems: 0,
-          totalPages: 0,
-          itemsPerPage: pageSize
-        }))
-        return
+      // 別途 users_profile を取得
+      const userIds = questData?.map(q => q.user_id) || []
+      let userProfiles: any[] = []
+      
+      if (userIds.length > 0) {
+        const { data: profileData } = await supabase
+          .from('users_profile')
+          .select('id, nickname, email')
+          .in('id', userIds)
+        
+        userProfiles = profileData || []
       }
-
-      // ユーザー情報を別途取得
-      const userIds = [...new Set(questData.map(item => item.user_id))]
-      const { data: usersData, error: usersError } = await supabase
-        .from('users_profile')
-        .select('id, nickname, email')
-        .in('id', userIds)
-
-      if (usersError) {
-        console.warn('ユーザー情報取得エラー:', usersError)
-      }
-
-      // ユーザー情報をマップ化
-      const usersMap = (usersData || []).reduce((acc, user) => {
-        acc[user.id] = user
-        return acc
-      }, {} as Record<string, { id: string; nickname: string | null; email: string }>)
 
       // データを結合
-      const combinedData = questData.map(quest => ({
+      const combinedData = questData?.map(quest => ({
         ...quest,
-        users_profile: usersMap[quest.user_id] || null
-      }))
+        users_profile: userProfiles.find(profile => profile.id === quest.user_id) || {
+          nickname: null,
+          email: 'unknown@example.com'
+        }
+      })) || []
 
-      // ユーザー検索のフィルタリング
+      // フィルター適用（ユーザー検索）
       let filteredData = combinedData
       if (filters?.userSearch) {
         const searchTerm = filters.userSearch.toLowerCase()
-        filteredData = combinedData.filter(item => {
-          const userEmail = item.users_profile?.email?.toLowerCase() || ''
-          const userName = item.users_profile?.nickname?.toLowerCase() || ''
-          return userEmail.includes(searchTerm) || userName.includes(searchTerm)
-        })
+        filteredData = combinedData.filter(item => 
+          item.users_profile?.nickname?.toLowerCase().includes(searchTerm) ||
+          item.users_profile?.email?.toLowerCase().includes(searchTerm)
+        )
       }
 
-      setPendingApprovals(filteredData)
-      
-      const totalItems = count || 0
-      const totalPages = Math.ceil(totalItems / pageSize)
-      
+      setPendingApprovals(filteredData as PendingApproval[])
       setPagination(prev => ({
         ...prev,
-        totalItems,
-        totalPages,
-        itemsPerPage: pageSize
+        totalItems: count || 0,
+        totalPages: Math.ceil((count || 0) / pageSize)
       }))
 
-    } catch (error: unknown) {
-      console.error('承認待ちデータ取得エラー:', error)
+    } catch (error) {
+      console.error('データ取得エラー:', error)
       setError('データの取得に失敗しました')
-      const errorMessage = error instanceof Error ? error.message : '承認待ちクエストの取得に失敗しました'
-      showNotification('error', 'データ取得エラー', errorMessage)
+      setPendingApprovals([])
     } finally {
       setLoading(false)
     }
-  }, [supabase, filters, pagination.currentPage, pageSize])
+  }, [supabase, filters?.stageFilter, filters?.dateFilter, filters?.userSearch, pagination.currentPage, pageSize])
 
-  // =====================================================
-  // 選択管理
-  // =====================================================
+  // loadPendingApprovalsの安定した参照を保持
+  const loadPendingApprovalsRef = useRef(loadPendingApprovals)
+  
+  // refを更新
+  useEffect(() => {
+    loadPendingApprovalsRef.current = loadPendingApprovals
+  }, [loadPendingApprovals])
 
-  const toggleSelection = useCallback((userId: string, stageId: number) => {
-    const key = `${userId}-${stageId}`
-    setSelectedItems(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(key)) {
-        newSet.delete(key)
-      } else {
-        newSet.add(key)
+  // 初期化（依存配列を最小限に）
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user?.id) {
+          setCurrentAdminId(session.user.id)
+        }
+      } catch (error) {
+        console.error('初期化エラー:', error)
+        setError('初期化に失敗しました')
       }
-      return newSet
-    })
-  }, [])
-
-  const toggleSelectAll = useCallback((checked: boolean) => {
-    if (checked) {
-      const allKeys = pendingApprovals.map(item => `${item.user_id}-${item.stage_id}`)
-      setSelectedItems(new Set(allKeys))
-    } else {
-      setSelectedItems(new Set())
     }
-  }, [pendingApprovals])
 
-  const clearSelection = useCallback(() => {
-    setSelectedItems(new Set())
-  }, [])
+    initialize()
+  }, [supabase])
 
-  // =====================================================
-  // ヘルパー関数
-  // =====================================================
+  // データ読み込み専用のuseEffect（無限ループを防ぐ）
+  useEffect(() => {
+    loadPendingApprovalsRef.current?.()
+  }, [filters?.stageFilter, filters?.dateFilter, filters?.userSearch, pagination.currentPage, pageSize])
 
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      setPagination(prev => ({ ...prev, currentPage: page }))
-    }
-  }
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '不明'
-    return new Date(dateString).toLocaleString('ja-JP')
-  }
-
-  const getUserDisplayName = (userProfile: PendingApproval['users_profile']) => {
-    if (!userProfile) return 'Unknown'
-    return userProfile.nickname || userProfile.email?.split('@')[0] || 'Unknown'
-  }
-
-  const getUserAvatar = (userProfile: PendingApproval['users_profile']) => {
-    const name = getUserDisplayName(userProfile)
-    return name.charAt(0).toUpperCase()
-  }
-
-  // =====================================================
-  // 承認/却下処理
-  // =====================================================
-
-  const handleApproveQuest = useCallback(async (userId: string, stageId: number) => {
-    let userName = 'Unknown'
+  // 承認処理
+  const handleApprove = async (id: string) => {
     try {
-      const { data: user } = await supabase
-        .from('users_profile')
-        .select('nickname, email')
-        .eq('id', userId)
-        .single()
-      
-      userName = user?.nickname || user?.email?.split('@')[0] || 'Unknown'
-    } catch (error) {
-      console.warn('ユーザー情報取得失敗:', error)
-    }
+      const approval = pendingApprovals.find(a => a.id === id)
+      if (!approval) return
 
-    const nextStageMessage = stageId < 6 ? 
-      `次のステージ（ステージ${stageId + 1}）が自動的に解放されます` : 
-      '全ステージ完了となります！🎉'
-    
-    const confirmMessage = `ユーザー: ${userName}\nステージ${stageId}のクエストを承認しますか？\n\n承認すると：\n・このステージが完了状態になります\n・${nextStageMessage}\n・ユーザーの統計情報が更新されます`
-    
-    if (!confirm(confirmMessage)) {
-      return
-    }
+      setOptimisticUpdates(prev => new Set([...prev, id]))
 
-    // 楽観的更新: UIを即座に更新
-    const optimisticKey = `${userId}-${stageId}`
-    setOptimisticUpdates(prev => new Set(prev).add(optimisticKey))
-    setPendingApprovals(prev => prev.filter(item => 
-      !(item.user_id === userId && item.stage_id === stageId)
-    ))
-
-    try {
-      showNotification('info', '処理中...', 'クエストを承認しています')
-      
-      const result = await approveQuest(userId, stageId)
+      const result = await approveQuest(approval.user_id, approval.stage_id)
       
       if (result.success) {
-        const successMessage = result.nextStageUnlocked ? 
-          `ステージ${stageId + 1}が解放されました！` : 
-          '🎉 全ステージ完了おめでとうございます！'
-        
-        showNotification('success', '承認完了', `${result.message} ${successMessage}`)
-        onApprovalChange?.()
+        showNotification('success', 'クエストを承認しました')
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
-
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('承認エラー:', error)
-      const errorMessage = error instanceof Error ? error.message : '承認処理中にエラーが発生しました'
-      showNotification('error', '承認失敗', errorMessage)
-      
-      // エラー時は楽観的更新を取り消し
-      await loadPendingApprovals()
+      showNotification('error', '承認に失敗しました')
     } finally {
-      // 楽観的更新の清理（遅延実行）
-      setTimeout(() => {
         setOptimisticUpdates(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(optimisticKey)
-          return newSet
-        })
-      }, 2000)
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     }
-  }, [supabase, loadPendingApprovals, onApprovalChange])
+  }
 
-  const handleRejectQuest = useCallback(async (userId: string, stageId: number) => {
-    let userName = 'Unknown'
+  // 却下処理
+  const handleReject = async (id: string) => {
     try {
-      const { data: user } = await supabase
-        .from('users_profile')
-        .select('nickname, email')
-        .eq('id', userId)
-        .single()
-      
-      userName = user?.nickname || user?.email?.split('@')[0] || 'Unknown'
-    } catch (error) {
-      console.warn('ユーザー情報取得失敗:', error)
-    }
+      const approval = pendingApprovals.find(a => a.id === id)
+      if (!approval) return
 
-    const confirmMessage = `ユーザー: ${userName}\nステージ${stageId}のクエストを却下しますか？\n\n却下すると：\n・ステージが「挑戦中」状態に戻ります\n・ユーザーは再度クエストに挑戦できます\n・却下履歴が記録されます`
-    
-    if (!confirm(confirmMessage)) {
-      return
-    }
+      setOptimisticUpdates(prev => new Set([...prev, id]))
 
-    // 楽観的更新: UIを即座に更新
-    const optimisticKey = `${userId}-${stageId}`
-    setOptimisticUpdates(prev => new Set(prev).add(optimisticKey))
-    setPendingApprovals(prev => prev.filter(item => 
-      !(item.user_id === userId && item.stage_id === stageId)
-    ))
-
-    try {
-      showNotification('info', '処理中...', 'クエストを却下しています')
-      
-      const result = await rejectQuest(userId, stageId)
+      const result = await rejectQuest(approval.user_id, approval.stage_id)
       
       if (result.success) {
-        showNotification('success', '却下完了', result.message)
-        onApprovalChange?.()
+        showNotification('success', 'クエストを却下しました')
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
-
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('却下エラー:', error)
-      const errorMessage = error instanceof Error ? error.message : '却下処理中にエラーが発生しました'
-      showNotification('error', '却下失敗', errorMessage)
-      
-      // エラー時は楽観的更新を取り消し
-      await loadPendingApprovals()
+      showNotification('error', '却下に失敗しました')
     } finally {
-      // 楽観的更新の清理（遅延実行）
-      setTimeout(() => {
         setOptimisticUpdates(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(optimisticKey)
-          return newSet
-        })
-      }, 2000)
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     }
-  }, [supabase, loadPendingApprovals, onApprovalChange])
+  }
 
   // 一括承認処理
-  const handleBulkApprove = useCallback(async () => {
-    if (selectedItems.size === 0) {
-      showNotification('error', 'エラー', '承認する項目を選択してください')
-      return
-    }
-
-    const userStageIds = Array.from(selectedItems).map(key => {
-      const [userId, stageId] = key.split('-')
-      return { userId, stageId: parseInt(stageId) }
-    })
-
-    const confirmMessage = `選択された${userStageIds.length}件のクエストを一括承認しますか？\n\n注意：この操作は取り消せません。`
-    
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
+  const handleBulkApprove = async () => {
     try {
-      showNotification('info', '処理中...', `${userStageIds.length}件のクエストを一括承認しています`)
+      const selectedApprovals = pendingApprovals.filter(a => selectedItems.has(a.id))
+      const userStageIds = selectedApprovals.map(a => ({
+        userId: a.user_id,
+        stageId: a.stage_id
+      }))
+
+      selectedApprovals.forEach(a => {
+        setOptimisticUpdates(prev => new Set([...prev, a.id]))
+      })
       
       const result = await bulkApprove(userStageIds)
       
       if (result.success) {
-        showNotification('success', '一括承認完了', result.message)
-        if (result.errors) {
-          console.warn('一括承認で一部エラー:', result.errors)
-        }
-        clearSelection()
-        await loadPendingApprovals()
-        onApprovalChange?.()
+        showNotification('success', `${selectedItems.size}件のクエストを一括承認しました`)
+        setSelectedItems(new Set())
+        if (onApprovalChangeRef.current) onApprovalChangeRef.current()
+        await loadPendingApprovalsRef.current?.()
       } else {
         throw new Error(result.error)
       }
-
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('一括承認エラー:', error)
-      const errorMessage = error instanceof Error ? error.message : '一括承認処理中にエラーが発生しました'
-      showNotification('error', '一括承認失敗', errorMessage)
+      showNotification('error', '一括承認に失敗しました')
+    } finally {
+      setOptimisticUpdates(new Set())
     }
-  }, [selectedItems, loadPendingApprovals, onApprovalChange, clearSelection])
+  }
 
-  // =====================================================
+  // 選択処理
+  const handleSelect = (id: string) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  // 全選択処理
+  const handleSelectAll = () => {
+    if (selectedItems.size === pendingApprovals.length) {
+      setSelectedItems(new Set())
+    } else {
+      setSelectedItems(new Set(pendingApprovals.map(a => a.id)))
+    }
+  }
+
+  // ページ移動
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, currentPage: page }))
+  }
+
   // レンダリング
-  // =====================================================
-
-  if (loading) {
-    return (
-      <div className="approval-table-container">
-        <div className="loading">
-          <div className="loading-spinner"></div>
-          <p>承認待ちクエストを読み込み中...</p>
-        </div>
-        
-        <style jsx>{`
-          .approval-table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          }
-          .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-          }
-          .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #673AB7;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="approval-table-container">
-        <div className="error-state">
-          <AlertCircle className="error-icon" />
-          <h3>エラーが発生しました</h3>
-          <p>{error}</p>
-          <button onClick={loadPendingApprovals} className="retry-button">
-            再試行
-          </button>
-        </div>
-        
-        <style jsx>{`
-          .approval-table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          }
-          .error-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-          }
-          .error-icon {
-            width: 48px;
-            height: 48px;
-            color: #f44336;
-            margin-bottom: 16px;
-          }
-          .retry-button {
-            background: #673AB7;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 16px;
-            transition: background 0.2s;
-          }
-          .retry-button:hover {
-            background: #512DA8;
-          }
-        `}</style>
-      </div>
-    )
-  }
-
-  if (pendingApprovals.length === 0) {
-    return (
-      <div className="approval-table-container">
-        <div className="empty-state">
-          <Check className="empty-icon" />
-          <h3>承認待ちのクエストはありません</h3>
-          <p>現在、承認が必要なクエストはありません。</p>
-        </div>
-        
-        <style jsx>{`
-          .approval-table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          }
-          .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-          }
-          .empty-icon {
-            width: 48px;
-            height: 48px;
-            color: #4CAF50;
-            margin-bottom: 16px;
-          }
-        `}</style>
-      </div>
-    )
-  }
-
   return (
-    <div className="approval-table-container">
-      {/* リアルタイム接続ステータス */}
-      <div className="realtime-status">
-        <div className={`connection-indicator ${realtimeConnected ? 'connected' : 'disconnected'}`}>
-          <div className="status-dot"></div>
-          <span className="status-text">
-            {realtimeConnected ? 'リアルタイム接続中' : '接続を試行中...'}
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* ヘッダー */}
+      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h3 className="text-lg font-medium text-gray-900">承認待ちクエスト</h3>
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            {pagination.totalItems} 件
           </span>
         </div>
-        {realtimeUnreadCount > 0 && (
-          <div className="notification-badge">
-            <span className="badge-text">{realtimeUnreadCount}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => loadPendingApprovalsRef.current?.()}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <RefreshCw size={14} className="mr-1" />
+            更新
+          </button>
+          {selectedItems.size > 0 && (
+            <button
+              onClick={handleBulkApprove}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              <Check size={14} className="mr-1" />
+              一括承認 ({selectedItems.size})
+            </button>
+          )}
           </div>
-        )}
       </div>
 
-      {/* 一括アクション */}
-      {selectedItems.size > 0 && (
-        <div className="bulk-actions">
-          <span className="selected-count">
-            {selectedItems.size}件選択中
-          </span>
-          <div className="bulk-buttons">
-            <button onClick={handleBulkApprove} className="bulk-approve-btn">
-              <Check size={16} />
-              一括承認
-            </button>
-            <button onClick={clearSelection} className="clear-selection-btn">
-              選択解除
-            </button>
+      {/* エラー表示 */}
+      {error && (
+        <div className="p-4 bg-red-50 border-b border-red-200">
+          <div className="flex items-center gap-2 text-red-700">
+            <AlertCircle size={16} />
+            <span>{error}</span>
           </div>
         </div>
       )}
 
       {/* テーブル */}
-      <div className="table-wrapper">
-        <table className="approval-table">
-          <thead>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="checkbox-cell">
+              <th scope="col" className="px-4 py-3 text-left">
                 <input
                   type="checkbox"
-                  checked={selectedItems.size === pendingApprovals.length}
-                  onChange={(e) => toggleSelectAll(e.target.checked)}
-                  className="table-checkbox"
+                  checked={selectedItems.size === pendingApprovals.length && pendingApprovals.length > 0}
+                  onChange={handleSelectAll}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                 />
               </th>
-              <th>ユーザー</th>
-              <th>ステージ</th>
-              <th>提出日時</th>
-              <th>アクション</th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ユーザー
+              </th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ステージ
+              </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                提出日時
+              </th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                アクション
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {pendingApprovals.map((item) => {
-              const key = `${item.user_id}-${item.stage_id}`
-              const isSelected = selectedItems.has(key)
-              
-              return (
-                <tr key={key} className={isSelected ? 'selected' : ''}>
-                  <td className="checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelection(item.user_id, item.stage_id)}
-                      className="table-checkbox"
-                    />
-                  </td>
-                  <td>
-                    <div className="user-cell">
-                      <div className="user-avatar">
-                        {getUserAvatar(item.users_profile)}
-                      </div>
-                      <div>
-                        <div className="user-name">
-                          {getUserDisplayName(item.users_profile)}
-                        </div>
-                        <div className="user-email">
-                          {item.users_profile?.email || 'unknown@example.com'}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="stage-badge">
-                      ステージ {item.stage_id}
-                    </span>
-                  </td>
-                  <td className="date-cell">
-                    <Calendar size={16} />
-                    {formatDate(item.submitted_at)}
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => handleApproveQuest(item.user_id, item.stage_id)}
-                        className="approve-btn"
-                        title="承認"
-                      >
-                        <Check size={16} />
-                        承認
-                      </button>
-                      <button
-                        onClick={() => handleRejectQuest(item.user_id, item.stage_id)}
-                        className="reject-btn"
-                        title="却下"
-                      >
-                        <X size={16} />
-                        却下
-                      </button>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-gray-300 border-t-purple-600 rounded-full animate-spin"></div>
+                    <span>読み込み中...</span>
                     </div>
                   </td>
                 </tr>
-              )
-            })}
+            ) : pendingApprovals.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  承認待ちのクエストはありません
+                </td>
+              </tr>
+            ) : (
+              pendingApprovals.map(approval => (
+                <TableRow
+                  key={approval.id}
+                  approval={approval}
+                  isSelected={selectedItems.has(approval.id)}
+                  onSelect={handleSelect}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  isOptimistic={optimisticUpdates.has(approval.id)}
+                />
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* ページネーション */}
       {pagination.totalPages > 1 && (
-        <div className="pagination">
-          <div className="pagination-info">
-            {pagination.totalItems}件中 {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1}-{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}件を表示
-          </div>
-          
-          <div className="pagination-controls">
+        <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+          <div className="flex-1 flex justify-between sm:hidden">
             <button
-              onClick={() => goToPage(pagination.currentPage - 1)}
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
               disabled={pagination.currentPage === 1}
-              className="pagination-btn"
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
-              <ChevronLeft size={16} />
               前へ
             </button>
-            
-            <div className="page-numbers">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                .filter(page => 
-                  page === 1 || 
-                  page === pagination.totalPages || 
-                  Math.abs(page - pagination.currentPage) <= 2
-                )
-                .map((page, index, array) => (
-                  <div key={page}>
-                    {index > 0 && array[index - 1] !== page - 1 && (
-                      <span className="page-ellipsis">...</span>
-                    )}
-                    <button
-                      onClick={() => goToPage(page)}
-                      className={`page-btn ${page === pagination.currentPage ? 'active' : ''}`}
-                    >
-                      {page}
-                    </button>
-                  </div>
-                ))
-              }
-            </div>
-            
             <button
-              onClick={() => goToPage(pagination.currentPage + 1)}
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
               disabled={pagination.currentPage === pagination.totalPages}
-              className="pagination-btn"
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
               次へ
-              <ChevronRight size={16} />
             </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                全 <span className="font-medium">{pagination.totalItems}</span> 件中
+                <span className="font-medium"> {(pagination.currentPage - 1) * pageSize + 1} </span>
+                -
+                <span className="font-medium">
+                  {' '}
+                  {Math.min(pagination.currentPage * pageSize, pagination.totalItems)}{' '}
+                </span>
+                件を表示
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  <span className="sr-only">前へ</span>
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {[...Array(pagination.totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                      pagination.currentPage === i + 1
+                        ? 'z-10 bg-purple-50 border-purple-500 text-purple-600'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                  <span className="sr-only">次へ</span>
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </nav>
+            </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .approval-table-container {
-          background: white;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .realtime-status {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: #f8f9fa;
-          padding: 8px 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          border-left: 4px solid #673AB7;
-        }
-        
-        .connection-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .status-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          transition: background-color 0.3s ease;
-        }
-        
-        .connection-indicator.connected .status-dot {
-          background-color: #4CAF50;
-          box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
-        }
-        
-        .connection-indicator.disconnected .status-dot {
-          background-color: #ff9800;
-          animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-        
-        .status-text {
-          font-size: 14px;
-          color: #555;
-          font-weight: 500;
-        }
-        
-        .notification-badge {
-          position: relative;
-          background: #f44336;
-          color: white;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 600;
-          margin-left: 12px;
-        }
-        
-        .badge-text {
-          line-height: 1;
-        }
-        
-        .bulk-actions {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #f8f9fa;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          border: 2px solid #673AB7;
-        }
-        
-        .selected-count {
-          font-weight: 600;
-          color: #673AB7;
-        }
-        
-        .bulk-buttons {
-          display: flex;
-          gap: 8px;
-        }
-        
-        .bulk-approve-btn {
-          background: #4CAF50;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: background 0.2s;
-        }
-        
-        .bulk-approve-btn:hover {
-          background: #388E3C;
-        }
-        
-        .clear-selection-btn {
-          background: #6c757d;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          transition: background 0.2s;
-        }
-        
-        .clear-selection-btn:hover {
-          background: #5a6268;
-        }
-        
-        .table-wrapper {
-          overflow-x: auto;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
-        }
-        
-        .approval-table {
-          width: 100%;
-          border-collapse: collapse;
-          min-width: 700px;
-        }
-        
-        .approval-table th,
-        .approval-table td {
-          text-align: left;
-          padding: 16px;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .approval-table th {
-          background: #f8f9fa;
-          font-weight: 700;
-          color: #666;
-          font-size: 14px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        
-        .approval-table tr:hover {
-          background: rgba(103, 58, 183, 0.05);
-        }
-        
-        .approval-table tr.selected {
-          background: rgba(103, 58, 183, 0.1);
-        }
-        
-        .checkbox-cell {
-          width: 50px;
-          text-align: center;
-        }
-        
-        .table-checkbox {
-          width: 18px;
-          height: 18px;
-          cursor: pointer;
-        }
-        
-        .user-cell {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, #673AB7 0%, #E91E63 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 700;
-          font-size: 16px;
-        }
-        
-        .user-name {
-          font-weight: 700;
-          color: #333;
-        }
-        
-        .user-email {
-          font-size: 14px;
-          color: #666;
-        }
-        
-        .stage-badge {
-          background: #f0f0f0;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #333;
-        }
-        
-        .date-cell {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #666;
-          font-size: 14px;
-        }
-        
-        .action-buttons {
-          display: flex;
-          gap: 8px;
-        }
-        
-        .approve-btn,
-        .reject-btn {
-          padding: 8px 16px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s;
-        }
-        
-        .approve-btn {
-          background: #4CAF50;
-          color: white;
-        }
-        
-        .approve-btn:hover {
-          background: #388E3C;
-          transform: translateY(-1px);
-        }
-        
-        .reject-btn {
-          background: #f44336;
-          color: white;
-        }
-        
-        .reject-btn:hover {
-          background: #d32f2f;
-          transform: translateY(-1px);
-        }
-        
-        .pagination {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 20px;
-          padding-top: 16px;
-          border-top: 1px solid #e0e0e0;
-        }
-        
-        .pagination-info {
-          color: #666;
-          font-size: 14px;
-        }
-        
-        .pagination-controls {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .pagination-btn {
-          background: white;
-          border: 1px solid #ddd;
-          padding: 8px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s;
-        }
-        
-        .pagination-btn:hover:not(:disabled) {
-          background: #f8f9fa;
-        }
-        
-        .pagination-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        
-        .page-numbers {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        
-        .page-btn {
-          background: white;
-          border: 1px solid #ddd;
-          padding: 8px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          min-width: 40px;
-          text-align: center;
-          transition: all 0.2s;
-        }
-        
-        .page-btn:hover {
-          background: #f8f9fa;
-        }
-        
-        .page-btn.active {
-          background: #673AB7;
-          color: white;
-          border-color: #673AB7;
-        }
-        
-        .page-ellipsis {
-          padding: 8px 4px;
-          color: #666;
-        }
-        
-        @media (max-width: 768px) {
-          .approval-table-container {
-            padding: 16px;
-          }
-          
-          .bulk-actions {
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-          }
-          
-          .bulk-buttons {
-            justify-content: center;
-          }
-          
-          .approval-table th,
-          .approval-table td {
-            padding: 12px 8px;
-          }
-          
-          .user-cell {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-          
-          .user-avatar {
-            width: 32px;
-            height: 32px;
-            font-size: 14px;
-          }
-          
-          .action-buttons {
-            flex-direction: column;
-            gap: 6px;
-          }
-          
-          .approve-btn,
-          .reject-btn {
-            padding: 6px 12px;
-            font-size: 12px;
-          }
-          
-          .pagination {
-            flex-direction: column;
-            gap: 12px;
-          }
-          
-          .pagination-controls {
-            flex-wrap: wrap;
-            justify-content: center;
-          }
-        }
-      `}</style>
     </div>
   )
 }

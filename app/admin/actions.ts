@@ -377,4 +377,59 @@ export async function getAdminInfo() {
       error: error instanceof Error ? error.message : '管理者情報の取得に失敗しました'
     }
   }
+}
+
+/**
+ * 一時的な管理者権限付与機能（開発・セットアップ用）
+ * 注意: 本番環境では削除またはコメントアウトしてください
+ */
+export async function grantAdminAccess(userId: string, email: string) {
+  try {
+    console.log('🔧 開発モード: 管理者権限の自動付与を試行します')
+    
+    // 環境変数チェック
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase環境変数が設定されていません')
+    }
+    
+    const { createBrowserSupabaseClient } = await import('@/lib/supabase/client')
+    const supabase = createBrowserSupabaseClient()
+    
+    // admin_usersテーブルに挿入
+    const { data, error } = await supabase
+      .from('admin_users')
+      .upsert({
+        user_id: userId,
+        email: email,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      })
+    
+    if (error) {
+      console.error('管理者権限付与エラー:', error)
+      return {
+        success: false,
+        error: error.message || '管理者権限の付与に失敗しました'
+      }
+    }
+    
+    console.log('✅ 管理者権限が正常に付与されました')
+    return {
+      success: true,
+      message: '管理者権限が正常に付与されました'
+    }
+    
+  } catch (error) {
+    console.error('管理者権限付与エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '管理者権限の付与に失敗しました'
+    }
+  }
 } 

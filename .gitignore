@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 参照用フォルダ（元のhtml/css/jsファイル）
+/reference/
+/backup_original/
+
+# 開発用メモファイル
+typescript-errors.txt
+dev-log.txt

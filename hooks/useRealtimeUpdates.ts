@@ -29,6 +29,18 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
 
   const supabase = useRef(createBrowserSupabaseClient())
   const channelRef = useRef<RealtimeChannel | null>(null)
+  
+  // 安定したreferenceを保持
+  const onNotificationRef = useRef(onNotification)
+  const onDataUpdateRef = useRef(onDataUpdate)
+  const currentAdminIdRef = useRef(currentAdminId)
+
+  // refを更新（無限ループを防ぐ）
+  useEffect(() => {
+    onNotificationRef.current = onNotification
+    onDataUpdateRef.current = onDataUpdate  
+    currentAdminIdRef.current = currentAdminId
+  })
 
   const getUserInfo = useCallback(async (userId: string) => {
     try {
@@ -54,11 +66,11 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
 
     setNotifications(prev => [newNotification, ...prev.slice(0, 49)])
     
-    if (onNotification) {
+    if (onNotificationRef.current) {
       const notificationType = notification.type === 'new_pending' ? 'info' : 'success'
-      onNotification(notificationType, notification.title, notification.message)
+      onNotificationRef.current(notificationType, notification.title, notification.message)
     }
-  }, [onNotification])
+  }, [])
 
   const handleRealtimeUpdate = useCallback(async (payload: any) => {
     try {
@@ -78,7 +90,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
           stageId: record.stage_id
         })
       } else if (eventType === 'UPDATE') {
-        if (record.status === 'completed' && record.approved_by !== currentAdminId) {
+        if (record.status === 'completed' && record.approved_by !== currentAdminIdRef.current) {
           addNotification({
             type: 'approved_by_other',
             title: '他の管理者が承認',
@@ -86,7 +98,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
             userId: record.user_id,
             stageId: record.stage_id
           })
-        } else if (record.status === 'current' && record.rejected_by !== currentAdminId) {
+        } else if (record.status === 'current' && record.rejected_by !== currentAdminIdRef.current) {
           addNotification({
             type: 'rejected_by_other',
             title: '他の管理者が却下',
@@ -97,13 +109,13 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         }
       }
 
-      if (onDataUpdate) {
-        onDataUpdate()
+      if (onDataUpdateRef.current) {
+        onDataUpdateRef.current()
       }
     } catch (error) {
       console.error('Realtimeイベント処理エラー:', error)
     }
-  }, [getUserInfo, addNotification, currentAdminId, onDataUpdate])
+  }, [getUserInfo, addNotification])
 
   const connectRealtime = useCallback(() => {
     if (channelRef.current) {
@@ -133,6 +145,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
     channelRef.current = channel
   }, [handleRealtimeUpdate])
 
+  // 初期化は一度だけ実行
   useEffect(() => {
     connectRealtime()
 
@@ -141,7 +154,7 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         channelRef.current.unsubscribe()
       }
     }
-  }, [connectRealtime])
+  }, []) // 依存配列を空にして無限ループを防ぐ
 
   const markNotificationAsRead = useCallback((notificationId: string) => {
     setNotifications(prev => 
