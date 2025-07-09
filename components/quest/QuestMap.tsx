@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { Map, Compass, Star, Trophy, Zap } from 'lucide-react'
 import StageNode from './StageNode'
 import type { StageProgress } from '@/stores/questStore'
@@ -17,6 +18,11 @@ interface QuestMapProps {
 
 export default function QuestMap({ stages, statistics, onStageClick }: QuestMapProps) {
   const skyObjectsRef = useRef<HTMLDivElement>(null)
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
+
+  const handleImageError = (stageId: number) => {
+    setImageErrors(prev => ({ ...prev, [stageId]: true }))
+  }
 
   // 空中オブジェクト（雲とUFO）を生成
   useEffect(() => {
@@ -65,12 +71,12 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
 
   // ステージの静的データ
   const stageStaticData = {
-    1: { title: '君はどんな冒険者？', description: '〜学びの地図をひらこう〜', icon: '🏠' },
-    2: { title: '新時代の冒険者に必要なものって？', description: '〜武器と道具の話〜', icon: '🌲' },
-    3: { title: '君はどんなキャラ？', description: '〜自分を育てる育成ゲーム〜', icon: '⚔️' },
-    4: { title: 'ちがうって、おもしろい', description: '〜正解がないから広がる世界〜', icon: '🛡️' },
-    5: { title: '「？」が世界をひらく', description: '〜ワクワク＆もやもや〜', icon: '👥' },
-    6: { title: 'つくってつたえると気づける', description: '〜違いを生かして未来を創る〜', icon: '🏰' }
+    1: { title: '君はどんな冒険者？', description: '〜学びの地図をひらこう〜', iconUrl: '/images/quest/stage-1.png', fallbackIcon: '🏠' },
+    2: { title: '新時代の冒険者に必要なものって？', description: '〜武器と道具の話〜', iconUrl: '/images/quest/stage-2.png', fallbackIcon: '🌲' },
+    3: { title: '君はどんなキャラ？', description: '〜自分を育てる育成ゲーム〜', iconUrl: '/images/quest/stage-3.png', fallbackIcon: '⚔️' },
+    4: { title: 'ちがうって、おもしろい', description: '〜正解がないから広がる世界〜', iconUrl: '/images/quest/stage-4.png', fallbackIcon: '🛡️' },
+    5: { title: '「？」が世界をひらく', description: '〜ワクワク＆もやもや〜', iconUrl: '/images/quest/stage-5.png', fallbackIcon: '👥' },
+    6: { title: 'つくってつたえると気づける', description: '〜違いを生かして未来を創る〜', iconUrl: '/images/quest/stage-6.png', fallbackIcon: '🏰' }
   }
 
   return (
@@ -128,21 +134,31 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
                   
                   {/* ステージアイコン */}
                   <div className="pixel-stage-icon">
-                    <span className="stage-emoji">{staticInfo.icon}</span>
+                    {imageErrors[stageNumber] || !staticInfo.iconUrl ? (
+                      <span className="stage-emoji">{staticInfo.fallbackIcon}</span>
+                    ) : (
+                      <Image
+                        src={staticInfo.iconUrl}
+                        alt={`${staticInfo.title} アイコン`}
+                        width={120}
+                        height={120}
+                        className="stage-image"
+                        onError={() => handleImageError(stageNumber)}
+                      />
+                    )}
                     {status === 'completed' && (
                       <div className="clear-effect" />
                     )}
+                  </div>
+                  {/* ステージ情報 */}
+                  <div className="pixel-stage-info">
+                    <h3 className="stage-title">{staticInfo.title}</h3>
+                    <p className="stage-description">{staticInfo.description}</p>
                   </div>
                   
                   {/* ナンバーバッジ */}
                   <div className="stage-number-badge">
                     <span className="stage-number-text">{stageNumber}</span>
-                  </div>
-                  
-                  {/* ステージ情報 */}
-                  <div className="pixel-stage-info">
-                    <h3 className="stage-title">{staticInfo.title}</h3>
-                    <p className="stage-description">{staticInfo.description}</p>
                   </div>
                   
                   {/* パスライン（最後のステージ以外） */}
@@ -339,6 +355,15 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           filter: grayscale(0);
         }
 
+        .stage-image {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          image-rendering: pixelated;
+          image-rendering: -moz-crisp-edges;
+          image-rendering: crisp-edges;
+        }
+
         .pixel-stage-node.locked .stage-emoji {
           filter: grayscale(1);
           opacity: 0.7;
@@ -389,10 +414,8 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
 
         /* ナンバーバッジ */
         .stage-number-badge {
-          position: absolute;
-          bottom: -15px;
-          left: 50%;
-          transform: translateX(-50%);
+          position: relative;
+          margin: 16px auto 0;
           width: 44px;
           height: 44px;
           background: #4DB6F7;
@@ -406,7 +429,6 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           font-weight: bold;
           color: white;
           box-shadow: 0 0 0 1px #5AC8F7, 3px 3px 0 0 rgba(0,0,0,0.3);
-          z-index: 5;
           padding: 2px;
         }
 

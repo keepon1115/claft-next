@@ -56,6 +56,8 @@ interface QuestState {
   initialize: (userId?: string) => Promise<void>
   updateStageProgress: (stageId: number, status: StageStatus, optimistic?: boolean) => Promise<{ success: boolean; error?: string }>
   completeStage: (stageId: number) => Promise<{ success: boolean; error?: string }>
+  completeStageWithConfirmation: (stageId: number) => Promise<{ success: boolean; error?: string; cancelled?: boolean }>
+  completeStageImmediately: (stageId: number) => Promise<{ success: boolean; error?: string }>
   submitStage: (stageId: number, submissionData?: Record<string, any>) => Promise<{ success: boolean; error?: string }>
   approveStage: (stageId: number) => Promise<{ success: boolean; error?: string }>
   rejectStage: (stageId: number, reason?: string) => Promise<{ success: boolean; error?: string }>
@@ -244,9 +246,10 @@ export const useQuestStore = create<QuestState>()(
 
                 if (questProgress && questProgress.length > 0) {
                   // Supabaseからのデータを使用
-                  const progress: UserQuestProgress = {}
+                  const progress: UserQuestProgress = { ...defaultUserProgress }
                   const stageDetails: Record<number, StageProgress> = { ...defaultStageDetails }
 
+                  // 既存の進捗データを適用
                   questProgress.forEach((item) => {
                     const stageId = item.stage_id
                     const status = mapSupabaseStatusToStageStatus(item.status)
@@ -262,6 +265,28 @@ export const useQuestStore = create<QuestState>()(
                         lastUpdated: item.updated_at || undefined
                       }
                     }
+                  })
+
+                  // 次にアクセス可能なステージを計算
+                  const completedStages = questProgress.filter(item => 
+                    mapSupabaseStatusToStageStatus(item.status) === 'completed'
+                  ).length
+                  
+                  const nextStageId = completedStages + 1
+                  if (nextStageId <= TOTAL_STAGES && progress[nextStageId] === 'locked') {
+                    progress[nextStageId] = 'current'
+                    if (stageDetails[nextStageId]) {
+                      stageDetails[nextStageId] = {
+                        ...stageDetails[nextStageId],
+                        status: 'current'
+                      }
+                    }
+                  }
+
+                  console.log('🔧 Quest Progress Initialized:', {
+                    completedStages,
+                    nextStageId,
+                    progress
                   })
 
                   set((state) => {
@@ -384,7 +409,7 @@ export const useQuestStore = create<QuestState>()(
           },
 
           // =====================================================
-          // ステージ完了
+          // ステージ完了（即座完了版）
           // =====================================================
           completeStage: async (stageId: number) => {
             const result = await get().updateStageProgress(stageId, 'completed')
@@ -398,6 +423,121 @@ export const useQuestStore = create<QuestState>()(
             }
 
             return result
+          },
+
+          // =====================================================
+          // ステージ即座完了（確認ポップアップ付き）
+          // =====================================================
+          completeStageWithConfirmation: async (stageId: number): Promise<{ success: boolean; error?: string; cancelled?: boolean }> => {
+            return new Promise((resolve) => {
+              // 確認ダイアログを表示
+              const confirmed = window.confirm(
+                `ステージ${stageId}の完了を報告してよろしいですか？\n\n` +
+                `完了報告後は即座に次のステージに進むことができます。\n` +
+                `管理者からのフィードバックは後から確認できます。`
+              )
+
+              if (!confirmed) {
+                resolve({ success: false, cancelled: true })
+                return
+              }
+
+              // 確認されたら即座完了処理を実行
+              get().completeStageImmediately(stageId).then(resolve)
+            })
+          },
+
+          // =====================================================
+          // ステージ即座完了（内部処理）
+          // =====================================================
+          completeStageImmediately: async (stageId: number) => {
+            const { currentUserId } = get()
+            
+            if (!currentUserId) {
+              return { success: false, error: 'ユーザーIDが見つかりません' }
+            }
+
+            set((state) => {
+              state.isSyncing = true
+              state.error = null
+            })
+
+            try {
+              const supabase = createBrowserSupabaseClient()
+              const now = new Date().toISOString()
+
+              // 楽観的更新
+              set((state) => {
+                state.userProgress[stageId] = 'completed'
+                state.stageDetails[stageId].status = 'completed'
+                
+                // 次のステージをアンロック
+                const nextStageId = stageId + 1
+                if (nextStageId <= TOTAL_STAGES) {
+                  state.userProgress[nextStageId] = 'current'
+                  state.stageDetails[nextStageId].status = 'current'
+                }
+              })
+
+              // データベース更新（即座完了）
+              const progressData = {
+                user_id: currentUserId,
+                stage_id: stageId,
+                status: 'completed',
+                updated_at: now,
+                approved_at: now, // 即座完了なので承認日時も同時に設定
+                submitted_at: now  // 提出日時も設定
+              }
+
+              const { error } = await supabase
+                .from('quest_progress')
+                .upsert(progressData)
+
+              if (error) {
+                throw error
+              }
+
+              // 次のステージのレコードも作成/更新
+              const nextStageId = stageId + 1
+              if (nextStageId <= TOTAL_STAGES) {
+                const nextStageData = {
+                  user_id: currentUserId,
+                  stage_id: nextStageId,
+                  status: 'in_progress',
+                  updated_at: now
+                }
+
+                await supabase
+                  .from('quest_progress')
+                  .upsert(nextStageData)
+              }
+
+              // 統計を再計算
+              const statistics = get().calculateStatistics()
+              set((state) => {
+                state.statistics = statistics
+                state.lastSyncTime = now
+              })
+
+              return { success: true }
+
+            } catch (error) {
+              console.error('即座完了エラー:', error)
+              const errorMessage = error instanceof Error ? error.message : 'ステージ完了に失敗しました'
+
+              // 楽観的更新を元に戻す
+              await get().syncWithSupabase()
+
+              set((state) => {
+                state.error = errorMessage
+              })
+
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isSyncing = false
+              })
+            }
           },
 
           // =====================================================
@@ -685,6 +825,7 @@ export const useQuestProgress = () => {
     initialize: store.initialize,
     updateStageProgress: store.updateStageProgress,
     completeStage: store.completeStage,
+    completeStageWithConfirmation: store.completeStageWithConfirmation,
     submitStage: store.submitStage,
     clearError: store.clearError
   }

@@ -123,9 +123,9 @@ export default function QuestPage() {
         <div className="container">
           <header className="map-header">
             <h1>🗺️ CLAFT クエストマップ</h1>
-            <p>きみだけの冒険物語をつくろう！</p>
+            <p>試練のダンジョン</p>
             <button className="adventure-log-button">
-              これまでの冒険を振り返る
+              これまでの冒険
             </button>
           </header>
 

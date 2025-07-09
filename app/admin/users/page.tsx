@@ -19,6 +19,16 @@ interface UserData {
   quest_clear_count?: number
   total_exp?: number
   login_count?: number
+  // プロフィール情報を追加
+  character_type?: string | null
+  skills?: string[] | null
+  weakness?: string | null
+  favorite_place?: string | null
+  energy_charge?: string | null
+  companion?: string | null
+  catchphrase?: string | null
+  message?: string | null
+  profile_completion?: number | null
 }
 
 interface AdminInfo {
@@ -46,6 +56,8 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalUsers, setTotalUsers] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
   
   const pageSize = 20
   const supabase = createBrowserSupabaseClient()
@@ -85,10 +97,10 @@ export default function UsersPage() {
       setLoading(true)
       setError(null)
 
-      // ユーザープロフィール取得
+      // ユーザープロフィール取得（プロフィール情報も含む）
       let userQuery = supabase
         .from('users_profile')
-        .select('id, email, nickname, created_at', { count: 'exact' })
+        .select('id, email, nickname, created_at, character_type, skills, weakness, favorite_place, energy_charge, companion, catchphrase, message, profile_completion', { count: 'exact' })
         .order('created_at', { ascending: false })
 
       // 検索フィルター適用
@@ -161,6 +173,18 @@ export default function UsersPage() {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '未ログイン'
     return new Date(dateString).toLocaleDateString('ja-JP')
+  }
+
+  // プロフィール詳細を表示
+  const openProfileModal = (user: UserData) => {
+    setSelectedUser(user)
+    setShowProfileModal(true)
+  }
+
+  // プロフィールモーダルを閉じる
+  const closeProfileModal = () => {
+    setSelectedUser(null)
+    setShowProfileModal(false)
   }
 
   // 管理者権限確認中
@@ -340,12 +364,15 @@ export default function UsersPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     経験値
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    プロフィール
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mr-3"></div>
                         読み込み中...
@@ -354,7 +381,7 @@ export default function UsersPage() {
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       ユーザーが見つかりません
                     </td>
                   </tr>
@@ -402,6 +429,18 @@ export default function UsersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {userData.total_exp || 0} XP
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <button
+                            onClick={() => openProfileModal(userData)}
+                            className="inline-flex items-center px-3 py-1 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors"
+                          >
+                            <User size={16} className="mr-1" />
+                            詳細
+                          </button>
+                          <div className="mt-1 text-xs text-gray-500">
+                            完成度: {userData.profile_completion || 0}%
+                          </div>
                         </td>
                       </tr>
                     )
@@ -482,6 +521,140 @@ export default function UsersPage() {
           )}
         </div>
       </div>
+
+      {/* プロフィール詳細モーダル */}
+      {showProfileModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            {/* モーダルヘッダー */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  {selectedUser.nickname || '名前未設定'} のプロフィール
+                </h3>
+                <p className="text-sm text-gray-500">{selectedUser.email}</p>
+              </div>
+              <button
+                onClick={closeProfileModal}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* プロフィール内容 */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 基本情報 */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                    基本情報
+                  </h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">ニックネーム</label>
+                    <p className="text-gray-900">{selectedUser.nickname || '未設定'}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">キャラクタータイプ</label>
+                    <p className="text-gray-900">{selectedUser.character_type || '未設定'}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">口ぐせ</label>
+                    <p className="text-gray-900">{selectedUser.catchphrase || '未設定'}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">プロフィール完成度</label>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-600 h-2 rounded-full" 
+                          style={{ width: `${selectedUser.profile_completion || 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600">{selectedUser.profile_completion || 0}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* スキル・特性 */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                    スキル・特性
+                  </h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">得意なこと（スキル）</label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedUser.skills && selectedUser.skills.length > 0 ? (
+                        selectedUser.skills.map((skill, index) => (
+                          <span 
+                            key={index}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          >
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">未設定</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">ちょっと苦手なこと</label>
+                    <p className="text-gray-900">{selectedUser.weakness || '未設定'}</p>
+                  </div>
+                </div>
+
+                {/* パーソナル情報 */}
+                <div className="space-y-4 md:col-span-2">
+                  <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                    パーソナル情報
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">好きな場所・時間</label>
+                      <p className="text-gray-900">{selectedUser.favorite_place || '未設定'}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">エネルギーチャージ方法</label>
+                      <p className="text-gray-900">{selectedUser.energy_charge || '未設定'}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">一緒に冒険したい人</label>
+                      <p className="text-gray-900">{selectedUser.companion || '未設定'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600">ひとこと</label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {selectedUser.message || '未設定'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* モーダルフッター */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={closeProfileModal}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

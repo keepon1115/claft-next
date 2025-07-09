@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 // =====================================================
 // 型定義
@@ -174,7 +175,7 @@ interface UserState {
   isInitialized: boolean
   
   // 基本アクション
-  initialize: (userId?: string) => Promise<void>
+  initialize: (userId: string) => Promise<void>
   updateProfile: (updates: Partial<ProfileData>) => Promise<{ success: boolean; error?: string }>
   addExperience: (amount: number, reason?: string) => Promise<{ success: boolean; levelUp?: boolean; error?: string }>
   calculateProfileCompletion: () => number
@@ -218,19 +219,89 @@ export const useUserStore = create<UserState>()(
           // =====================================================
           // 初期化
           // =====================================================
-          initialize: async (userId: string = 'dev-user-001') => {
+          initialize: async (userId: string) => {
+            if (!userId) {
+              set((state) => {
+                state.error = 'ユーザーIDが指定されていないため、初期化できません。'
+                state.isLoading = false
+              })
+              return
+            }
             set((state) => {
               state.isLoading = true
               state.error = null
             })
 
             try {
-              console.log('🔧 開発モード: userStoreを拡張版で初期化')
+              console.log('🔧 userStore初期化開始:', userId)
               
-              // モックデータで初期化
+              // Supabaseクライアント作成
+              const supabase = createBrowserSupabaseClient()
+              
+              // プロフィールデータを取得
+              const { data: profileData, error: profileError } = await supabase
+                .from('users_profile')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle()
+
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('❌ プロフィール取得エラー:', profileError)
+                throw profileError
+              }
+
+              // 統計データを取得
+              const { data: statsData, error: statsError } = await supabase
+                .from('user_stats')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle()
+
+              if (statsError && statsError.code !== 'PGRST116') {
+                console.error('❌ 統計データ取得エラー:', statsError)
+                throw statsError
+              }
+
+              // プロフィールデータを変換
+              const profile: ProfileData = profileData ? {
+                nickname: profileData.nickname || defaultProfileData.nickname,
+                character: profileData.character_type || defaultProfileData.character,
+                skills: profileData.skills || defaultProfileData.skills,
+                weakness: profileData.weakness || defaultProfileData.weakness,
+                favoritePlace: profileData.favorite_place || defaultProfileData.favoritePlace,
+                energyCharge: profileData.energy_charge || defaultProfileData.energyCharge,
+                companion: profileData.companion || defaultProfileData.companion,
+                catchphrase: profileData.catchphrase || defaultProfileData.catchphrase,
+                message: profileData.message || defaultProfileData.message,
+                avatarUrl: profileData.avatar_url || defaultProfileData.avatarUrl,
+                profileCompletion: profileData.profile_completion || 0,
+              } : { ...defaultProfileData }
+
+              // 統計データを変換
+              const stats: ExtendedUserStats = statsData ? {
+                userId,
+                loginCount: statsData.login_count || 0,
+                lastLoginDate: statsData.last_login_date || new Date().toISOString(),
+                totalPlayTime: 0,
+                level: Math.floor((statsData.total_exp || 0) / 100) + 1,
+                experience: statsData.total_exp || 0,
+                experienceToNext: 100 - ((statsData.total_exp || 0) % 100),
+                questsCompleted: statsData.quest_clear_count || 0,
+                questsInProgress: 0,
+                currentStreak: 0,
+                maxStreak: 0,
+                achievementCount: 0,
+                goldBadges: 0,
+                silverBadges: 0,
+                bronzeBadges: 0,
+                createdAt: statsData.created_at || new Date().toISOString(),
+                updatedAt: statsData.updated_at || new Date().toISOString(),
+              } : { ...defaultExtendedStats, userId }
+
+              // 状態を更新
               set((state) => {
-                state.profileData = { ...defaultProfileData }
-                state.extendedStats = { ...defaultExtendedStats, userId }
+                state.profileData = profile
+                state.extendedStats = stats
                 state.achievements = predefinedAchievements.map(achievement => ({ ...achievement }))
                 state.recentActivities = [
                   {
@@ -255,12 +326,17 @@ export const useUserStore = create<UserState>()(
                 state.error = null
               })
               
-              console.log('✅ userStore: 拡張版初期化完了')
+              console.log('✅ userStore: 初期化完了')
               
             } catch (error) {
               console.error('❌ userStore初期化エラー:', error)
               set((state) => {
                 state.error = 'userStore初期化に失敗しました'
+                // エラーの場合でもデフォルトデータで初期化
+                state.profileData = { ...defaultProfileData }
+                state.extendedStats = { ...defaultExtendedStats, userId }
+                state.achievements = predefinedAchievements.map(achievement => ({ ...achievement }))
+                state.isInitialized = true
               })
             } finally {
               set((state) => {

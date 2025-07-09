@@ -6,27 +6,21 @@ import { useAuth } from '@/hooks/useAuth'
 import { AuthButton } from '@/components/auth/AuthButton'
 import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { useUserStore } from '@/stores/userStore'
 
 export default function ProfilePage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading } = useAuth()
+  const { profileData, updateProfile, initialize } = useUserStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
-  const [saveStatus, setSaveStatus] = useState('saved') // 'saving' | 'saved'
+  const [saveStatus, setSaveStatus] = useState('saved') // 'saving' | 'saved' | 'error'
+  const [localChanges, setLocalChanges] = useState(false)
+  const supabase = createBrowserSupabaseClient()
   
-  // プロフィールデータの状態
-  const [profileData, setProfileData] = useState({
-    nickname: 'クラフター',
-    character: '創造型冒険者',
-    skills: ['プログラミング', 'デザイン', '企画'],
-    weakness: '早起き',
-    favoritePlace: 'カフェ',
-    energyCharge: 'コーヒーを飲む',
-    companion: 'クリエイティブな仲間',
-    catchphrase: '毎日少しずつ成長していこう！',
-    message: '新しい挑戦をしながら、自分らしいキャリアを築いていきたいです。',
-    profileCompletion: 85
-  })
+  // ローカルプロフィールデータの状態（編集用）
+  const [localProfileData, setLocalProfileData] = useState(profileData)
 
   // 認証チェック
   useEffect(() => {
@@ -43,21 +37,77 @@ export default function ProfilePage() {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
   const closeSidebar = () => setSidebarOpen(false)
 
-  // フォーム更新処理
+  // userStore初期化
+  useEffect(() => {
+    const initStore = async () => {
+      // SupabaseのUUID形式に一致するかチェック
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (user?.id && uuidRegex.test(user.id)) {
+        await initialize(user.id);
+      }
+    }
+    initStore()
+  }, [user?.id, initialize])
+
+  // プロフィールデータの同期
+  useEffect(() => {
+    setLocalProfileData(profileData)
+  }, [profileData])
+
+  // フォーム更新処理（ローカル）
   const handleInputChange = (field: string, value: string) => {
-    setProfileData(prev => ({ ...prev, [field]: value }))
-    setSaveStatus('saving')
-    
-    // デモ：2秒後に保存完了
-    setTimeout(() => {
-      setSaveStatus('saved')
-    }, 2000)
+    if (field === 'skills') {
+      // スキルは文字列をカンマ区切りで配列に変換
+      const skillsArray = value.split(',').map(skill => skill.trim()).filter(skill => skill.length > 0)
+      setLocalProfileData(prev => ({ ...prev, skills: skillsArray }))
+    } else {
+      setLocalProfileData(prev => ({ ...prev, [field]: value }))
+    }
+    setLocalChanges(true)
+    // 自動保存を無効化（保存ボタンを押したときのみ保存）
+    // setSaveStatus('saving')
   }
 
-  const handleSkillsChange = (skills: string[]) => {
-    setProfileData(prev => ({ ...prev, skills }))
+  // Supabaseに保存
+  const handleSaveProfile = async () => {
+    if (!user?.id) return
+
     setSaveStatus('saving')
-    setTimeout(() => setSaveStatus('saved'), 2000)
+    try {
+      // userStoreを更新
+      const result = await updateProfile(localProfileData)
+      
+      if (result.success) {
+        // Supabaseにも保存
+        const { error } = await supabase
+          .from('users_profile')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            nickname: localProfileData.nickname,
+            character_type: localProfileData.character,
+            skills: localProfileData.skills,
+            weakness: localProfileData.weakness,
+            favorite_place: localProfileData.favoritePlace,
+            energy_charge: localProfileData.energyCharge,
+            companion: localProfileData.companion,
+            catchphrase: localProfileData.catchphrase,
+            message: localProfileData.message,
+            updated_at: new Date().toISOString()
+          })
+
+        if (error) throw error
+
+        setSaveStatus('saved')
+        setLocalChanges(false)
+        console.log('✅ プロフィール保存完了')
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('❌ プロフィール保存エラー:', error)
+      setSaveStatus('error')
+    }
   }
 
   // ローディング中
@@ -115,24 +165,55 @@ export default function ProfilePage() {
     <>
       {/* 部屋の背景 */}
       <div className="room-background">
+        {/* RGBライトストリップ */}
+        <div className="rgb-lights"></div>
+
+        {/* ゲーミングデスク */}
+        <div className="gaming-desk">
+          <div className="desk-surface"></div>
+          <div className="monitor monitor-left"></div>
+          <div className="monitor monitor-center"></div>
+          <div className="monitor monitor-right"></div>
+          <div className="gaming-chair">
+            <div className="chair-back"></div>
+            <div className="chair-seat"></div>
+          </div>
+        </div>
+
+        {/* 魔法の道具エリア */}
+        <div className="magic-area">
+          <div className="crystal-ball"></div>
+          <div className="crystal-stand"></div>
+          <div className="magic-wand"></div>
+          <div className="potion-shelf">
+            <div className="potion potion1"></div>
+            <div className="potion potion2"></div>
+            <div className="potion potion3"></div>
+            <div className="potion potion4"></div>
+          </div>
+        </div>
+
+        {/* ペットエリア */}
+        <div className="pet-area">
+          <div className="pet-slime"></div>
+          <div className="pet-bed"></div>
+        </div>
+
+        {/* 窓 */}
         <div className="window">
-          <div className="sun"></div>
-          <div className="cloud cloud1"></div>
+          <div className="city-silhouette"></div>
+          <div className="flying-vehicle"></div>
         </div>
-        <div className="floor"></div>
-        <div className="bookshelf">
-          <div className="book"></div>
-          <div className="book"></div>
-          <div className="book"></div>
-          <div className="book"></div>
-          <div className="book"></div>
+
+        {/* フィギュア棚 */}
+        <div className="figure-shelf">
+          <div className="figure figure1"></div>
+          <div className="figure figure2"></div>
+          <div className="figure figure3"></div>
         </div>
-        <div className="plant">
-          <div className="pot"></div>
-          <div className="leaf"></div>
-          <div className="leaf"></div>
-          <div className="leaf"></div>
-        </div>
+
+        {/* 床 */}
+        <div className="room-floor"></div>
       </div>
 
       <main className="min-h-screen relative">
@@ -181,16 +262,16 @@ export default function ProfilePage() {
                   <i className="fas fa-user-astronaut"></i>
                 </div>
                 <div className="character-speech active">
-                  {profileData.catchphrase}
+                  {localProfileData.catchphrase}
                 </div>
               </div>
               
-              <h2 className="character-name">{profileData.nickname}</h2>
+              <h2 className="character-name">{localProfileData.nickname}</h2>
               
               <div className="character-stats">
                 <div className="stat-item">
                   <div className="stat-label">キャラクター</div>
-                  <div className="stat-value">{profileData.character}</div>
+                  <div className="stat-value">{localProfileData.character}</div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">レベル</div>
@@ -198,7 +279,12 @@ export default function ProfilePage() {
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">スキル数</div>
-                  <div className="stat-value">{profileData.skills.length}個</div>
+                  <div className="stat-value">
+                    {Array.isArray(localProfileData.skills) 
+                      ? localProfileData.skills.length 
+                      : 0
+                    }個
+                  </div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">経験値</div>
@@ -209,10 +295,10 @@ export default function ProfilePage() {
               <div className="completion-bar">
                 <div 
                   className="completion-fill" 
-                  style={{ width: `${profileData.profileCompletion}%` }}
+                  style={{ width: `${localProfileData.profileCompletion}%` }}
                 ></div>
                 <div className="completion-text">
-                  プロフィール完成度 {profileData.profileCompletion}%
+                  プロフィール完成度 {localProfileData.profileCompletion}%
                 </div>
               </div>
             </div>
@@ -245,6 +331,39 @@ export default function ProfilePage() {
               </button>
             </div>
 
+            {/* 保存ボタンエリア */}
+            <div className="save-buttons">
+              <button
+                onClick={handleSaveProfile}
+                disabled={!localChanges || saveStatus === 'saving'}
+                className={`save-btn ${!localChanges ? 'disabled' : ''} ${saveStatus === 'saving' ? 'saving' : ''}`}
+              >
+                <i className={`fas ${saveStatus === 'saving' ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+                {saveStatus === 'saving' ? '保存中...' : 'プロフィールを保存する'}
+              </button>
+              
+              {localChanges && (
+                <button
+                  onClick={() => {
+                    setLocalProfileData(profileData)
+                    setLocalChanges(false)
+                    setSaveStatus('saved')
+                  }}
+                  className="cancel-btn"
+                >
+                  <i className="fas fa-undo"></i>
+                  変更を取り消す
+                </button>
+              )}
+              
+              {saveStatus === 'error' && (
+                <div className="error-message">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  保存に失敗しました。もう一度お試しください。
+                </div>
+              )}
+            </div>
+
             {/* タブコンテンツ */}
             <div className="tab-content">
               {/* 基本情報タブ */}
@@ -253,12 +372,12 @@ export default function ProfilePage() {
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-signature"></i>
-                      ニックネーム
+                      なまえ（ニックネーム）
                     </label>
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.nickname}
+                      value={localProfileData.nickname || ''}
                       onChange={(e) => handleInputChange('nickname', e.target.value)}
                       placeholder="あなたの冒険者名"
                     />
@@ -267,31 +386,31 @@ export default function ProfilePage() {
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-mask"></i>
-                      キャラクタータイプ
+                      キャラ（特性）
                     </label>
-                    <select
+                    <input
+                      type="text"
                       className="form-input"
-                      value={profileData.character}
+                      value={localProfileData.character || ''}
                       onChange={(e) => handleInputChange('character', e.target.value)}
-                    >
-                      <option value="創造型冒険者">創造型冒険者</option>
-                      <option value="探求型冒険者">探求型冒険者</option>
-                      <option value="社交型冒険者">社交型冒険者</option>
-                      <option value="分析型冒険者">分析型冒険者</option>
-                    </select>
+                      placeholder="例: 勇者, 魔法使い, 探検家, 発明家"
+                    />
+                    <div className="form-hint">
+                      💡 その他自由に表現OK！
+                    </div>
                   </div>
                   
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-comment"></i>
-                      キャッチフレーズ
+                      セリフ（口ぐせ）
                     </label>
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.catchphrase}
+                      value={localProfileData.catchphrase || ''}
                       onChange={(e) => handleInputChange('catchphrase', e.target.value)}
-                      placeholder="あなたの座右の銘"
+                      placeholder="例: 「やってみよう！」「面白そう！」"
                     />
                   </div>
                 </div>
@@ -303,37 +422,31 @@ export default function ProfilePage() {
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-star"></i>
-                      得意なこと（スキル）
+                      とくい（スキル）
                     </label>
-                    <div className="skills-input">
-                      {profileData.skills.map((skill, index) => (
-                        <div key={index} className="skill-tag">
-                          {skill}
-                          <button 
-                            onClick={() => {
-                              const newSkills = profileData.skills.filter((_, i) => i !== index)
-                              handleSkillsChange(newSkills)
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      <button className="add-skill-btn">+ スキル追加</button>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={(Array.isArray(localProfileData.skills) ? localProfileData.skills.join(', ') : localProfileData.skills) || ''}
+                      onChange={(e) => handleInputChange('skills', e.target.value)}
+                      placeholder="例: プログラミング, 走る, 絵を描く"
+                    />
+                    <div className="form-hint">
+                      💡 得意なことを「,」で区切って入力してください（例: デザイン, プログラミング, 企画）
                     </div>
                   </div>
                   
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-grimace"></i>
-                      ちょっと苦手なこと
+                      よわみ（苦手）
                     </label>
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.weakness}
+                      value={localProfileData.weakness || ''}
                       onChange={(e) => handleInputChange('weakness', e.target.value)}
-                      placeholder="苦手なことを正直に"
+                      placeholder="例: 寒がり, 寝坊ぐせ"
                     />
                   </div>
                 </div>
@@ -345,14 +458,14 @@ export default function ProfilePage() {
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-map-marker-alt"></i>
-                      好きな場所・時間
+                      すきな時間・場所
                     </label>
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.favoritePlace}
+                      value={localProfileData.favoritePlace || ''}
                       onChange={(e) => handleInputChange('favoritePlace', e.target.value)}
-                      placeholder="集中できる場所や時間"
+                      placeholder="例: カフェでゆっくり, 公園で遊ぶ"
                     />
                   </div>
                   
@@ -364,9 +477,9 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.energyCharge}
+                      value={localProfileData.energyCharge || ''}
                       onChange={(e) => handleInputChange('energyCharge', e.target.value)}
-                      placeholder="元気になる方法"
+                      placeholder="例: 音楽を聴く, 温泉に行く"
                     />
                   </div>
                   
@@ -378,9 +491,9 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       className="form-input"
-                      value={profileData.companion}
+                      value={localProfileData.companion || ''}
                       onChange={(e) => handleInputChange('companion', e.target.value)}
-                      placeholder="どんな人と働きたい？"
+                      placeholder="例: リーダー, ムードメーカー, アイデアマン"
                     />
                   </div>
                   
@@ -391,9 +504,9 @@ export default function ProfilePage() {
                     </label>
                     <textarea
                       className="form-textarea"
-                      value={profileData.message}
+                      value={localProfileData.message || ''}
                       onChange={(e) => handleInputChange('message', e.target.value)}
-                      placeholder="自分についてのメッセージ"
+                      placeholder="なかまへのメッセージ"
                       rows={4}
                     />
                   </div>
@@ -404,9 +517,9 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* プロフィール編集専用スタイル */}
-      <style jsx>{`
-        /* 部屋の背景 */
+     {/* プロフィール編集専用スタイル */}
+     <style jsx>{`
+        /* 部屋の背景 - ゲーマー×魔法使いのハイブリッド空間 */
         .room-background {
           position: fixed;
           top: 0;
@@ -414,153 +527,444 @@ export default function ProfilePage() {
           width: 100%;
           height: 100%;
           z-index: -1;
-          background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 40%, var(--cream-bg) 40%);
+          background: #2a2a3e;
           overflow: hidden;
+          perspective: 1000px;
         }
 
-        .window {
-          position: absolute;
-          top: 10%;
-          right: 20%;
-          width: 200px;
-          height: 250px;
-          background: linear-gradient(to bottom, #87CEEB, #FFE4B5);
-          border: 8px solid #8B6E47;
-          border-radius: 5px 5px 0 0;
-          box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        .window::before {
+        /* 部屋の壁と床 */
+        .room-background::before {
           content: '';
           position: absolute;
-          top: 50%;
-          left: -8px;
-          right: -8px;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: 
+            linear-gradient(to bottom, #1a1a2e 0%, #16213e 25%),
+            linear-gradient(to bottom, #f5f5dc 25%, #f5f5dc 75%);
+          background-size: 100% 25%, 100% 100%;
+          background-position: 0 0, 0 0;
+          background-repeat: no-repeat;
+        }
+
+        /* 床 */
+        .room-floor {
+          position: absolute;
+          bottom: 0;
+          left: -50%;
+          right: -50%;
+          height: 40%;
+          background: 
+            repeating-linear-gradient(
+              90deg,
+              #8B7355 0px,
+              #8B7355 100px,
+              #A0826D 100px,
+              #A0826D 200px
+            );
+          transform: rotateX(70deg) translateZ(-100px);
+          transform-origin: bottom;
+        }
+
+        /* RGBライトストリップ（天井） */
+        .rgb-lights {
+          position: absolute;
+          top: 24%;
+          left: 0;
+          right: 0;
           height: 8px;
-          background: #8B6E47;
+          background: linear-gradient(
+            90deg,
+            #ff0080 0%,
+            #ff8c00 20%,
+            #ffd700 40%,
+            #00ff00 60%,
+            #00ffff 80%,
+            #ff0080 100%
+          );
+          box-shadow: 
+            0 0 20px rgba(255, 0, 128, 0.5),
+            0 0 40px rgba(255, 0, 128, 0.3);
+          filter: blur(2px);
         }
 
-        .window::after {
+        /* ゲーミングデスクセットアップ */
+        .gaming-desk {
+          position: absolute;
+          left: 3%;
+          bottom: 15%;
+          width: 350px;
+          height: 280px;
+        }
+
+        /* L字型デスク */
+        .desk-surface {
+          position: absolute;
+          bottom: 0;
+          width: 100%;
+          height: 120px;
+          background: linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 100%);
+          border-radius: 10px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .desk-surface::before {
           content: '';
           position: absolute;
-          top: -8px;
-          bottom: -8px;
-          left: 50%;
-          width: 8px;
-          background: #8B6E47;
-          transform: translateX(-50%);
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 5px;
+          background: linear-gradient(
+            90deg,
+            #ff0080 0%,
+            #00ffff 50%,
+            #ff0080 100%
+          );
+          border-radius: 10px 10px 0 0;
         }
 
-        .sun {
+        /* トリプルモニター */
+        .monitor {
           position: absolute;
-          top: 30px;
-          right: 30px;
-          width: 40px;
-          height: 40px;
-          background: #FFD700;
-          border-radius: 50%;
-          box-shadow: 0 0 40px #FFD700;
-          animation: float 6s ease-in-out infinite;
+          bottom: 120px;
+          background: #000;
+          border: 3px solid #333;
+          border-radius: 10px;
+          box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
         }
 
-        .cloud1 {
+        .monitor-center {
+          left: 50%;
+          transform: translateX(-50%);
+          width: 140px;
+          height: 90px;
+        }
+
+        .monitor-left {
+          left: 10px;
+          width: 120px;
+          height: 80px;
+          transform: rotate(-15deg);
+        }
+
+        .monitor-right {
+          right: 10px;
+          width: 120px;
+          height: 80px;
+          transform: rotate(15deg);
+        }
+
+        .monitor::before {
+          content: '';
+          position: absolute;
+          top: 5px;
+          left: 5px;
+          right: 5px;
+          bottom: 5px;
+          background: linear-gradient(
+            135deg,
+            #1e3c72 0%,
+            #2a5298 50%,
+            #7e22ce 100%
+          );
+          border-radius: 5px;
+          opacity: 0.9;
+        }
+
+        /* ゲーミングチェア */
+        .gaming-chair {
+          position: absolute;
+          left: 120px;
+          bottom: -20px;
+          width: 80px;
+          height: 140px;
+        }
+
+        .chair-back {
+          position: absolute;
+          top: 0;
+          left: 10px;
+          width: 60px;
+          height: 90px;
+          background: linear-gradient(to bottom, #ff0080 0%, #8b008b 100%);
+          border-radius: 10px 10px 0 0;
+          box-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+        }
+
+        .chair-seat {
+          position: absolute;
+          bottom: 30px;
+          left: 5px;
+          width: 70px;
+          height: 20px;
+          background: #8b008b;
+          border-radius: 5px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 魔法の道具エリア */
+        .magic-area {
+          position: absolute;
+          right: 5%;
+          bottom: 25%;
+          width: 300px;
+          height: 350px;
+        }
+
+        /* 浮遊する水晶玉 */
+        .crystal-ball {
           position: absolute;
           top: 20px;
-          left: -100px;
+          right: 50px;
           width: 80px;
-          height: 30px;
-          background: white;
-          border-radius: 100px;
-          opacity: 0.7;
-          animation: drift 20s infinite linear;
+          height: 80px;
+          background: radial-gradient(
+            circle at 30% 30%,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(138, 43, 226, 0.6) 30%,
+            rgba(75, 0, 130, 0.8) 60%,
+            rgba(138, 43, 226, 0.9) 100%
+          );
+          border-radius: 50%;
+          box-shadow: 
+            0 0 50px rgba(138, 43, 226, 0.8),
+            inset 0 0 30px rgba(255, 255, 255, 0.3);
         }
 
-        .cloud1::before {
+        .crystal-ball::before {
           content: '';
           position: absolute;
-          width: 50px;
-          height: 50px;
-          top: -25px;
-          left: 10px;
-          background: white;
-          border-radius: 100px;
+          top: 10%;
+          left: 20%;
+          width: 30%;
+          height: 30%;
+          background: rgba(255, 255, 255, 0.6);
+          border-radius: 50%;
+          filter: blur(10px);
         }
 
-        .floor {
+        .crystal-stand {
+          position: absolute;
+          top: 90px;
+          right: 60px;
+          width: 60px;
+          height: 30px;
+          background: linear-gradient(to bottom, #4a4a4a 0%, #2a2a2a 100%);
+          clip-path: polygon(20% 0%, 80% 0%, 90% 100%, 10% 100%);
+        }
+
+        /* 魔法の杖（壁掛け） */
+        .magic-wand {
+          position: absolute;
+          top: 150px;
+          right: 20px;
+          width: 150px;
+          height: 8px;
+          background: linear-gradient(
+            90deg,
+            #8b4513 0%,
+            #d2691e 40%,
+            #ffd700 50%,
+            #d2691e 60%,
+            #8b4513 100%
+          );
+          border-radius: 4px;
+          transform: rotate(-30deg);
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .magic-wand::before {
+          content: '';
+          position: absolute;
+          right: -20px;
+          top: -15px;
+          width: 40px;
+          height: 40px;
+          background: radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(255, 215, 0, 0.6) 40%,
+            transparent 70%
+          );
+          border-radius: 50%;
+        }
+
+        /* ポーション棚 */
+        .potion-shelf {
+          position: absolute;
+          top: 200px;
+          right: 40px;
+          width: 200px;
+          height: 15px;
+          background: #8b4513;
+          box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .potion {
+          position: absolute;
+          bottom: 15px;
+          width: 25px;
+          height: 40px;
+          border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+          box-shadow: 0 0 15px currentColor;
+        }
+
+        .potion1 {
+          left: 20px;
+          background: rgba(255, 0, 0, 0.7);
+          color: #ff0000;
+        }
+
+        .potion2 {
+          left: 60px;
+          background: rgba(0, 255, 0, 0.7);
+          color: #00ff00;
+        }
+
+        .potion3 {
+          left: 100px;
+          background: rgba(0, 100, 255, 0.7);
+          color: #0064ff;
+        }
+
+        .potion4 {
+          left: 140px;
+          background: rgba(255, 0, 255, 0.7);
+          color: #ff00ff;
+        }
+
+        /* ペットエリア */
+        .pet-area {
+          position: absolute;
+          right: 10%;
+          bottom: 5%;
+          width: 150px;
+          height: 120px;
+        }
+
+        /* かわいいスライムペット */
+        .pet-slime {
+          position: absolute;
+          bottom: 20px;
+          left: 30px;
+          width: 60px;
+          height: 50px;
+          background: radial-gradient(
+            ellipse at center,
+            rgba(0, 255, 170, 0.8) 0%,
+            rgba(0, 200, 140, 0.9) 60%,
+            rgba(0, 150, 100, 1) 100%
+          );
+          border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+          box-shadow: 
+            0 0 30px rgba(0, 255, 170, 0.6),
+            inset 0 -5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .pet-slime::before,
+        .pet-slime::after {
+          content: '';
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          background: #000;
+          border-radius: 50%;
+          top: 35%;
+        }
+
+        .pet-slime::before {
+          left: 25%;
+        }
+
+        .pet-slime::after {
+          right: 25%;
+        }
+
+        .pet-bed {
           position: absolute;
           bottom: 0;
           left: 0;
-          right: 0;
-          height: 60%;
-          background: repeating-linear-gradient(
-            90deg,
-            #D2691E,
-            #D2691E 80px,
-            #CD853F 80px,
-            #CD853F 160px
+          width: 100px;
+          height: 20px;
+          background: #8b4513;
+          border-radius: 50%;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .pet-bed::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: 10px;
+          right: 10px;
+          height: 15px;
+          background: #ff6b6b;
+          border-radius: 50%;
+        }
+
+        /* 窓は既存の要素を使用するため削除 */
+        .window {
+          position: absolute;
+          top: 8%;
+          right: 15%;
+          width: 250px;
+          height: 300px;
+          background: linear-gradient(
+            to bottom,
+            #1e3c72 0%,
+            #2a5298 40%,
+            #ff6b6b 70%,
+            #feca57 100%
           );
-          transform: perspective(200px) rotateX(30deg);
-          transform-origin: bottom;
+          border: 10px solid #4a4a4a;
+          border-radius: 10px;
+          box-shadow: 
+            inset 0 0 30px rgba(0, 0, 0, 0.3),
+            0 0 50px rgba(0, 0, 0, 0.2);
+          overflow: hidden;
         }
 
-        .bookshelf {
+        /* 窓枠 */
+        .window::before,
+        .window::after {
+          content: '';
           position: absolute;
-          left: 5%;
-          bottom: 30%;
-          width: 150px;
-          height: 200px;
-          background: #8B6E47;
-          border-radius: 5px;
-          box-shadow: var(--shadow-md);
+          background: #4a4a4a;
         }
 
-        .book {
-          position: absolute;
-          bottom: 10px;
-          width: 20px;
-          height: 140px;
-          border-radius: 2px;
-          transform-origin: bottom;
+        .window::before {
+          top: 50%;
+          left: 0;
+          right: 0;
+          height: 10px;
+          transform: translateY(-50%);
         }
 
-        .book:nth-child(1) { left: 10px; background: #E74C3C; transform: rotate(-2deg); }
-        .book:nth-child(2) { left: 35px; background: #3498DB; height: 130px; }
-        .book:nth-child(3) { left: 60px; background: #2ECC71; transform: rotate(2deg); }
-        .book:nth-child(4) { left: 85px; background: #F39C12; height: 135px; }
-        .book:nth-child(5) { left: 110px; background: #9B59B6; transform: rotate(-1deg); }
-
-        .plant {
-          position: absolute;
-          right: 10%;
-          bottom: 25%;
-          width: 80px;
-          height: 100px;
-        }
-
-        .pot {
-          position: absolute;
-          bottom: 0;
-          width: 80px;
-          height: 40px;
-          background: #8B4513;
-          border-radius: 0 0 10px 10px;
-          box-shadow: var(--shadow-md);
-        }
-
-        .leaf {
-          position: absolute;
-          bottom: 30px;
+        .window::after {
           left: 50%;
-          width: 30px;
-          height: 50px;
-          background: #228B22;
-          border-radius: 0 100% 0 100%;
-          transform-origin: bottom;
-          animation: sway 3s ease-in-out infinite;
+          top: 0;
+          bottom: 0;
+          width: 10px;
+          transform: translateX(-50%);
         }
 
-        .leaf:nth-child(2) { transform: rotate(-30deg) translateX(-20px); animation-delay: 0.5s; }
-        .leaf:nth-child(3) { transform: rotate(30deg) translateX(20px); animation-delay: 1s; }
+        /* 元のwindow内の要素は削除 */
+        .sun,
+        .cloud {
+          display: none;
+        }
+
+        /* 既存の要素も削除 */
+        .floor,
+        .bookshelf,
+        .book,
+        .plant,
+        .pot,
+        .leaf {
+          display: none;
+        }
 
         /* ヘッダー */
         .header {
@@ -967,6 +1371,94 @@ export default function ProfilePage() {
           color: white;
         }
 
+        .form-hint {
+          font-size: 14px;
+          color: #6B7280;
+          margin-top: 8px;
+          padding: 8px 12px;
+          background: #F3F4F6;
+          border-radius: 8px;
+          border-left: 3px solid #3B82F6;
+        }
+
+        /* 保存ボタンエリア */
+        .save-buttons {
+          background: white;
+          padding: 24px;
+          border-radius: 15px;
+          box-shadow: var(--shadow-md);
+          margin-bottom: 20px;
+          display: flex;
+          gap: 15px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+
+        .save-btn {
+          background: linear-gradient(135deg, var(--purple) 0%, var(--blue) 100%);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 25px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 15px rgba(126, 87, 194, 0.3);
+        }
+
+        .save-btn:hover:not(.disabled):not(.saving) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
+        }
+
+        .save-btn.disabled {
+          background: #D1D5DB;
+          color: #9CA3AF;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .save-btn.saving {
+          opacity: 0.8;
+          cursor: not-allowed;
+        }
+
+        .cancel-btn {
+          background: transparent;
+          color: #6B7280;
+          border: 2px solid #D1D5DB;
+          padding: 10px 20px;
+          border-radius: 25px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .cancel-btn:hover {
+          background: #F3F4F6;
+          border-color: #9CA3AF;
+          color: #374151;
+        }
+
+        .error-message {
+          color: #DC2626;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: #FEF2F2;
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid #FECACA;
+        }
+
         /* アニメーション */
         @keyframes float {
           0%, 100% { transform: translateY(0); }
@@ -1029,8 +1521,82 @@ export default function ProfilePage() {
             padding: 10px 16px;
             font-size: 14px;
           }
+
+          .gaming-desk {
+            transform: scale(0.7);
+            left: -5%;
+          }
+          
+          .magic-area {
+            transform: scale(0.8);
+            right: 0;
+          }
+          
+          .window {
+            width: 180px;
+            height: 220px;
+            right: 5%;
+          }
+          
+          .neon-sign {
+            font-size: 18px;
+            left: 10%;
+          }
         }
       `}</style>
-    </>
+
+      {/* 部屋の背景要素をJSXで追加 */}
+      <div className="room-background">
+        <div className="room-floor"></div>
+        <div className="rgb-lights"></div>
+        
+        {/* ゲーミングデスクエリア */}
+        <div className="gaming-desk">
+          <div className="desk-surface"></div>
+          <div className="monitor monitor-left"></div>
+          <div className="monitor monitor-center"></div>
+          <div className="monitor monitor-right"></div>
+          <div className="gaming-chair">
+            <div className="chair-back"></div>
+            <div className="chair-seat"></div>
+          </div>
+        </div>
+        
+        {/* 魔法の道具エリア */}
+        <div className="magic-area">
+          <div className="crystal-ball"></div>
+          <div className="crystal-stand"></div>
+          <div className="magic-wand"></div>
+          <div className="potion-shelf">
+            <div className="potion potion1"></div>
+            <div className="potion potion2"></div>
+            <div className="potion potion3"></div>
+            <div className="potion potion4"></div>
+          </div>
+        </div>
+        
+        {/* ペットエリア */}
+        <div className="pet-area">
+          <div className="pet-bed"></div>
+          <div className="pet-slime"></div>
+        </div>
+        
+        {/* 新しい窓 */}
+        <div className="window">
+          <div className="city-silhouette"></div>
+          <div className="flying-vehicle"></div>
+        </div>
+        
+        {/* ネオンサイン */}
+        <div className="neon-sign">PLAYER ONE</div>
+        
+        {/* フィギュア棚 */}
+        <div className="figure-shelf">
+          <div className="figure figure1"></div>
+          <div className="figure figure2"></div>
+          <div className="figure figure3"></div>
+        </div>
+      </div>
+      </>
   )
 } 

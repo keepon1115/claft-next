@@ -23,10 +23,17 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   // userStore初期化
   useEffect(() => {
     const initStore = async () => {
-      await initialize();
+      // ログインしている場合のみ、実際のユーザーIDで初期化
+      if (isAuthenticated && user?.id) {
+        // SupabaseのUUID形式に一致するかチェック
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(user.id)) {
+          await initialize(user.id);
+        }
+      }
     };
     initStore();
-  }, [initialize]);
+  }, [initialize, user?.id, isAuthenticated]);
 
   const handleEditClick = async () => {
     if (isAuthenticated) {
