@@ -55,9 +55,9 @@ export default function PWAInstallPrompt({
     return null
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[5000] flex items-center justify-center p-4 sm:p-6">
-      <div className={`bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto ${className}`}>
+      return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center p-4 sm:p-6">
+        <div className={`bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto ${className}`}>
         <div className="relative p-4 sm:p-6">
           <button
             onClick={handleDismiss}

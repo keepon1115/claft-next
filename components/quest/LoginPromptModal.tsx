@@ -48,7 +48,7 @@ const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000]"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000]"
       onClick={handleBackdropClick}
     >
       <div className="bg-white border-4 border-gray-800 p-8 max-w-md w-full mx-4 relative rounded-lg">
