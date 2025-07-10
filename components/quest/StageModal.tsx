@@ -184,7 +184,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           <button 
             className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
             onClick={() => setShowFeedback(false)}
-            aria-label="フィードバックモーダルを閉じる"
+            aria-label="メッセージモーダルを閉じる"
           >
             <X size={16} />
           </button>
@@ -193,7 +193,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
             <div className="flex items-center justify-center gap-2 mb-4">
               <MessageSquare className="w-8 h-8 text-blue-600" />
               <h2 className="text-2xl font-bold text-gray-800">
-                ステージ{stageId} フィードバック
+                ステージ{stageId} メッセージ
               </h2>
             </div>
           </div>
@@ -201,12 +201,12 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           {loadingFeedback ? (
             <div className="text-center py-8">
               <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600">フィードバックを読み込み中...</p>
+              <p className="text-gray-600">メッセージを読み込み中...</p>
             </div>
           ) : feedbackData?.feedback_message ? (
             <div>
               <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-lg mb-4">
-                <h3 className="text-lg font-bold text-blue-800 mb-3">📝 管理者からのメッセージ</h3>
+                <h3 className="text-lg font-bold text-blue-800 mb-3">📝 スタッフからのメッセージ</h3>
                 <p className="text-blue-700 whitespace-pre-wrap leading-relaxed">
                   {feedbackData.feedback_message}
                 </p>
@@ -220,9 +220,9 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           ) : (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">📭</div>
-              <h3 className="text-lg font-bold text-gray-700 mb-2">フィードバック待ち</h3>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">メッセージ待ち</h3>
               <p className="text-gray-600">
-                管理者からのフィードバックはまだ届いていません。<br />
+                スタッフからのメッセージはまだ届いていません。<br />
                 しばらくお待ちください。
               </p>
             </div>
@@ -282,7 +282,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
           {status === 'pending_approval' && (
             <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full">
               <AlertTriangle size={20} />
-              <span className="font-bold">承認待ち</span>
+              <span className="font-bold">メッセージ待ち</span>
             </div>
           )}
         </div>
@@ -309,7 +309,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">✓</div>
-                <span className="text-green-700 font-medium">即座に次のステージに進めます！</span>
+                <span className="text-green-700 font-medium">次のステージに進めます！</span>
               </div>
             </div>
           </div>
@@ -328,7 +328,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
             </p>
             <div className="flex items-center gap-2 text-sm text-green-600">
               <ArrowRight size={16} />
-              <span>報告後は即座に次のステージに進むことができます</span>
+              <span>報告後は次のステージに進むことができます</span>
             </div>
           </div>
         )}
@@ -367,7 +367,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
               className="flex items-center justify-center gap-2 px-6 py-4 bg-purple-500 text-white border-2 border-purple-700 font-bold hover:bg-purple-600 transition-colors rounded-lg"
             >
               <MessageSquare size={24} />
-              フィードバック確認
+              メッセージ確認
             </button>
           )}
         </div>

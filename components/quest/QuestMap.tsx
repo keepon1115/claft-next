@@ -599,7 +599,7 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           border: 2px solid rgba(255, 255, 255, 0.1);
           padding: 24px;
           text-align: center;
-          color: white;
+          color: #333;
         }
 
         .hint-header {
@@ -616,7 +616,7 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
         }
 
         .pixel-hint-box p {
-          color: rgba(255, 255, 255, 0.8);
+          color: #555;
           font-size: 0.9rem;
           line-height: 1.6;
         }
@@ -639,7 +639,7 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           display: flex;
           align-items: center;
           gap: 8px;
-          color: white;
+          color: #333;
           font-weight: bold;
           box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 3px 3px 0 0 rgba(0,0,0,0.2);
         }
