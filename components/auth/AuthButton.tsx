@@ -158,7 +158,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
               onClick={() => openAuthModal('signup')}
               disabled={isLoading}
               className={`
-                bg-green-600 text-white rounded-lg hover:bg-green-700 
+                bg-green-500 text-black border-2 border-green-700 rounded-lg hover:bg-green-600 
                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
                 disabled:opacity-50 disabled:cursor-not-allowed transition-colors
                 ${currentSize.button}
