@@ -191,12 +191,18 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           font-family: 'DotGothic16', 'M PLUS Rounded 1c', monospace;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 80px 16px 40px;
+          padding: 60px 12px 40px;
           position: relative;
           z-index: 10;
           image-rendering: pixelated;
           image-rendering: -moz-crisp-edges;
           image-rendering: crisp-edges;
+        }
+
+        @media (min-width: 768px) {
+          .quest-container {
+            padding: 80px 16px 40px;
+          }
         }
 
         /* 空中オブジェクト */
@@ -256,10 +262,18 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
         .pixel-quest-map {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
-          border: 4px solid #333;
-          padding: 32px;
-          box-shadow: 0 0 0 2px #666, 8px 8px 0 0 rgba(0,0,0,0.3);
+          border: 3px solid #333;
+          padding: 16px;
+          box-shadow: 0 0 0 2px #666, 6px 6px 0 0 rgba(0,0,0,0.3);
           margin-bottom: 40px;
+        }
+
+        @media (min-width: 768px) {
+          .pixel-quest-map {
+            border: 4px solid #333;
+            padding: 32px;
+            box-shadow: 0 0 0 2px #666, 8px 8px 0 0 rgba(0,0,0,0.3);
+          }
         }
 
         /* ステージグリッド */
@@ -321,19 +335,30 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
 
         /* ステージアイコン */
         .pixel-stage-icon {
-          width: 120px;
-          height: 120px;
-          margin: 0 auto 16px;
+          width: 100px;
+          height: 100px;
+          margin: 0 auto 12px;
           position: relative;
           background: #E8F5E9;
-          border: 4px solid #333;
-          box-shadow: 0 0 0 2px #666, 6px 6px 0 0 rgba(0,0,0,0.3);
+          border: 3px solid #333;
+          box-shadow: 0 0 0 2px #666, 4px 4px 0 0 rgba(0,0,0,0.3);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 64px;
+          font-size: 48px;
           transition: all 0.3s ease;
           overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+          .pixel-stage-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            border: 4px solid #333;
+            box-shadow: 0 0 0 2px #666, 6px 6px 0 0 rgba(0,0,0,0.3);
+            font-size: 64px;
+          }
         }
 
         .pixel-stage-node.locked .pixel-stage-icon {
@@ -536,24 +561,48 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
         /* ステージ情報 */
         .pixel-stage-info {
           background: white;
-          border: 3px solid #333;
-          padding: 12px 16px;
-          margin-top: 16px;
+          border: 2px solid #333;
+          padding: 8px 12px;
+          margin-top: 12px;
           position: relative;
-          box-shadow: 0 0 0 1px #666, 4px 4px 0 0 rgba(0,0,0,0.2);
+          box-shadow: 0 0 0 1px #666, 3px 3px 0 0 rgba(0,0,0,0.2);
+        }
+
+        @media (min-width: 768px) {
+          .pixel-stage-info {
+            border: 3px solid #333;
+            padding: 12px 16px;
+            margin-top: 16px;
+            box-shadow: 0 0 0 1px #666, 4px 4px 0 0 rgba(0,0,0,0.2);
+          }
         }
 
         .stage-title {
-          font-size: 1.1rem;
+          font-size: 0.95rem;
           font-weight: bold;
           color: #333;
-          margin-bottom: 4px;
+          margin-bottom: 3px;
+          line-height: 1.3;
+        }
+
+        @media (min-width: 768px) {
+          .stage-title {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+          }
         }
 
         .stage-description {
-          font-size: 0.9rem;
+          font-size: 0.8rem;
           color: #666;
-          line-height: 1.4;
+          line-height: 1.3;
+        }
+
+        @media (min-width: 768px) {
+          .stage-description {
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
         }
 
         /* パスライン */
@@ -626,22 +675,39 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
-          gap: 16px;
-          margin-bottom: 30px;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+          .progress-stats {
+            gap: 16px;
+            margin-bottom: 30px;
+          }
         }
 
         .stat-card {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
           border: 2px solid rgba(255, 255, 255, 0.2);
-          padding: 12px 20px;
+          padding: 8px 12px;
           border-radius: 0;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           color: #333;
           font-weight: bold;
-          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 3px 3px 0 0 rgba(0,0,0,0.2);
+          font-size: 0.85rem;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 2px 2px 0 0 rgba(0,0,0,0.2);
+        }
+
+        @media (min-width: 768px) {
+          .stat-card {
+            padding: 12px 20px;
+            gap: 8px;
+            font-size: 1rem;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 3px 3px 0 0 rgba(0,0,0,0.2);
+          }
         }
       `}</style>
     </>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 
 export interface SidebarProps {
@@ -10,6 +11,8 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
+  const { isAuthenticated, isAdmin } = useAuth()
+
   // ESCキーでサイドバーを閉じる
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -147,23 +150,26 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
               </Link>
             </li>
             
-            <li>
-              <Link 
-                href="/admin" 
-                className="
-                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
-                  transition-all duration-300 ease-in-out font-medium
-                  hover:bg-white/10 hover:text-white hover:pl-[35px]
-                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
-                "
-                onClick={onClose}
-              >
-                <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
-                <span className="text-base">管理画面</span>
-              </Link>
-            </li>
+            {isAuthenticated && isAdmin && (
+              <li>
+                <Link 
+                  href="/admin" 
+                  className="
+                    flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                    transition-all duration-300 ease-in-out font-medium
+                    hover:bg-white/10 hover:text-white hover:pl-[35px]
+                    focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                  "
+                  onClick={onClose}
+                >
+                  <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
+                  <span className="text-base">管理画面</span>
+                </Link>
+              </li>
+            )}
             
-            <li>
+            {/* 「認証」ページは不要なため削除 */}
+            {/* <li>
               <Link 
                 href="/unauthorized" 
                 className="
@@ -177,7 +183,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🔒</i>
                 <span className="text-base">認証</span>
               </Link>
-            </li>
+            </li> */}
           </ul>
         </nav>
       </aside>
