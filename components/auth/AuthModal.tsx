@@ -297,7 +297,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="login-email"
                     type="email"
                     placeholder="your-email@example.com"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
                       loginForm.formState.errors.email 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -321,7 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="パスワードを入力"
-                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
                         loginForm.formState.errors.password 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300'
@@ -383,7 +383,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="signup-email"
                     type="email"
                     placeholder="your-email@example.com"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
                       signupForm.formState.errors.email 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -407,7 +407,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       id="signup-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="6文字以上のパスワード"
-                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
                         signupForm.formState.errors.password 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300'
@@ -439,7 +439,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="signup-nickname"
                     type="text"
                     placeholder="あなたの冒険者名"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
                       signupForm.formState.errors.nickname 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'

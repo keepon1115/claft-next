@@ -1,16 +1,27 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuestStore } from '@/stores/questStore'
 import QuestMap from '@/components/quest/QuestMap'
-import { DynamicStageModal } from '@/components/dynamic/DynamicStageModal'
-import { Map, Compass, Star, Trophy, Zap } from 'lucide-react'
+import { DynamicStageModal } from '@/components/quest/DynamicStageModal'
+import { DynamicAuthModal } from '@/components/auth/DynamicAuthModal'
+import { Lock } from 'lucide-react'
 import type { StageProgress } from '@/stores/questStore'
 import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import { AuthButton } from '@/components/auth/AuthButton'
+import { ModalLoadingFallback } from '@/components/common/DynamicLoader';
+
+// ==========================================
+// 動的インポートコンポーネント
+// ==========================================
+const DynamicLoginPromptModal = dynamic(
+  () => import('@/components/quest/LoginPromptModal'),
+  { loading: () => <ModalLoadingFallback title="ログイン案内を読み込み中..." />, ssr: false }
+);
 
 // ==========================================
 // クエストページメインコンポーネント
@@ -29,42 +40,62 @@ export default function QuestPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [promptStageId, setPromptStageId] = useState<number>(1)
 
   // ステージ詳細を配列に変換
   const stages: StageProgress[] = Object.values(stageDetails).sort((a, b) => a.stageId - b.stageId)
 
-  // 開発環境での認証チェック緩和
-  const isDevMode = process.env.NODE_ENV === 'development'
-  const shouldAllowAccess = isDevMode || isAuthenticated
+  // 未ログインユーザー用のデモ統計
+  const demoStatistics = {
+    totalStages: 6,
+    completedStages: 0,
+    currentStage: null,
+    progressPercentage: 0,
+    lastCompletedStage: null
+  }
+
+  // 表示用の統計（ログイン状態に応じて切り替え）
+  const displayStatistics = isAuthenticated ? statistics : demoStatistics
 
   // 認証確認とデータロード
   useEffect(() => {
-    // 本番環境でのみ厳密な認証チェック
-    if (!isDevMode && !isAuthenticated) {
-      router.push('/')
-      return
-    }
-
-    // ユーザーIDがある場合のみ初期化（開発環境ではダミーID使用）
-    const userId = user?.id || (isDevMode ? 'dev-user' : null)
-    if (userId) {
-      initialize(userId)
-    }
-  }, [isAuthenticated, user?.id, router, initialize, isDevMode])
+    // 常にクエストストアを初期化（未ログインの場合はデモモード）
+    initialize(user?.id)
+  }, [initialize, user?.id])
 
   // ステージクリック処理
   const handleStageClick = (stageId: number) => {
-    // 未認証でステージ1以外をクリックした場合の処理
-    if (!isAuthenticated && stageId > 1) {
-      alert('ステージ2以降は冒険者登録が必要です！まずはログインしてください。')
+    // 未認証の場合はログイン促進モーダルを表示
+    if (!isAuthenticated) {
+      setPromptStageId(stageId)
+      setShowLoginPrompt(true)
       return
     }
     
+    // 認証済みの場合は通常通りステージモーダルを開く
     setSelectedStageId(stageId)
     setIsModalOpen(true)
   }
 
-  // モーダルクローズ処理
+  // ログイン促進モーダルからの登録ボタンクリック
+  const handleLoginFromPrompt = () => {
+    setShowLoginPrompt(false)
+    setShowAuthModal(true)
+  }
+
+  // ログイン促進モーダルクローズ
+  const handleCloseLoginPrompt = () => {
+    setShowLoginPrompt(false)
+  }
+
+  // 認証モーダルクローズ
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false)
+  }
+
+  // ステージモーダルクローズ処理
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setTimeout(() => {
@@ -75,8 +106,8 @@ export default function QuestPage() {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
   const closeSidebar = () => setSidebarOpen(false)
 
-  // ローディング状態
-  if (isLoading) {
+  // ローディング状態（認証済みユーザーのみ表示）
+  if (isLoading && isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
         <div className="text-center">
@@ -85,11 +116,6 @@ export default function QuestPage() {
         </div>
       </div>
     )
-  }
-
-  // 本番環境で認証されていない場合
-  if (!shouldAllowAccess) {
-    return null
   }
 
   // メインレンダリング
@@ -124,27 +150,70 @@ export default function QuestPage() {
           <header className="map-header">
             <h1>🗺️ CLAFT クエストマップ</h1>
             <p>試練のダンジョン</p>
-            <button className="adventure-log-button">
-              これまでの冒険
-            </button>
+            {!isAuthenticated && (
+              <div className="guest-notice">
+                <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
+                  <Lock size={16} />
+                  <span className="font-bold">ゲスト閲覧モード</span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  クエストに挑戦するには冒険者登録が必要です
+                </p>
+              </div>
+            )}
+            {isAuthenticated && (
+              <button className="adventure-log-button">
+                これまでの冒険
+              </button>
+            )}
           </header>
 
           {/* クエストマップ表示 */}
           <QuestMap
             stages={stages}
-            statistics={statistics}
+            statistics={displayStatistics}
             onStageClick={handleStageClick}
           />
         </div>
 
-        {/* 次の冒険ボタン */}
-        <button className="quest-button">
-          🔥 次の冒険へ進む！
-        </button>
+        {/* 次の冒険ボタン（認証済みユーザーのみ） */}
+        {isAuthenticated && (
+          <button className="quest-button">
+            🔥 次の冒険へ進む！
+          </button>
+        )}
+
+        {/* 未認証ユーザー向けの登録促進ボタン */}
+        {!isAuthenticated && (
+          <button 
+            className="quest-register-button"
+            onClick={() => setShowAuthModal(true)}
+          >
+            ✨ 冒険者登録して挑戦する！
+          </button>
+        )}
       </main>
 
-      {/* ステージ詳細モーダル */}
-      {isModalOpen && selectedStageId && (
+      {/* ログイン促進モーダル */}
+      <DynamicLoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={handleCloseLoginPrompt}
+        onLoginClick={handleLoginFromPrompt}
+        stageId={promptStageId}
+      />
+
+      {/* 認証モーダル */}
+      {showAuthModal && (
+        <DynamicAuthModal
+          isOpen={showAuthModal}
+          onClose={handleCloseAuthModal}
+          defaultTab="signup"
+          redirectTo="/quest"
+        />
+      )}
+
+      {/* ステージ詳細モーダル（認証済みユーザーのみ） */}
+      {isModalOpen && selectedStageId && isAuthenticated && (
         <DynamicStageModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
@@ -202,6 +271,16 @@ export default function QuestPage() {
           border: 2px solid rgba(255,255,255,0.3);
         }
 
+        .guest-notice {
+          background: rgba(255, 235, 59, 0.9);
+          border: 3px solid #F57F17;
+          padding: 12px 20px;
+          margin: 20px auto 0;
+          max-width: 400px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
         .adventure-log-button {
           display: inline-block;
           margin: 20px auto 0;
@@ -243,24 +322,52 @@ export default function QuestPage() {
           z-index: 900;
         }
 
+        .quest-register-button {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          padding: 16px 32px;
+          background: #9C27B0;
+          border: 4px solid #6A1B9A;
+          color: white;
+          font-size: 1.2rem;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 0 0 2px #BA68C8, 6px 6px 0 0 rgba(0,0,0,0.3);
+          transition: all 0.1s ease;
+          animation: pulse_button 2s ease-in-out infinite;
+          z-index: 900;
+        }
+
         @keyframes pulse_button {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.02); }
         }
 
-        .quest-button:hover {
+        .quest-button:hover,
+        .quest-register-button:hover {
           transform: translate(-2px, -2px) scale(1.02);
           box-shadow: 0 0 0 2px #FF8787, 8px 8px 0 0 rgba(0,0,0,0.3);
           animation: none;
         }
 
-        .quest-button:active {
+        .quest-register-button:hover {
+          box-shadow: 0 0 0 2px #BA68C8, 8px 8px 0 0 rgba(0,0,0,0.3);
+        }
+
+        .quest-button:active,
+        .quest-register-button:active {
           transform: translate(2px, 2px);
           box-shadow: 0 0 0 2px #FF8787, 2px 2px 0 0 rgba(0,0,0,0.3);
         }
 
+        .quest-register-button:active {
+          box-shadow: 0 0 0 2px #BA68C8, 2px 2px 0 0 rgba(0,0,0,0.3);
+        }
+
         @media (max-width: 767px) {
-          .quest-button {
+          .quest-button,
+          .quest-register-button {
             padding: 12px 24px;
             font-size: 1rem;
             bottom: 20px;

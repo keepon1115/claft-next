@@ -68,25 +68,40 @@ export default function YononakaPage() {
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer">
-                【Yo91 】こんな遊びいいな、できたらいいな
-                </div>
-                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer">
-                【Yo92】七夕の日にだけ会えるなら？
-                </div>
+                <a
+                  href="https://forms.gle/nEUMFroAn986QY37A"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo91】こんな遊びいいな、できたらいいな
+                </a>
+                <a
+                  href="https://forms.gle/2YJtRWQr3KN6tXPY7"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo92】七夕の日にだけ会えるなら？
+                </a>
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer">
-                【Yo92】七夕の日にだけ会えるなら？
+                  【Yo93】まだ押せません
                 </div>
-                <div className="bg-gradient-to-br from-purple-200 to-pink-200 border-2 border-purple-300 rounded-xl p-4 font-bold text-amber-900 relative overflow-hidden cursor-pointer hover:translate-x-1 hover:scale-105 transition-all duration-300">
+                <a
+                  href="https://forms.gle/3pBgXCR74Je6cqee6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-purple-200 to-pink-200 border-2 border-purple-300 rounded-xl p-4 font-bold text-amber-900 relative overflow-hidden cursor-pointer hover:translate-x-1 hover:scale-105 transition-all duration-300"
+                >
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl opacity-50">⭐</span>
                   【マンスリー】街で見つけた面白い看板をさがせ！
-                </div>
+                </a>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://www.canva.com/design/DAGsulhyDNA/cmqZ6G-eGMVs7ABWtFKskg/edit?utm_content=DAGsulhyDNA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer" className="group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">これまでのみんなの回答をチェック</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-              </button>
+              </a>
             </section>
 
             {/* Yononakaワーク */}
@@ -107,9 +122,9 @@ export default function YononakaPage() {
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
                     <p>📅 期間: 7月14日 20時~21時</p>
                   </div>
-                  <button className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
-                  </button>
+                  </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6">
@@ -117,9 +132,9 @@ export default function YononakaPage() {
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
                     <p>📅 期間: 7月27日 13時~14時</p>
                   </div>
-                  <button className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
-                  </button>
+                  </a>
                 </div>
               </div>
             </section>
@@ -130,23 +145,33 @@ export default function YononakaPage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg animate-float" style={{animationDelay: '1s'}}>
                   <span className="text-2xl">🎬</span>
                 </div>
-                <h2 className="text-2xl font-bold text-amber-900">振り返り動画</h2>
+                <h2 className="text-2xl font-bold text-amber-900">ワークの振り返り</h2>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
-                <button className="bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold text-lg py-6 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3">
-                  <span className="text-2xl">🎬</span>
+              <a
+                  href="https://youtube.com/playlist?list=PL0Mhi-8AZtqevy4FM32tAIvwgyDDVEi8r&feature=shared"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold text-lg py-6 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                >
+                 <span className="text-2xl">🎬</span>
                   アーカイブ動画
-                </button>
+                </a>
                 
-                <button className="bg-gradient-to-br from-green-400 to-cyan-400 text-amber-900 font-bold text-lg py-6 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3">
-                  <span className="text-2xl">⏱</span>
-                  アーカイブ動画（短縮Ver）
-                </button>
+                <a
+                  href="https://youtube.com/playlist?list=PLg8PlJHz4ogvIGsyI8SDss91HpW_edbuc&feature=shared"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-br from-green-400 to-cyan-400 text-amber-900 font-bold text-lg py-6 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+                >
+                 <span className="text-2xl">🎬</span>
+                  振り返り動画
+                </a>
                 
                 <button className="bg-gradient-to-br from-blue-400 to-purple-400 text-white font-bold text-lg py-6 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3">
                   <span className="text-2xl">💭</span>
-                  参加者の声
+                  参加者の感想
                 </button>
               </div>
             </section>
@@ -161,15 +186,15 @@ export default function YononakaPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <button className="bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20 relative overflow-hidden">
+                <a href="https://youtu.be/j04B7zlQRQs" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20 relative overflow-hidden">
                   <span className="relative z-10">
-                    🎬 音響と照明のパイオニア
+                    🎬 笑顔を届ける舞台の立役者
                   </span>
-                </button>
+                </a>
                 
-                <button className="bg-gradient-to-br from-green-400 to-cyan-400 text-amber-900 font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20">
-                　🎬 心も癒す薬剤師
-                </button>
+                <a href="https://youtu.be/UM_BFsKWTrs" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-br from-green-400 to-cyan-400 text-amber-900 font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20">
+                　🎬 癒しの魔法と薬剤師
+                </a>
               </div>
             </section>
           </div>
