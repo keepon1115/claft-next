@@ -217,21 +217,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-6"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 mx-auto my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="relative p-6 border-b border-gray-100">
+        <div className="relative p-4 sm:p-6 border-b border-gray-100">
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="absolute right-3 top-3 sm:right-4 sm:top-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors touch-manipulation"
             aria-label="モーダルを閉じる"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -239,7 +239,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           
           <h2 
             id="auth-modal-title"
-            className="text-2xl font-bold text-gray-800 text-center"
+            className="text-lg sm:text-2xl font-bold text-gray-800 text-center pr-10"
           >
             🔐 冒険者登録・ログイン
           </h2>
@@ -249,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex border-b border-gray-100">
           <button
             onClick={() => switchTab('login')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
               activeTab === 'login'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -259,7 +259,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
           <button
             onClick={() => switchTab('signup')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
               activeTab === 'signup'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -269,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* 共通エラーメッセージ */}
           {error && (
             <div 
@@ -297,7 +297,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="login-email"
                     type="email"
                     placeholder="your-email@example.com"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
+                    className={`w-full px-3 py-3 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 text-base sm:text-sm ${
                       loginForm.formState.errors.email 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -321,7 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="パスワードを入力"
-                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
+                      className={`w-full px-3 py-3 sm:py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 text-base sm:text-sm ${
                         loginForm.formState.errors.password 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300'
@@ -331,7 +331,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation p-1"
                       aria-label={showPassword ? 'パスワードを隠す' : 'パスワードを表示'}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -348,7 +348,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || !loginForm.formState.isValid}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-blue-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm font-medium"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">
@@ -383,7 +383,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="signup-email"
                     type="email"
                     placeholder="your-email@example.com"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
+                    className={`w-full px-3 py-3 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 text-base sm:text-sm ${
                       signupForm.formState.errors.email 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -407,7 +407,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       id="signup-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="6文字以上のパスワード"
-                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
+                      className={`w-full px-3 py-3 sm:py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 text-base sm:text-sm ${
                         signupForm.formState.errors.password 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300'
@@ -417,7 +417,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation p-1"
                       aria-label={showPassword ? 'パスワードを隠す' : 'パスワードを表示'}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -439,7 +439,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     id="signup-nickname"
                     type="text"
                     placeholder="あなたの冒険者名"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 ${
+                    className={`w-full px-3 py-3 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 text-base sm:text-sm ${
                       signupForm.formState.errors.nickname 
                         ? 'border-red-300 focus:ring-red-500' 
                         : 'border-gray-300'
@@ -460,7 +460,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || !signupForm.formState.isValid}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-green-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm font-medium"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">

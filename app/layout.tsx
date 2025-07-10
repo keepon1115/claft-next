@@ -22,6 +22,23 @@ const mPlusRounded = M_PLUS_Rounded_1c({
 export const metadata: Metadata = {
   title: "CLAFT - Creative Learning And Future Technology",
   description: "自分らしく、クリエイティブに成長するプラットフォーム",
+  manifest: '/manifest.json',
+  themeColor: '#673AB7',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover'
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CLAFT',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
