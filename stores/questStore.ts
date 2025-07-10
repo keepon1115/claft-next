@@ -83,8 +83,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: '君はどんな冒険者？',
     description: '〜学びの地図をひらこう〜',
     message: '「勉強という二文字を忘れよう」',
-    videoUrl: 'https://vimeo.com/1096785134/fc1a254212',
-    formUrl: 'https://forms.gle/DX3GDXH9E62wVWTz7',
+    videoUrl: 'https://youtu.be/6APKhw1pXMo',
+    formUrl: ' https://forms.gle/VAVyehyoK1wZmSBX6',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🏠'
@@ -95,8 +95,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: '新時代の冒険者に必要なものって？',
     description: '〜武器と道具の話〜',
     message: '「君は武器や道具をどう使う？」',
-    videoUrl: 'https://youtube.com/watch?v=stage2video',
-    formUrl: 'https://forms.google.com/your-form-2',
+    videoUrl: 'https://youtu.be/aA5jEdgFU9I',
+    formUrl: 'https://forms.gle/cfRbcWeEHpL8Vfex6',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🌲'

@@ -8,10 +8,16 @@ import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import BackgroundAnimations from '@/components/common/BackgroundAnimations'
 import { AuthButton } from '@/components/auth/AuthButton'
+import { useAuth } from '@/hooks/useAuth'
+import { LockedContent } from '@/components/common/LockedContent'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isAdmin } = useAuth()
+
+  // TODO: 本来はuseUserStatsフックなどから取得する
+  const [questsCompleted, setQuestsCompleted] = useState(5)
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -90,13 +96,33 @@ export default function Home() {
           
           {/* 右側: クラフトストーリー & JibunCraft */}
           <div className="content-area">
-            <CraftStory />
-            <JibunCraft />
+            <LockedContent
+              isLocked={!isAdmin && questsCompleted < 6}
+              unlockConditionText={
+                <>
+                  このエリアは
+                  <span className="text-purple-600 font-black">クエスト6</span>
+                  をクリアすると開放されます
+                </>
+              }
+            >
+              <CraftStory />
+            </LockedContent>
+            <LockedContent
+              isLocked={!isAdmin && questsCompleted < 20}
+              unlockConditionText={
+                <>
+                  このエリアは
+                  <span className="text-purple-600 font-black">クエスト20</span>
+                  をクリアすると開放されます
+                </>
+              }
+            >
+              <JibunCraft />
+            </LockedContent>
           </div>
         </div>
       </main>
     </>
   )
 }
-
-
