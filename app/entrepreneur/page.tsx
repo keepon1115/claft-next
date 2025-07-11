@@ -32,7 +32,7 @@ export default function EntrepreneurPage() {
       <main className="min-h-screen bg-gray-100 flex items-center justify-center relative">
         {/* ヘッダー */}
         <header className="fixed top-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200 py-4">
-          <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="max-w-7xl mx-auto px-6 flex justify-center items-center">
             <div className="flex items-center gap-3 text-gray-700">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-lg flex items-center justify-center shadow-sm">
                 <span className="text-lg">🤝</span>
