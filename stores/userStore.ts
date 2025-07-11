@@ -68,14 +68,14 @@ export interface UserActivity {
 
 const defaultProfileData: ProfileData = {
   nickname: 'CLAFT冒険者',
-  character: '創造的チャレンジャー',
-  skills: ['創造力', '学習', '挑戦'],
-  weakness: 'ついつい夜更かし',
-  favoritePlace: '静かなカフェ',
-  energyCharge: '好きな音楽を聴くこと',
-  companion: '一緒に成長できる仲間',
-  catchphrase: '「今日も新しいことにチャレンジ！」',
-  message: 'CLAFTで自分らしい成長の物語を作っています！',
+  character: '',
+  skills: [''],
+  weakness: '',
+  favoritePlace: '',
+  energyCharge: '',
+  companion: '',
+  catchphrase: '',
+  message: '',
   avatarUrl: '',
   profileCompletion: 85,
 }

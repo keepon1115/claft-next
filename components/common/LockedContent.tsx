@@ -4,7 +4,7 @@ import { Lock } from 'lucide-react'
 
 interface LockedContentProps {
   isLocked: boolean
-  unlockConditionText: string
+  unlockConditionText: React.ReactNode
   children: React.ReactNode
   className?: string
 }

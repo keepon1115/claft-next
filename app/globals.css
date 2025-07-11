@@ -1290,7 +1290,7 @@ img.pixel {
   color: var(--text-dark);
   padding: 6px 12px;
   border-radius: 15px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   transition: all 0.3s ease;
 }

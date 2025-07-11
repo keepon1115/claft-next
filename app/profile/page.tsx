@@ -320,14 +320,14 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab('skills')}
               >
                 <i className="fas fa-star"></i>
-                スキル・特性
+                スキル
               </button>
               <button 
                 className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
                 onClick={() => setActiveTab('personal')}
               >
                 <i className="fas fa-heart"></i>
-                パーソナル
+                大切なこと
               </button>
             </div>
 

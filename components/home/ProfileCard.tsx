@@ -99,14 +99,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   // userStore拡張版のデータを使用
   const displayData = profileData || {
     nickname: isAuthenticated ? (user?.email?.split('@')[0] || 'CLAFT冒険者') : 'CLAFT冒険者',
-    character: 'チャレンジャー',
-    skills: '挑戦',
-    weakness: 'ついつい夜更かし',
-    favoritePlace: '公園で散歩',
-    energyCharge: 'すきな音楽を聴く',
-    companion: 'アイデア豊富なヒト',
-    catchphrase: '今日も新しいことにチャレンジ！',
-    message: '新しいものを創るために、挑戦し続けたいです！',
+    character: '',
+    skills: '',
+    weakness: '',
+    favoritePlace: '',
+    energyCharge: '',
+    companion: '',
+    catchphrase: '',
+    message: '',
     profileCompletion: 85
   };
 

@@ -344,6 +344,11 @@ export default function QuestPage() {
           50% { transform: scale(1.02); }
         }
 
+        @keyframes pulse_button_centered {
+          0%, 100% { transform: translateX(-50%) scale(1); }
+          50% { transform: translateX(-50%) scale(1.02); }
+        }
+
         .quest-button:hover,
         .quest-register-button:hover {
           transform: translate(-2px, -2px) scale(1.02);
@@ -371,7 +376,20 @@ export default function QuestPage() {
             padding: 12px 24px;
             font-size: 1rem;
             bottom: 20px;
-            right: 20px;
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-name: pulse_button_centered;
+          }
+
+          .quest-button:hover,
+          .quest-register-button:hover {
+            transform: translateX(-50%) translate(-2px, -2px) scale(1.02);
+          }
+
+          .quest-button:active,
+          .quest-register-button:active {
+            transform: translateX(-50%) translate(2px, 2px);
           }
         }
       `}</style>
