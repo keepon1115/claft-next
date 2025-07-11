@@ -120,7 +120,7 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">ありがとうって言ってますか？</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 7月14日 20時~21時</p>
+                    <p>📅 期間: 7月14日（月） 20時~21時</p>
                   </div>
                   <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
@@ -130,7 +130,7 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">アイデアづくり</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 7月27日 13時~14時</p>
+                    <p>📅 期間: 7月27日（日） 13時~14時</p>
                   </div>
                   <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する

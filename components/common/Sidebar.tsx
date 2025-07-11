@@ -97,7 +97,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 "
                 onClick={onClose}
               >
-                <i className="w-[25px] text-[18px] mr-[15px] text-center">👤</i>
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">😊</i>
                 <span className="text-base">プロフィール</span>
               </Link>
             </li>
@@ -113,7 +113,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 "
                 onClick={onClose}
               >
-                <i className="w-[25px] text-[18px] mr-[15px] text-center">🎯</i>
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🏋️‍♂️</i>
                 <span className="text-base">クエスト</span>
               </Link>
             </li>
@@ -129,7 +129,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 "
                 onClick={onClose}
               >
-                <i className="w-[25px] text-[18px] mr-[15px] text-center">🌍</i>
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">😆</i>
                 <span className="text-base">Yononaka</span>
               </Link>
             </li>
@@ -145,8 +145,24 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 "
                 onClick={onClose}
               >
-                <i className="w-[25px] text-[18px] mr-[15px] text-center">🚀</i>
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🌍</i>
                 <span className="text-base">ミライクラフト</span>
+              </Link>
+            </li>
+            
+            <li>
+              <Link 
+                href="/entrepreneur" 
+                className="
+                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
+                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                "
+                onClick={onClose}
+              >
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🤝</i>
+                <span className="text-base">アントレプレナー</span>
               </Link>
             </li>
             
