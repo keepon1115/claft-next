@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthButton } from '@/components/auth/AuthButton';
@@ -23,17 +23,36 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   // userStore初期化
   useEffect(() => {
     const initStore = async () => {
-      // ログインしている場合のみ、実際のユーザーIDで初期化
-      if (isAuthenticated && user?.id) {
-        // SupabaseのUUID形式に一致するかチェック
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (uuidRegex.test(user.id)) {
-          await initialize(user.id);
-        }
+      // SupabaseのUUID形式に一致するかチェック
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (user?.id && uuidRegex.test(user.id)) {
+        await initialize(user.id);
       }
     };
     initStore();
-  }, [initialize, user?.id, isAuthenticated]);
+  }, [user?.id, initialize]);
+
+  // モーダル表示時の背景スクロール防止
+  useEffect(() => {
+    if (showAuthModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = '0';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [showAuthModal]);
 
   const handleEditClick = async () => {
     if (isAuthenticated) {
@@ -49,12 +68,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
       // 未認証：ログインモーダル表示
       setShowAuthModal(true);
     }
-  };
-
-  const handleAuthSuccess = () => {
-    // 認証成功後：モーダルを閉じてプロフィールページに移動
-    setShowAuthModal(false);
-    router.push('/profile');
   };
 
   if (isLoading) {
@@ -204,30 +217,47 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
         </div>
       </div>
 
-      {/* 認証モーダル（未認証時のみ表示） */}
-      {showAuthModal && (
+      {/* 認証モーダル（高いz-indexで確実に最前面表示） */}
+      {showAuthModal && !isAuthenticated && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99998]"
-          style={{ 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          style={{
+            zIndex: 999999,
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 99998,
             WebkitTransform: 'translate3d(0, 0, 0)',
-            transform: 'translate3d(0, 0, 0)'
+            transform: 'translate3d(0, 0, 0)',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAuthModal(false);
+            }
           }}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center"
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center relative"
             style={{
-              position: 'relative',
-              zIndex: 99999,
+              zIndex: 1000000,
               WebkitTransform: 'translate3d(0, 0, 0)',
-              transform: 'translate3d(0, 0, 0)'
+              transform: 'translate3d(0, 0, 0)',
+              animation: 'modalSlideIn 0.3s ease-out forwards'
             }}
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* 閉じるボタン */}
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 text-xl"
+            >
+              ×
+            </button>
+
+            {/* モーダル内容 */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 🚪 ログインが必要です
