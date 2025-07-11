@@ -86,14 +86,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
   // userStore拡張版のデータを使用
   const displayData = profileData || {
     nickname: isAuthenticated ? (user?.email?.split('@')[0] || 'CLAFT冒険者') : 'CLAFT冒険者',
-    character: '創造的チャレンジャー',
-    skills: ['創造力', '学習', '挑戦'],
+    character: 'チャレンジャー',
+    skills: '挑戦',
     weakness: 'ついつい夜更かし',
-    favoritePlace: '静かなカフェ',
-    energyCharge: 'コーヒーを飲む',
-    companion: 'クリエイティブな仲間',
+    favoritePlace: '公園で散歩',
+    energyCharge: 'すきな音楽を聴く',
+    companion: 'アイデア豊富なヒト',
     catchphrase: '今日も新しいことにチャレンジ！',
-    message: '新しい挑戦をしながら、自分らしいキャリアを築いていきたいです。',
+    message: '新しいものを創るために、挑戦し続けたいです！',
     profileCompletion: 85
   };
 
@@ -137,9 +137,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
                 <div className="ability-title">とくい</div>
               </div>
               <div className="ability-tags">
-                {displayData.skills.map((skill, index) => (
-                  <span key={index} className="ability-tag">{skill}</span>
-                ))}
+                {Array.isArray(displayData.skills) 
+                  ? displayData.skills.map((skill, index) => (
+                      <span key={index} className="ability-tag">{skill}</span>
+                    ))
+                  : <span className="ability-tag">{displayData.skills}</span>
+                }
               </div>
             </div>
             
@@ -203,8 +206,28 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
 
       {/* 認証モーダル（未認証時のみ表示） */}
       {showAuthModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99998]"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99998,
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            transform: 'translate3d(0, 0, 0)'
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center"
+            style={{
+              position: 'relative',
+              zIndex: 99999,
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              transform: 'translate3d(0, 0, 0)'
+            }}
+          >
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 🚪 ログインが必要です

@@ -124,7 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [isOpen, defaultTab, loginForm, signupForm, clearError])
 
-  // Escキーでモーダルを閉じる
+  // Escキーでモーダルを閉じる & モバイル対応
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -132,8 +132,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     }
 
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+    if (isOpen) {
+      // モバイルブラウザでの背景スクロール防止
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
+      
+      // iOS Safari対応
+      const viewport = document.querySelector('meta[name=viewport]')
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+      }
+      
+      document.addEventListener('keydown', handleEscape)
+      
+      // タッチイベントでのスクロール防止
+      const preventScroll = (e: TouchEvent) => {
+        e.preventDefault()
+      }
+      document.addEventListener('touchmove', preventScroll, { passive: false })
+      
+      return () => {
+        document.removeEventListener('keydown', handleEscape)
+        document.removeEventListener('touchmove', preventScroll)
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.body.style.width = ''
+        document.body.style.height = ''
+        
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
+        }
+      }
+    }
   }, [isOpen, onClose])
 
   // ログイン処理
@@ -215,17 +247,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null
 
-  return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[5000] p-4 sm:p-6"
-      onClick={handleBackdropClick}
-      role="dialog"
+      return (
+      <div 
+        className="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4 sm:p-6"
+        onClick={handleBackdropClick}
+        role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        transform: 'translate3d(0, 0, 0)'
+      }}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 mx-auto my-auto"
+        className="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mx-auto my-auto"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          zIndex: 100000,
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          transform: 'translate3d(0, 0, 0)'
+        }}
       >
         {/* ヘッダー */}
         <div className="relative p-4 sm:p-6 border-b border-gray-100">
@@ -247,27 +295,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* タブナビゲーション */}
         <div className="flex border-b border-gray-100">
-          <button
-            onClick={() => switchTab('login')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
-              activeTab === 'login'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            ログイン
-          </button>
-          <button
-            onClick={() => switchTab('signup')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
-              activeTab === 'signup'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            新規登録
-          </button>
-        </div>
+  <button
+    onClick={() => switchTab('login')}
+    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
+      activeTab === 'login'
+        ? 'text-white bg-blue-600 border-b-4 border-blue-600'
+        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
+    }`}
+  >
+    ログイン
+  </button>
+  <button
+    onClick={() => switchTab('signup')}
+    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors touch-manipulation ${
+      activeTab === 'signup'
+        ? 'text-white bg-blue-600 border-b-4 border-green-600'
+        : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
+    }`}
+  >
+    新規登録
+  </button>
+</div>
 
         <div className="p-4 sm:p-6">
           {/* 共通エラーメッセージ */}
@@ -460,11 +508,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || !signupForm.formState.isValid}
-                  className="w-full bg-green-600 text-white py-3 sm:py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm font-medium"
+                  className="w-full bg-green-600 text-black py-3 sm:py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm font-medium"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>

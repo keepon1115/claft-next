@@ -124,7 +124,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   // ロックされているステージ（ステージ1以外）へのアクセス制御
   if (status === 'locked' && !isStage1) {
     return createPortal(
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000]" onClick={handleBackdropClick}>
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000]" onClick={handleBackdropClick}>
         <div className="bg-yellow-100 border-4 border-yellow-800 p-8 max-w-md w-full mx-4 relative rounded-lg">
           <button 
             className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
@@ -179,7 +179,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   // フィードバックモーダル
   if (showFeedback) {
     return createPortal(
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000]" onClick={handleBackdropClick}>
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000]" onClick={handleBackdropClick}>
         <div className="bg-white border-4 border-gray-800 p-8 max-w-lg w-full mx-4 relative rounded-lg">
           <button 
             className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"
@@ -244,7 +244,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
 
   // メインモーダル
   return createPortal(
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000]" onClick={handleBackdropClick}>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000]" onClick={handleBackdropClick}>
       <div className="bg-white border-4 border-gray-800 p-8 max-w-2xl w-full mx-4 relative rounded-lg max-h-[90vh] overflow-y-auto">
         <button 
           className="absolute top-3 right-3 w-8 h-8 bg-red-600 text-white border-2 border-red-900 hover:bg-red-700 transition-colors rounded"

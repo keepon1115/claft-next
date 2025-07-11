@@ -93,6 +93,8 @@
   --z-hamburger: 10000;
   --z-sidebar-overlay: 9998;
   --z-sidebar: 9999;
+  --z-auth-modal: 99999;
+  --z-auth-modal-backdrop: 99998;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2843,6 +2845,53 @@ img.pixel {
   align-items: center;
   justify-content: center;
   z-index: 10000;
+}
+
+/* モバイル対応のモーダルスタイル */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari専用 */
+  .modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 99999 !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+  }
+  
+  .modal-content {
+    position: relative !important;
+    z-index: 100000 !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+  }
+}
+
+/* Android Chrome対応 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 99999 !important;
+    transform: translate3d(0, 0, 0) !important;
+    will-change: transform !important;
+  }
+  
+  .modal-content {
+    position: relative !important;
+    z-index: 100000 !important;
+    transform: translate3d(0, 0, 0) !important;
+    will-change: transform !important;
+  }
 }
 
 .admin-modal-content {

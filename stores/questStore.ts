@@ -107,8 +107,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: '君はどんなキャラ？',
     description: '〜自分を育てる育成ゲーム〜',
     message: '「自分のキャラは、自分で決めよう」',
-    videoUrl: 'https://youtube.com/watch?v=stage3video',
-    formUrl: 'https://forms.google.com/your-form-3',
+    videoUrl: 'https://youtu.be/qeyeMcstjrw',
+    formUrl: 'https://forms.gle/BPELhkniVYbzwihd7',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '⚔️'
