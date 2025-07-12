@@ -14,10 +14,17 @@ import { LockedContent } from '@/components/common/LockedContent'
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isAdmin } = useAuth()
+  const { isAdmin, isAuthenticated, profile } = useAuth()
 
   // TODO: 本来はuseUserStatsフックなどから取得する
   const [questsCompleted, setQuestsCompleted] = useState(5)
+
+  // プロフィール完成度を判定するロジック
+  // ニックネームがデフォルトの「冒険者」から変更されていれば参加とみなす
+  const isProfileCompleted =
+    isAuthenticated &&
+    profile &&
+    profile.nickname !== '冒険者'
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -68,18 +75,27 @@ export default function Home() {
             </div>
             
             <div className="achievements">
-              <div className="achievement-badge gold">
-                🏆
-                <div className="tooltip">初回ログイン達成</div>
-              </div>
-              <div className="achievement-badge silver">
-                ⭐
-                <div className="tooltip">プロフィール完成</div>
-              </div>
-              <div className="achievement-badge bronze">
-                🎯
-                <div className="tooltip">クエスト参加</div>
-              </div>
+              {/* ログインしている時だけ表示する */}
+              {isAuthenticated && (
+                <div className="achievement-badge gold">
+                  🏆
+                  <div className="tooltip">初回ログイン達成</div>
+                </div>
+              )}
+              {/* プロフィール参加している時だけ表示する */}
+              {isProfileCompleted && (
+                <div className="achievement-badge silver">
+                  ⭐
+                  <div className="tooltip">プロフィール参加</div>
+                </div>
+              )}
+              {/* クエストに1回以上参加している時だけ表示する */}
+              {questsCompleted > 0 && (
+                <div className="achievement-badge bronze">
+                  🎯
+                  <div className="tooltip">クエスト参加</div>
+                </div>
+              )}
             </div>
           </div>
           

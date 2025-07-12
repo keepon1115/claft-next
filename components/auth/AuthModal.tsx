@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { createPortal } from 'react-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, X } from 'lucide-react'
@@ -96,6 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(defaultTab)
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   
   const { login, signup, error, clearError } = useAuth()
   const router = useRouter()
@@ -111,6 +113,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     resolver: zodResolver(signupSchema),
     mode: 'onChange'
   })
+
+  // Portalを安全に使用するため、クライアントサイドでのみレンダリング
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // モーダルが開かれた時にタブをリセット
   useEffect(() => {
@@ -135,15 +142,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isOpen) {
       // モバイルブラウザでの背景スクロール防止
       document.body.style.overflow = 'hidden'
-      document.body.style.position = 'fixed'
-      document.body.style.width = '100%'
-      document.body.style.height = '100%'
-      
-      // iOS Safari対応
-      const viewport = document.querySelector('meta[name=viewport]')
-      if (viewport) {
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
-      }
       
       document.addEventListener('keydown', handleEscape)
       
@@ -157,13 +155,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         document.removeEventListener('keydown', handleEscape)
         document.removeEventListener('touchmove', preventScroll)
         document.body.style.overflow = ''
-        document.body.style.position = ''
-        document.body.style.width = ''
-        document.body.style.height = ''
-        
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
-        }
       }
     }
   }, [isOpen, onClose])
@@ -247,23 +238,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null
 
-      return (
-      <div 
+  // isClientがtrueになるまで（＝クライアントでマウントされるまで）は何もレンダリングしない
+  if (!isClient) return null
+
+  return createPortal(
+    <div 
         className="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4 sm:p-6"
         onClick={handleBackdropClick}
         role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
       style={{ 
-        zIndex: 99999
+        zIndex: 99999,
       }}
     >
       <div 
         className="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mx-auto my-auto"
         onClick={(e) => e.stopPropagation()}
         style={{
-          position: 'relative',
-          zIndex: 100000
+          position: 'relative'
         }}
       >
         {/* ヘッダー */}
@@ -518,7 +511,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
