@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ProfileCard from '@/components/home/ProfileCard'
 import CraftStory from '@/components/home/CraftStory'
 import JibunCraft from '@/components/home/JibunCraft'
@@ -10,14 +10,18 @@ import BackgroundAnimations from '@/components/common/BackgroundAnimations'
 import { AuthButton } from '@/components/auth/AuthButton'
 import { useAuth } from '@/hooks/useAuth'
 import { LockedContent } from '@/components/common/LockedContent'
+import { useQuestStore } from '@/stores/questStore'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isAdmin, isAuthenticated, profile } = useAuth()
+  const { isAdmin, isAuthenticated, profile, user } = useAuth()
+  const { statistics, initialize } = useQuestStore()
 
-  // TODO: 本来はuseUserStatsフックなどから取得する
-  const [questsCompleted, setQuestsCompleted] = useState(5)
+  useEffect(() => {
+    // ユーザーIDに基づいてクエスト情報を初期化（未ログイン時はデモモード）
+    initialize(user?.id)
+  }, [user?.id, initialize])
 
   // プロフィール完成度を判定するロジック
   // ニックネームがデフォルトの「冒険者」から変更されていれば参加とみなす
@@ -25,6 +29,10 @@ export default function Home() {
     isAuthenticated &&
     profile &&
     profile.nickname !== '冒険者'
+
+  // クエスト参加実績（ステージ1をクリアしているか）
+  const hasParticipatedInQuest =
+    isAuthenticated && statistics.completedStages >= 1
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -90,7 +98,7 @@ export default function Home() {
                 </div>
               )}
               {/* クエストに1回以上参加している時だけ表示する */}
-              {questsCompleted > 0 && (
+              {hasParticipatedInQuest && (
                 <div className="achievement-badge bronze">
                   🎯
                   <div className="tooltip">クエスト参加</div>
@@ -113,7 +121,7 @@ export default function Home() {
           {/* 右側: クラフトストーリー & JibunCraft */}
           <div className="content-area">
             <LockedContent
-              isLocked={!isAdmin && questsCompleted < 6}
+              isLocked={!isAdmin && statistics.completedStages < 6}
               unlockConditionText={
                 <>
                   このエリアは
@@ -125,7 +133,7 @@ export default function Home() {
               <CraftStory />
             </LockedContent>
             <LockedContent
-              isLocked={!isAdmin && questsCompleted < 20}
+              isLocked={!isAdmin && statistics.completedStages < 20}
               unlockConditionText={
                 <>
                   このエリアは
