@@ -235,11 +235,9 @@ export default function QuestPage() {
         }
 
         .quest-auth-section {
-          position: fixed;
+          position: absolute;
           top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          -webkit-transform: translateX(-50%); /* for Safari */
+          right: 20px;
           z-index: 1000;
         }
 
