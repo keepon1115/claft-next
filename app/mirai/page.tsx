@@ -38,7 +38,7 @@ export default function MiraiPage() {
                 <span className="text-lg">🚀</span>
               </div>
               <span className="text-xl font-bold">
-                CLAFT ミライクラフト
+                ミライクラフト
               </span>
             </div>
             

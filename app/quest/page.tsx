@@ -148,7 +148,7 @@ export default function QuestPage() {
 
         <div className="container">
           <header className="map-header">
-            <h1>🗺️ CLAFT クエストマップ</h1>
+            <h1>🗺️ クエストマップ</h1>
             <p>試練のダンジョン</p>
             {!isAuthenticated && (
               <div className="guest-notice">
@@ -232,6 +232,15 @@ export default function QuestPage() {
           image-rendering: pixelated;
           image-rendering: -moz-crisp-edges;
           image-rendering: crisp-edges;
+        }
+
+        .quest-auth-section {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          -webkit-transform: translateX(-50%); /* for Safari */
+          z-index: 1000;
         }
 
         .container {

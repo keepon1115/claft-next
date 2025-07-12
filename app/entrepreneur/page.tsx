@@ -38,7 +38,7 @@ export default function EntrepreneurPage() {
                 <span className="text-lg">🤝</span>
               </div>
               <span className="text-xl font-bold">
-                CLAFT アントレプレナー
+                アントレプレナー
               </span>
             </div>
           </div>
