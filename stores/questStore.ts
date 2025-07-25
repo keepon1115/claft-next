@@ -119,8 +119,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: 'ちがうって、おもしろい',
     description: '〜正解がないから広がる世界〜',
     message: '「だれかと違うのは怖いことじゃない」',
-    videoUrl: 'https://youtube.com/watch?v=stage4video',
-    formUrl: 'https://forms.google.com/your-form-4',
+    videoUrl: 'https://youtu.be/atCeWwhZLjk',
+    formUrl: 'https://forms.gle/7Se3H1TR6jD8B4hY7',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🛡️'
@@ -131,8 +131,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: '「？」が世界をひらく',
     description: '〜ワクワク＆もやもや〜',
     message: '「"もやもや"がアイデアをつくる！！」',
-    videoUrl: 'https://youtube.com/watch?v=stage5video',
-    formUrl: 'https://forms.google.com/your-form-5',
+    videoUrl: 'https://youtu.be/xhbAcMxdYSQ',
+    formUrl: 'https://forms.gle/x8Sow15HQz89fjh3A',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '👥'
@@ -143,8 +143,8 @@ const defaultStageDetails: Record<number, StageProgress> = {
     title: 'つくってつたえると気づける',
     description: '〜違いを生かして未来を創る〜',
     message: '「小さな一歩が、大きな未来につながる」',
-    videoUrl: 'https://youtube.com/watch?v=stage6video',
-    formUrl: 'https://forms.google.com/your-form-6',
+    videoUrl: 'https://youtu.be/Mk5KbHrz74M',
+    formUrl: 'https://forms.gle/3oADp4w4WtLBvB6AA',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🏰'

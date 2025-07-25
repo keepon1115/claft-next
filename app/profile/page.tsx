@@ -275,7 +275,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">レベル</div>
-                  <div className="stat-value">Lv. 3</div>
+                  <div className="stat-value">Lv. 1</div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">スキル数</div>
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">経験値</div>
-                  <div className="stat-value">250 XP</div>
+                  <div className="stat-value">0 XP</div>
                 </div>
               </div>
               
