@@ -69,23 +69,23 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <a
-                  href="https://forms.gle/nEUMFroAn986QY37A"
+                  href="https://forms.gle/bkYtfBkfwD5LNffg8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo91】こんな遊びいいな、できたらいいな
+                  【Yo93】 「夏」ってなんやねん？
                 </a>
                 <a
-                  href="https://forms.gle/2YJtRWQr3KN6tXPY7"
+                  href="https://forms.gle/3eiUz3xJyT25A24z9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo92】七夕の日にだけ会えるなら？
+                  【Yo94】世の中にはどんな仕事があるの？
                 </a>
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer">
-                  【Yo93】まだ押せません
+                  【Yo95】まだ押せません
                 </div>
                 <a
                   href="https://forms.gle/3pBgXCR74Je6cqee6"
@@ -118,21 +118,21 @@ export default function YononakaPage() {
 
               <div className="space-y-6">
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">ありがとうって言ってますか？</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">知ってる？お祭りのヒミツ！</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 7月14日（月） 20時~21時</p>
+                    <p>📅 期間: 8月5日（火） 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/N4vYnsXMB77cY8xz7" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">アイデアづくり</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">覚えるコト忘れるモノ</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 7月27日（日） 13時~14時</p>
+                    <p>📅 期間: 8月31日（日） 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/T8c7ntFFySE4yKqKA" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/N4vYnsXMB77cY8xz7" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
