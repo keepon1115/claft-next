@@ -3,9 +3,16 @@
 import { useState } from 'react'
 import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
+import UserProfileModal from '@/components/yononaka/UserProfileModal'
+import { useAdventurerList } from '@/hooks/useAdventurerList'
 
 export default function YononakaPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  
+  // 冒険者一覧データを取得
+  const { adventurers, loading: adventurersLoading, error: adventurersError } = useAdventurerList(12)
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -13,6 +20,18 @@ export default function YononakaPage() {
 
   const closeSidebar = () => {
     setSidebarOpen(false)
+  }
+
+  // 冒険者プロフィールを開く
+  const openUserProfile = (userId: string) => {
+    setSelectedUserId(userId)
+    setIsProfileModalOpen(true)
+  }
+
+  // モーダルを閉じる
+  const closeModal = () => {
+    setIsProfileModalOpen(false)
+    setSelectedUserId(null)
   }
 
   return (
@@ -204,20 +223,86 @@ export default function YononakaPage() {
             <div className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-amber-900 text-center mb-8">🏃‍♀️ CLAFTの冒険者一覧</h2>
               
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-8">
-                {[1, 2, 3, 4, 5, 6].map((index) => (
-                  <div key={index} className="text-center hover:scale-110 transition-transform duration-300">
-                    <div className="w-24 h-24 mx-auto mb-2 rounded-full border-4 border-purple-400 bg-gradient-to-br from-orange-100 to-white shadow-lg hover:border-pink-400 hover:shadow-xl transition-all duration-300 flex items-center justify-center">
-                      <span className="text-2xl">👨‍🎓</span>
+              {adventurersLoading && (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-500 mx-auto mb-4"></div>
+                  <p className="text-amber-700">冒険者たちを探しています...</p>
+                </div>
+              )}
+
+              {adventurersError && (
+                <div className="text-center py-12">
+                  <div className="text-amber-700 text-4xl mb-4">😅</div>
+                  <p className="text-amber-700">{adventurersError}</p>
+                </div>
+              )}
+
+              {!adventurersLoading && !adventurersError && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-8">
+                  {adventurers.length > 0 ? (
+                    adventurers.map((adventurer) => {
+                      const level = Math.floor((adventurer.total_exp || 0) / 100) + 1
+                      return (
+                        <div 
+                          key={adventurer.id} 
+                          className="text-center hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          onClick={() => openUserProfile(adventurer.id)}
+                        >
+                          <div className="w-24 h-24 mx-auto mb-2 rounded-full border-4 border-purple-400 bg-gradient-to-br from-orange-100 to-white shadow-lg hover:border-pink-400 hover:shadow-xl transition-all duration-300 flex items-center justify-center overflow-hidden relative">
+                            {adventurer.avatar_url ? (
+                              <img 
+                                src={adventurer.avatar_url}
+                                alt={`${adventurer.nickname}のアバター`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                  if (fallback) fallback.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-full h-full flex items-center justify-center text-2xl"
+                              style={{ display: adventurer.avatar_url ? 'none' : 'flex' }}
+                            >
+                              👨‍🎓
+                            </div>
+                            {/* レベルバッジ */}
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
+                              {level}
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-amber-800 truncate px-1">
+                            {adventurer.nickname}
+                          </p>
+                          {adventurer.character_type && (
+                            <p className="text-xs text-amber-600 truncate px-1">
+                              {adventurer.character_type}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <div className="text-6xl mb-4">🔍</div>
+                      <p className="text-amber-700 text-lg">まだ冒険者がいません</p>
+                      <p className="text-amber-600 text-sm mt-2">プロフィールを作成した冒険者が表示されます</p>
                     </div>
-                    <p className="text-sm font-medium text-amber-800">冒険者{index}</p>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         </div>
       </main>
+
+      {/* ユーザープロフィールモーダル */}
+      <UserProfileModal 
+        userId={selectedUserId}
+        isOpen={isProfileModalOpen}
+        onClose={closeModal}
+      />
 
       {/* カスタムアニメーション */}
       <style jsx>{`

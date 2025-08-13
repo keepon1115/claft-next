@@ -179,6 +179,7 @@ interface UserState {
   updateProfile: (updates: Partial<ProfileData>) => Promise<{ success: boolean; error?: string }>
   addExperience: (amount: number, reason?: string) => Promise<{ success: boolean; levelUp?: boolean; error?: string }>
   calculateProfileCompletion: () => number
+  refreshProfile: (userId: string) => Promise<void>
   clearError: () => void
 }
 
@@ -441,6 +442,57 @@ export const useUserStore = create<UserState>()(
             
             const filledFields = fields.filter(field => field && field.length > 0).length
             return Math.round((filledFields / fields.length) * 100)
+          },
+
+          // =====================================================
+          // プロフィールリフレッシュ
+          // =====================================================
+          refreshProfile: async (userId: string) => {
+            if (!userId) return
+
+            try {
+              console.log('🔄 プロフィールをリフレッシュしています...')
+              
+              const supabase = createBrowserSupabaseClient()
+              
+              // 最新のプロフィールデータを取得
+              const { data: profileData, error: profileError } = await supabase
+                .from('users_profile')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle()
+
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('❌ プロフィールリフレッシュエラー:', profileError)
+                return
+              }
+
+              if (profileData) {
+                // プロフィールデータを更新
+                const profile: ProfileData = {
+                  nickname: profileData.nickname || get().profileData.nickname,
+                  character: profileData.character_type || get().profileData.character,
+                  skills: profileData.skills || get().profileData.skills,
+                  weakness: profileData.weakness || get().profileData.weakness,
+                  favoritePlace: profileData.favorite_place || get().profileData.favoritePlace,
+                  energyCharge: profileData.energy_charge || get().profileData.energyCharge,
+                  companion: profileData.companion || get().profileData.companion,
+                  catchphrase: profileData.catchphrase || get().profileData.catchphrase,
+                  message: profileData.message || get().profileData.message,
+                  avatarUrl: profileData.avatar_url || get().profileData.avatarUrl,
+                  profileCompletion: profileData.profile_completion || get().calculateProfileCompletion(),
+                }
+
+                set((state) => {
+                  state.profileData = profile
+                  state.lastSyncTime = new Date().toISOString()
+                })
+
+                console.log('✅ プロフィールリフレッシュ完了')
+              }
+            } catch (error) {
+              console.error('❌ プロフィールリフレッシュエラー:', error)
+            }
           },
 
           // =====================================================

@@ -450,22 +450,46 @@ export default function AdminDashboard() {
   const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true)
+      
+      // auth.usersテーブルから実際のユーザー数を取得（管理者権限が必要）
+      let realUserCount = 0
+      try {
+        const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()
+        if (authError) throw authError
+        realUserCount = users?.length || 0
+      } catch (authError) {
+        console.warn('auth.admin.listUsers 権限エラー、代替方法を使用します:', authError)
+        // 代替案: users_profileとquest_progressからユニークユーザー数を推定
+        const [
+          { data: profileUsers },
+          { data: questUsers }
+        ] = await Promise.all([
+          supabase.from('users_profile').select('id'),
+          supabase.from('quest_progress').select('user_id')
+        ])
+        
+        const uniqueUserIds = new Set([
+          ...(profileUsers?.map(u => u.id) || []),
+          ...(questUsers?.map(q => q.user_id) || [])
+        ])
+        realUserCount = uniqueUserIds.size
+      }
+      
+      // 他の統計は従来通り
       const [
-        { count: totalUsers },
         { count: pendingApprovals },
         { count: completedQuests },
         { count: activeUsers }
       ] = await Promise.all([
-        supabase.from('users_profile').select('*', { count: 'exact', head: true }),
         supabase.from('quest_progress').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
         supabase.from('quest_progress').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
         supabase.from('user_stats').select('*', { count: 'exact', head: true }).gte('last_login_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ])
-
+      
       const averageProgress = ((completedQuests || 0) / Math.max((pendingApprovals || 0) + (completedQuests || 0), 1) * 100)
 
       setStats({
-        totalUsers: totalUsers || 0,
+        totalUsers: realUserCount,
         pendingApprovals: pendingApprovals || 0,
         completedQuests: completedQuests || 0,
         activeUsers: activeUsers || 0,
@@ -504,17 +528,47 @@ export default function AdminDashboard() {
 
       if (error) throw error
 
-      // 別途 users_profile を取得
+      // ユーザー情報を複数のソースから取得
       const userIds = questData?.map(q => q.user_id) || []
       let userProfiles: any[] = []
       
       if (userIds.length > 0) {
+        // まず users_profile から取得
         const { data: profileData } = await supabase
           .from('users_profile')
           .select('id, nickname, email')
           .in('id', userIds)
         
         userProfiles = profileData || []
+        
+        // users_profile で見つからないユーザーの情報を auth.users から取得
+        const missingUserIds = userIds.filter(userId => 
+          !userProfiles.some(profile => profile.id === userId)
+        )
+        
+        if (missingUserIds.length > 0) {
+          try {
+            const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()
+            if (!authError && users) {
+              const authUsers = users.filter(user => missingUserIds.includes(user.id))
+              const authUserProfiles = authUsers.map(user => ({
+                id: user.id,
+                nickname: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                email: user.email || 'unknown@example.com'
+              }))
+              userProfiles = [...userProfiles, ...authUserProfiles]
+            }
+          } catch (authError) {
+            console.warn('認証ユーザー情報取得エラー:', authError)
+            // 見つからないユーザーにはデフォルト値を設定
+            const defaultProfiles = missingUserIds.map(userId => ({
+              id: userId,
+              nickname: null,
+              email: `user-${userId.substring(0, 8)}@example.com`
+            }))
+            userProfiles = [...userProfiles, ...defaultProfiles]
+          }
+        }
       }
 
       // データを結合
@@ -539,15 +593,76 @@ export default function AdminDashboard() {
   const loadUserData = useCallback(async () => {
     try {
       setUsersLoading(true)
-      const { data: users, error: usersError } = await supabase
+      
+      // まず auth.users から全ユーザーを取得
+      let allUsers: any[] = []
+      try {
+        const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()
+        if (!authError && users) {
+          allUsers = users.map(user => ({
+            id: user.id,
+            email: user.email || 'unknown@example.com',
+            nickname: user.user_metadata?.full_name || user.user_metadata?.name || null,
+            created_at: user.created_at
+          }))
+        } else {
+          throw authError
+        }
+      } catch (error) {
+        console.warn('認証ユーザー取得エラー、users_profileから取得します:', error)
+        // フォールバック: プロファイルとクエストデータからユーザーを収集
+        const [
+          { data: profileData },
+          { data: questData }
+        ] = await Promise.all([
+          supabase.from('users_profile').select('id, email, nickname, created_at'),
+          supabase.from('quest_progress').select('user_id').limit(1000)
+        ])
+        
+        const uniqueUserIds = new Set([
+          ...(profileData?.map(u => u.id) || []),
+          ...(questData?.map(q => q.user_id) || [])
+        ])
+        
+        allUsers = Array.from(uniqueUserIds).map(userId => {
+          const profile = profileData?.find(p => p.id === userId)
+          return profile || {
+            id: userId,
+            email: `user-${userId.substring(0, 8)}@example.com`,
+            nickname: null,
+            created_at: new Date().toISOString()
+          }
+        })
+      }
+      
+      // users_profileからも取得してマージ
+      const { data: profileUsers, error: usersError } = await supabase
         .from('users_profile')
         .select('id, email, nickname, created_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (usersError) throw usersError
+      if (usersError && allUsers.length === 0) throw usersError
+      
+      // プロファイルデータでauth.usersの情報を補完
+      if (profileUsers) {
+        profileUsers.forEach(profileUser => {
+          const existingUserIndex = allUsers.findIndex(u => u.id === profileUser.id)
+          if (existingUserIndex !== -1) {
+            // 既存ユーザーの情報を更新
+            allUsers[existingUserIndex] = {
+              ...allUsers[existingUserIndex],
+              nickname: profileUser.nickname || allUsers[existingUserIndex].nickname,
+              email: profileUser.email || allUsers[existingUserIndex].email
+            }
+          } else {
+            // 新しいユーザーを追加
+            allUsers.push(profileUser)
+          }
+        })
+      }
 
-      const userIds = users?.map(u => u.id) || []
+      const userIds = allUsers.map(u => u.id) || []
       let userStats: any[] = []
       
       if (userIds.length > 0) {
@@ -559,7 +674,7 @@ export default function AdminDashboard() {
         userStats = stats || []
       }
 
-      const combinedData = users?.map(user => {
+      const combinedData = allUsers.map(user => {
         const stats = userStats.find(s => s.user_id === user.id)
         return {
           ...user,
@@ -567,7 +682,7 @@ export default function AdminDashboard() {
           total_exp: stats?.total_exp || 0,
           last_login_date: stats?.last_login_date
         }
-      }) || []
+      })
 
       setUserData(combinedData)
     } catch (error) {

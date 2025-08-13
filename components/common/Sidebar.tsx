@@ -120,6 +120,22 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
             
             <li>
               <Link 
+                href="/minecraft-sdgs" 
+                className="
+                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
+                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-green-400
+                "
+                onClick={onClose}
+              >
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🌱</i>
+                <span className="text-base">マイクラSDGs</span>
+              </Link>
+            </li>
+            
+            <li>
+              <Link 
                 href="/yononaka" 
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline

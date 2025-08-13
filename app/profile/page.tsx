@@ -12,7 +12,7 @@ import { useUserStore } from '@/stores/userStore'
 export default function ProfilePage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading } = useAuth()
-  const { profileData, updateProfile, initialize } = useUserStore()
+  const { profileData, updateProfile, initialize, refreshProfile } = useUserStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
   const [saveStatus, setSaveStatus] = useState('saved') // 'saving' | 'saved' | 'error'
@@ -21,6 +21,9 @@ export default function ProfilePage() {
   
   // ローカルプロフィールデータの状態（編集用）
   const [localProfileData, setLocalProfileData] = useState(profileData)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // 認証チェック
   useEffect(() => {
@@ -68,14 +71,89 @@ export default function ProfilePage() {
     // setSaveStatus('saving')
   }
 
+  // アバター画像選択処理
+  const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // ファイルサイズチェック（5MB制限）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ファイルサイズが大きすぎます。5MB以下の画像を選択してください。')
+      return
+    }
+
+    // ファイル形式チェック
+    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+      alert('対応していない画像形式です。JPEG、PNG、WebP形式の画像を選択してください。')
+      return
+    }
+
+    setAvatarFile(file)
+    setLocalChanges(true)
+
+    // プレビュー画像を作成
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setAvatarPreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // アバター画像アップロード処理
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user?.id) return null
+
+    setUploadingAvatar(true)
+    try {
+      const fileExtension = avatarFile.name.split('.').pop()
+      const fileName = `avatar-${user.id}-${Date.now()}.${fileExtension}`
+      const filePath = `avatars/${fileName}`
+
+      // Supabase Storageにアップロード
+      const { data, error } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, avatarFile, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (error) throw error
+
+      // パブリックURLを取得
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath)
+
+      console.log('✅ アバター画像アップロード完了:', publicUrl)
+      return publicUrl
+
+    } catch (error) {
+      console.error('❌ アバター画像アップロードエラー:', error)
+      throw error
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
   // Supabaseに保存
   const handleSaveProfile = async () => {
     if (!user?.id) return
 
     setSaveStatus('saving')
     try {
+      let avatarUrl = localProfileData.avatarUrl
+
+      // アバター画像がアップロードされている場合は先にアップロード
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar()
+        if (avatarUrl) {
+          setLocalProfileData(prev => ({ ...prev, avatarUrl }))
+        }
+      }
+
       // userStoreを更新
-      const result = await updateProfile(localProfileData)
+      const updatedProfileData = { ...localProfileData, avatarUrl }
+      const result = await updateProfile(updatedProfileData)
       
       if (result.success) {
         // Supabaseにも保存
@@ -93,6 +171,7 @@ export default function ProfilePage() {
             companion: localProfileData.companion,
             catchphrase: localProfileData.catchphrase,
             message: localProfileData.message,
+            avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
 
@@ -100,6 +179,12 @@ export default function ProfilePage() {
 
         setSaveStatus('saved')
         setLocalChanges(false)
+        setAvatarFile(null)
+        setAvatarPreview(null)
+        
+        // プロフィールをリフレッシュして最新状態に同期
+        await refreshProfile(user.id)
+        
         console.log('✅ プロフィール保存完了')
       } else {
         throw new Error(result.error)
@@ -259,7 +344,15 @@ export default function ProfilePage() {
             <div className="preview-card">
               <div className="character-avatar">
                 <div className="avatar-circle">
-                  <i className="fas fa-user-astronaut"></i>
+                  {avatarPreview || localProfileData.avatarUrl ? (
+                    <img 
+                      src={avatarPreview || localProfileData.avatarUrl} 
+                      alt="アバター"
+                      className="avatar-image"
+                    />
+                  ) : (
+                    <i className="fas fa-user-astronaut"></i>
+                  )}
                 </div>
                 <div className="character-speech active">
                   {localProfileData.catchphrase}
@@ -369,6 +462,58 @@ export default function ProfilePage() {
               {/* 基本情報タブ */}
               {activeTab === 'basic' && (
                 <div className="form-section">
+                  {/* アバター画像アップロード */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <i className="fas fa-image"></i>
+                      アバター画像
+                    </label>
+                    <div className="avatar-upload-area">
+                      <div className="avatar-preview">
+                        {avatarPreview || localProfileData.avatarUrl ? (
+                          <img 
+                            src={avatarPreview || localProfileData.avatarUrl} 
+                            alt="アバタープレビュー"
+                            className="avatar-preview-image"
+                          />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            <i className="fas fa-user-astronaut"></i>
+                            <span>画像を選択</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="avatar-upload-controls">
+                        <input
+                          type="file"
+                          id="avatar-upload"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleAvatarSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="avatar-upload" className="avatar-upload-btn">
+                          <i className="fas fa-upload"></i>
+                          画像を選択
+                        </label>
+                        {avatarFile && (
+                          <div className="upload-status">
+                            <i className="fas fa-check-circle text-green-500"></i>
+                            {avatarFile.name}
+                          </div>
+                        )}
+                        {uploadingAvatar && (
+                          <div className="upload-progress">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            アップロード中...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-hint">
+                      💡 JPEG、PNG、WebP形式、5MB以下の画像をアップロードできます
+                    </div>
+                  </div>
+
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-signature"></i>
@@ -1379,6 +1524,122 @@ export default function ProfilePage() {
           background: #F3F4F6;
           border-radius: 8px;
           border-left: 3px solid #3B82F6;
+        }
+
+        /* アバター画像アップロード */
+        .avatar-upload-area {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          padding: 20px;
+          border: 2px dashed #E0E0E0;
+          border-radius: 12px;
+          background: #FAFAFA;
+          transition: all 0.3s ease;
+        }
+
+        .avatar-upload-area:hover {
+          border-color: var(--blue);
+          background: #F0F8FF;
+        }
+
+        .avatar-preview {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+          box-shadow: 0 8px 30px rgba(126, 87, 194, 0.3);
+          flex-shrink: 0;
+        }
+
+        .avatar-preview-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+
+        .avatar-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+
+        .avatar-placeholder {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          color: white;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        .avatar-placeholder i {
+          font-size: 40px;
+          opacity: 0.8;
+        }
+
+        .avatar-upload-controls {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .avatar-upload-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 20px;
+          background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+          color: white;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          width: fit-content;
+        }
+
+        .avatar-upload-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        .upload-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #F0F9FF;
+          border: 1px solid #BAE6FD;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #0369A1;
+        }
+
+        .upload-progress {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #FEF3C7;
+          border: 1px solid #FCD34D;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #92400E;
         }
 
         /* 保存ボタンエリア */

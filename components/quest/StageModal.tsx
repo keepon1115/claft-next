@@ -36,6 +36,7 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null)
   const [loadingFeedback, setLoadingFeedback] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
   
   const { user, isAuthenticated } = useAuth()
   const { stageDetails, userProgress, completeStageWithConfirmation } = useQuestStore()
@@ -159,7 +160,13 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   const handleCompleteWithConfirmation = async () => {
     const result = await completeStageWithConfirmation(stageId)
     if (result.success) {
-      onClose()
+      // 祝福演出を表示
+      setShowCelebration(true)
+      // 3秒後にモーダルを閉じる
+      setTimeout(() => {
+        setShowCelebration(false)
+        onClose()
+      }, 3000)
     } else if (!result.cancelled) {
       // エラーが発生した場合（キャンセル以外）
       alert(`エラー: ${result.error}`)
@@ -174,6 +181,193 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   // フィードバック表示
   const handleShowFeedback = () => {
     setShowFeedback(true)
+  }
+
+  // 祝福演出モーダル
+  if (showCelebration) {
+    return createPortal(
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10001]">
+        <div className="celebration-container">
+          <div className="celebration-content">
+            <div className="celebration-emojis">
+              <span className="celebration-emoji">🎉</span>
+              <span className="celebration-emoji">✨</span>
+              <span className="celebration-emoji">🏆</span>
+              <span className="celebration-emoji">🎊</span>
+              <span className="celebration-emoji">⭐</span>
+            </div>
+            <h2 className="celebration-title">
+              おめでとうございます！
+            </h2>
+            <p className="celebration-subtitle">
+              ステージ{stageId}をクリアしました！
+            </p>
+            <div className="celebration-sparkles">
+              {Array.from({ length: 20 }, (_, i) => (
+                <div key={i} className={`sparkle sparkle-${i + 1}`}>✨</div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <style jsx>{`
+          .celebration-container {
+            position: relative;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: 6px solid #B8860B;
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            animation: celebration-bounce 0.6s ease-out;
+            overflow: hidden;
+          }
+
+          .celebration-content {
+            position: relative;
+            z-index: 2;
+          }
+
+          .celebration-emojis {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+          }
+
+          .celebration-emoji {
+            font-size: 3rem;
+            animation: emoji-bounce 1s ease-in-out infinite;
+          }
+
+          .celebration-emoji:nth-child(1) { animation-delay: 0s; }
+          .celebration-emoji:nth-child(2) { animation-delay: 0.2s; }
+          .celebration-emoji:nth-child(3) { animation-delay: 0.4s; }
+          .celebration-emoji:nth-child(4) { animation-delay: 0.6s; }
+          .celebration-emoji:nth-child(5) { animation-delay: 0.8s; }
+
+          .celebration-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: title-glow 2s ease-in-out infinite alternate;
+          }
+
+          .celebration-subtitle {
+            font-size: 1.5rem;
+            color: #654321;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+          }
+
+          .celebration-sparkles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+          }
+
+          .sparkle {
+            position: absolute;
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: sparkle-float 3s ease-in-out infinite;
+          }
+
+          .sparkle-1 { top: 10%; left: 10%; animation-delay: 0.1s; }
+          .sparkle-2 { top: 20%; right: 15%; animation-delay: 0.3s; }
+          .sparkle-3 { top: 30%; left: 20%; animation-delay: 0.5s; }
+          .sparkle-4 { top: 40%; right: 25%; animation-delay: 0.7s; }
+          .sparkle-5 { top: 50%; left: 5%; animation-delay: 0.9s; }
+          .sparkle-6 { top: 60%; right: 10%; animation-delay: 1.1s; }
+          .sparkle-7 { top: 70%; left: 15%; animation-delay: 1.3s; }
+          .sparkle-8 { top: 80%; right: 20%; animation-delay: 1.5s; }
+          .sparkle-9 { top: 15%; left: 80%; animation-delay: 0.2s; }
+          .sparkle-10 { top: 25%; right: 80%; animation-delay: 0.4s; }
+          .sparkle-11 { top: 35%; left: 75%; animation-delay: 0.6s; }
+          .sparkle-12 { top: 45%; right: 75%; animation-delay: 0.8s; }
+          .sparkle-13 { top: 55%; left: 85%; animation-delay: 1.0s; }
+          .sparkle-14 { top: 65%; right: 85%; animation-delay: 1.2s; }
+          .sparkle-15 { top: 75%; left: 70%; animation-delay: 1.4s; }
+          .sparkle-16 { top: 85%; right: 70%; animation-delay: 1.6s; }
+          .sparkle-17 { top: 5%; left: 50%; animation-delay: 0.25s; }
+          .sparkle-18 { top: 95%; left: 50%; animation-delay: 1.25s; }
+          .sparkle-19 { top: 50%; left: 2%; animation-delay: 0.75s; }
+          .sparkle-20 { top: 50%; right: 2%; animation-delay: 1.75s; }
+
+          @keyframes celebration-bounce {
+            0% { 
+              transform: scale(0.3) rotate(-10deg);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.1) rotate(5deg);
+            }
+            100% {
+              transform: scale(1) rotate(0deg);
+              opacity: 1;
+            }
+          }
+
+          @keyframes emoji-bounce {
+            0%, 100% { 
+              transform: translateY(0) rotate(0deg) scale(1);
+            }
+            50% { 
+              transform: translateY(-20px) rotate(10deg) scale(1.1);
+            }
+          }
+
+          @keyframes title-glow {
+            0% { 
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+            100% { 
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.8);
+            }
+          }
+
+          @keyframes sparkle-float {
+            0% { 
+              opacity: 0;
+              transform: translateY(20px) scale(0);
+            }
+            50% { 
+              opacity: 1;
+              transform: translateY(-10px) scale(1);
+            }
+            100% { 
+              opacity: 0;
+              transform: translateY(-40px) scale(0);
+            }
+          }
+
+          @media (max-width: 768px) {
+            .celebration-container {
+              margin: 20px;
+              padding: 40px 20px;
+            }
+
+            .celebration-title {
+              font-size: 2rem;
+            }
+
+            .celebration-subtitle {
+              font-size: 1.2rem;
+            }
+
+            .celebration-emoji {
+              font-size: 2rem;
+            }
+          }
+        `}</style>
+      </div>,
+      document.body
+    )
   }
 
   // フィードバックモーダル

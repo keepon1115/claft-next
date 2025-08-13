@@ -9,6 +9,31 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // 画像最適化設定
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'laqvpxecqvlufboquffe.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      // YouTube サムネイル画像
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        pathname: '/vi/**',
+      }
+    ],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+  },
   /* config options here */
 };
 
@@ -32,9 +57,33 @@ const pwaConfig = withPWA({
         networkTimeoutSeconds: 3,
       }
     },
-    // 画像ファイルのキャッシュ
+    // Supabase Storage画像のキャッシュ
     {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+      urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*\.(png|jpg|jpeg|webp|avif|gif|svg)$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "supabase-images-cache",
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7日
+        },
+      },
+    },
+    // YouTube サムネイル画像のキャッシュ
+    {
+      urlPattern: /^https:\/\/img\.youtube\.com\/vi\/.*\.(jpg|jpeg|webp|avif)$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "youtube-thumbnails-cache",
+        expiration: {
+          maxEntries: 200,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7日
+        },
+      },
+    },
+    // 一般画像ファイルのキャッシュ
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
       handler: "CacheFirst",
       options: {
         cacheName: "images-cache",

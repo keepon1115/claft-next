@@ -149,7 +149,6 @@ export default function QuestPage() {
         <div className="container">
           <header className="map-header">
             <h1>🗺️ クエストマップ</h1>
-            <p>試練のダンジョン</p>
             {!isAuthenticated && (
               <div className="guest-notice">
                 <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
@@ -161,11 +160,7 @@ export default function QuestPage() {
                 </p>
               </div>
             )}
-            {isAuthenticated && (
-              <button className="adventure-log-button">
-                これまでの冒険
-              </button>
-            )}
+
           </header>
 
           {/* クエストマップ表示 */}
@@ -288,29 +283,7 @@ export default function QuestPage() {
           box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .adventure-log-button {
-          display: inline-block;
-          margin: 20px auto 0;
-          padding: 12px 32px;
-          background: #FFD700;
-          border: 3px solid #B8860B;
-          color: #654321;
-          font-weight: bold;
-          font-size: 1rem;
-          cursor: pointer;
-          box-shadow: 0 0 0 1px #DAA520, 4px 4px 0 0 rgba(0,0,0,0.3);
-          transition: all 0.1s ease;
-        }
 
-        .adventure-log-button::before {
-          content: '📖';
-          margin-right: 8px;
-        }
-
-        .adventure-log-button:hover {
-          transform: translate(-2px, -2px);
-          box-shadow: 0 0 0 1px #DAA520, 6px 6px 0 0 rgba(0,0,0,0.3);
-        }
 
         .quest-button {
           position: fixed;
@@ -378,6 +351,7 @@ export default function QuestPage() {
         }
 
         @media (max-width: 767px) {
+
           .quest-button,
           .quest-register-button {
             padding: 12px 24px;

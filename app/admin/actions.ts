@@ -43,6 +43,55 @@ async function checkAdminPermission() {
 }
 
 /**
+ * ユーザー情報を複数のソースから取得するヘルパー関数
+ */
+async function getUserInfo(supabase: any, userId: string) {
+  try {
+    // まず users_profile から取得
+    const { data: profile } = await supabase
+      .from('users_profile')
+      .select('id, nickname, email')
+      .eq('id', userId)
+      .single()
+    
+    if (profile?.email) {
+      return profile
+    }
+    
+    // users_profile にない場合、auth.users から取得を試行
+    try {
+      const { data: { users }, error } = await supabase.auth.admin.listUsers()
+      if (!error && users) {
+        const authUser = users.find(u => u.id === userId)
+        if (authUser) {
+          return {
+            id: userId,
+            nickname: authUser.user_metadata?.full_name || authUser.user_metadata?.name || null,
+            email: authUser.email || `user-${userId.substring(0, 8)}@example.com`
+          }
+        }
+      }
+    } catch (authError) {
+      console.warn('auth.admin.listUsers エラー:', authError)
+    }
+    
+    // デフォルト値を返す
+    return {
+      id: userId,
+      nickname: null,
+      email: `user-${userId.substring(0, 8)}@example.com`
+    }
+  } catch (error) {
+    console.error('ユーザー情報取得エラー:', error)
+    return {
+      id: userId,
+      nickname: null,
+      email: `user-${userId.substring(0, 8)}@example.com`
+    }
+  }
+}
+
+/**
  * 統計情報更新
  */
 export async function updateUserStats(userId: string, action: 'quest_completed' | 'login') {

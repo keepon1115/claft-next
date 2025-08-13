@@ -123,7 +123,23 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
         <div className="profile-header">
           <div className="profile-avatar">
             <div className="avatar-container">
-              <i className="fas fa-user-astronaut"></i>
+              {displayData.avatarUrl ? (
+                <img 
+                  src={displayData.avatarUrl} 
+                  alt={`${displayData.nickname}のアバター`}
+                  className="avatar-image"
+                  onError={(e) => {
+                    // 画像読み込みエラー時はデフォルトアイコンを表示
+                    e.currentTarget.style.display = 'none'
+                    const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement
+                    if (fallbackIcon) fallbackIcon.style.display = 'block'
+                  }}
+                />
+              ) : null}
+              <i 
+                className="fas fa-user-astronaut" 
+                style={{ display: displayData.avatarUrl ? 'none' : 'block' }}
+              />
             </div>
             <div className="status-indicator"></div>
           </div>

@@ -808,6 +808,822 @@ img.pixel {
 .bg-pixel-black { background-color: #000000; }
 
 /* =====================================================
+ * マイクラSDGs専用スタイル
+ * ===================================================== */
+
+/* マイクラカラーパレット */
+:root {
+  --minecraft-grass: #9ACD32;     /* 芝ブロック色 */
+  --minecraft-grass-dark: #7BA428; /* 濃い芝色 */
+  --minecraft-dirt: #8B4513;      /* 土ブロック色 */
+  --minecraft-dirt-light: #A0522D; /* 明るい土色 */
+  --minecraft-wood: #D2691E;      /* 木材色 */
+  --minecraft-stone: #696969;     /* 石ブロック色 */
+  --minecraft-brown: #654321;     /* 茶色 */
+  --minecraft-brown-light: #8B6914; /* 明るい茶色 */
+  --minecraft-emerald: #50C878;   /* エメラルド色 */
+  --minecraft-diamond: #B9F2FF;   /* ダイヤモンド色 */
+  --minecraft-gold: #FFD700;      /* 金色 */
+}
+
+/* マイクラページ基本スタイル */
+.minecraft-page {
+  background: linear-gradient(to bottom, 
+    #87CEEB 0%,           /* 空色 */
+    #98D8E8 25%,          /* 薄い空色 */
+    var(--minecraft-grass) 25%,    /* 芝ライン */
+    var(--minecraft-grass-dark) 30%,
+    var(--minecraft-dirt) 70%,      /* 土地面 */
+    var(--minecraft-brown) 100%     /* 深い地下 */
+  );
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: var(--font-dot-gothic);
+}
+
+/* マイクラページ用認証セクション */
+.minecraft-auth-section {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+/* マイクラヘッダー */
+.minecraft-header {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, 
+    var(--minecraft-grass) 0%, 
+    var(--minecraft-emerald) 100%
+  );
+  border: 4px solid var(--minecraft-brown);
+  border-radius: 0;
+  margin: 20px;
+  box-shadow: 
+    inset 2px 2px 0 rgba(255,255,255,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.3),
+    4px 4px 8px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.minecraft-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="16" height="16" fill="%23ffffff" opacity="0.1"/><rect x="16" y="16" width="16" height="16" fill="%23ffffff" opacity="0.1"/></svg>') repeat;
+  pointer-events: none;
+}
+
+.minecraft-header h1 {
+  font-size: 36px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 
+    2px 2px 0 var(--minecraft-brown),
+    4px 4px 8px rgba(0,0,0,0.5);
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.minecraft-header p {
+  font-size: 18px;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  position: relative;
+  z-index: 1;
+}
+
+/* マイクラ通知エリア */
+.minecraft-notice {
+  background: linear-gradient(135deg, 
+    var(--minecraft-wood) 0%, 
+    var(--minecraft-dirt-light) 100%
+  );
+  border: 3px solid var(--minecraft-brown);
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 0;
+  box-shadow: 
+    inset 1px 1px 0 rgba(255,255,255,0.3),
+    inset -1px -1px 0 rgba(0,0,0,0.3);
+}
+
+/* マイクラボタンスタイル */
+.minecraft-log-button,
+.minecraft-next-button {
+  background: linear-gradient(135deg, 
+    var(--minecraft-emerald) 0%, 
+    var(--minecraft-grass) 100%
+  );
+  border: 3px solid var(--minecraft-brown);
+  border-radius: 0;
+  color: white;
+  font-family: var(--font-dot-gothic);
+  font-weight: bold;
+  font-size: 16px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  box-shadow: 
+    inset 2px 2px 0 rgba(255,255,255,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.3),
+    2px 2px 4px rgba(0,0,0,0.3);
+  margin-top: 15px;
+}
+
+.minecraft-log-button:hover,
+.minecraft-next-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 
+    inset 2px 2px 0 rgba(255,255,255,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.3),
+    3px 3px 6px rgba(0,0,0,0.4);
+}
+
+.minecraft-log-button:active,
+.minecraft-next-button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 
+    inset 2px 2px 0 rgba(0,0,0,0.3),
+    inset -2px -2px 0 rgba(255,255,255,0.1),
+    1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* マイクラ次のボタン配置 */
+.minecraft-next-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 50;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* マイクラローディングキューブ */
+.minecraft-loading-cube {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  background: linear-gradient(45deg, 
+    var(--minecraft-grass) 0%, 
+    var(--minecraft-grass-dark) 50%,
+    var(--minecraft-dirt) 100%
+  );
+  border: 3px solid var(--minecraft-brown);
+  animation: minecraft-cube-rotate 2s infinite ease-in-out;
+  position: relative;
+}
+
+.minecraft-loading-cube::before,
+.minecraft-loading-cube::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--minecraft-brown);
+}
+
+.minecraft-loading-cube::before {
+  background: var(--minecraft-dirt);
+  transform: translate(4px, 4px);
+  z-index: -1;
+}
+
+.minecraft-loading-cube::after {
+  background: var(--minecraft-stone);
+  transform: translate(8px, 8px);
+  z-index: -2;
+}
+
+@keyframes minecraft-cube-rotate {
+  0%, 100% { 
+    transform: rotateX(0deg) rotateY(0deg);
+  }
+  25% { 
+    transform: rotateX(90deg) rotateY(0deg);
+  }
+  50% { 
+    transform: rotateX(90deg) rotateY(90deg);
+  }
+  75% { 
+    transform: rotateX(0deg) rotateY(90deg);
+  }
+}
+
+/* マイクラマップ基本スタイル */
+.minecraft-map {
+  background: linear-gradient(135deg, 
+    rgba(255,255,255,0.9) 0%, 
+    rgba(154,205,50,0.1) 100%
+  );
+  border: 4px solid var(--minecraft-brown);
+  border-radius: 0;
+  padding: 30px;
+  margin: 20px 0;
+  box-shadow: 
+    inset 3px 3px 0 rgba(255,255,255,0.3),
+    inset -3px -3px 0 rgba(0,0,0,0.3),
+    6px 6px 12px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* マイクラグリッドパターン */
+.minecraft-map::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="none" stroke="%23654321" stroke-width="0.5" opacity="0.1"/></svg>') repeat;
+  pointer-events: none;
+}
+
+/* マイクラステージグリッド */
+.minecraft-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+  position: relative;
+  z-index: 1;
+}
+
+/* マイクラステージノード */
+.minecraft-stage-node {
+  background: linear-gradient(135deg, 
+    var(--minecraft-grass) 0%, 
+    var(--minecraft-grass-dark) 100%
+  );
+  border: 4px solid var(--minecraft-brown);
+  border-radius: 0;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    inset 2px 2px 0 rgba(255,255,255,0.3),
+    inset -2px -2px 0 rgba(0,0,0,0.3),
+    3px 3px 6px rgba(0,0,0,0.3);
+}
+
+/* ステージ状態による色変更 */
+.minecraft-stage-node.locked {
+  background: linear-gradient(135deg, 
+    var(--minecraft-stone) 0%, 
+    #555 100%
+  );
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.minecraft-stage-node.current {
+  background: linear-gradient(135deg, 
+    var(--minecraft-emerald) 0%, 
+    var(--minecraft-grass) 100%
+  );
+  animation: minecraft-glow 2s ease-in-out infinite alternate;
+}
+
+.minecraft-stage-node.completed {
+  background: linear-gradient(135deg, 
+    var(--minecraft-gold) 0%, 
+    var(--minecraft-diamond) 100%
+  );
+}
+
+.minecraft-stage-node:hover:not(.locked) {
+  transform: translate(-2px, -2px);
+  box-shadow: 
+    inset 2px 2px 0 rgba(255,255,255,0.4),
+    inset -2px -2px 0 rgba(0,0,0,0.3),
+    5px 5px 10px rgba(0,0,0,0.4);
+}
+
+.minecraft-stage-node:active:not(.locked) {
+  transform: translate(0, 0);
+  box-shadow: 
+    inset 2px 2px 0 rgba(0,0,0,0.3),
+    inset -2px -2px 0 rgba(255,255,255,0.1),
+    1px 1px 3px rgba(0,0,0,0.3);
+}
+
+/* マイクラグロウアニメーション */
+@keyframes minecraft-glow {
+  0% {
+    box-shadow: 
+      inset 2px 2px 0 rgba(255,255,255,0.3),
+      inset -2px -2px 0 rgba(0,0,0,0.3),
+      3px 3px 6px rgba(0,0,0,0.3),
+      0 0 20px rgba(80,200,120,0.5);
+  }
+  100% {
+    box-shadow: 
+      inset 2px 2px 0 rgba(255,255,255,0.3),
+      inset -2px -2px 0 rgba(0,0,0,0.3),
+      3px 3px 6px rgba(0,0,0,0.3),
+      0 0 30px rgba(80,200,120,0.8);
+  }
+}
+
+/* マイクラステージアイコン */
+.minecraft-stage-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.minecraft-stage-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect width="8" height="8" fill="%23ffffff" opacity="0.1"/><rect x="8" y="8" width="8" height="8" fill="%23ffffff" opacity="0.1"/></svg>') repeat;
+}
+
+/* マイクラステージテキスト */
+.minecraft-stage-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.minecraft-stage-description {
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* マイクラプログレス統計 */
+.minecraft-progress-stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.minecraft-stat-card {
+  background: linear-gradient(135deg, 
+    var(--minecraft-wood) 0%, 
+    var(--minecraft-dirt-light) 100%
+  );
+  border: 3px solid var(--minecraft-brown);
+  border-radius: 0;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 
+    inset 1px 1px 0 rgba(255,255,255,0.3),
+    inset -1px -1px 0 rgba(0,0,0,0.3),
+    2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.minecraft-stat-card span {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+/* クリアバッジ */
+.minecraft-clear-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--minecraft-gold);
+  color: var(--minecraft-brown);
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 10px;
+  border: 2px solid var(--minecraft-brown);
+  transform: rotate(15deg);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+/* SDGs目標バッジ */
+.minecraft-sdgs-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 10px;
+  z-index: 5;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .minecraft-header h1 {
+    font-size: 28px;
+  }
+  
+  .minecraft-stage-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+  
+  .minecraft-stage-node {
+    padding: 15px;
+  }
+  
+  .minecraft-stage-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+  }
+  
+  .minecraft-next-button {
+    bottom: 20px;
+    right: 20px;
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  
+  .minecraft-auth-section {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 10px 20px;
+  }
+}
+
+/* =====================================================
+ * マイクラ風アニメーション
+ * ===================================================== */
+
+/* 背景用のマイクラ風要素 */
+.minecraft-background-elements {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* 浮遊する芝ブロック */
+.minecraft-floating-grass {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--minecraft-grass);
+  border: 2px solid var(--minecraft-grass-dark);
+  border-radius: 0;
+  animation: minecraft-float-grass 15s infinite ease-in-out;
+  opacity: 0.3;
+}
+
+.minecraft-floating-grass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><rect width="4" height="4" fill="%23ffffff" opacity="0.2"/><rect x="4" y="4" width="4" height="4" fill="%23ffffff" opacity="0.2"/></svg>') repeat;
+}
+
+/* 成長する木のアニメーション */
+.minecraft-growing-tree {
+  position: absolute;
+  bottom: 0;
+  animation: minecraft-grow-tree 20s infinite ease-in-out;
+}
+
+.minecraft-tree-trunk {
+  width: 12px;
+  height: 0;
+  background: var(--minecraft-wood);
+  border: 1px solid var(--minecraft-dirt);
+  border-radius: 0;
+  animation: minecraft-grow-trunk 8s ease-out forwards;
+}
+
+.minecraft-tree-leaves {
+  width: 30px;
+  height: 30px;
+  background: var(--minecraft-grass);
+  border: 2px solid var(--minecraft-grass-dark);
+  border-radius: 0;
+  position: absolute;
+  top: -30px;
+  left: -9px;
+  opacity: 0;
+  animation: minecraft-grow-leaves 3s ease-out 8s forwards;
+}
+
+/* ブロック破壊エフェクト */
+.minecraft-break-effect {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--minecraft-stone);
+  border-radius: 0;
+  animation: minecraft-break-particle 1s ease-out forwards;
+}
+
+/* エメラルドの煌めき */
+.minecraft-emerald-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--minecraft-emerald);
+  border-radius: 0;
+  animation: minecraft-sparkle-move 12s infinite ease-in-out;
+  opacity: 0.7;
+  box-shadow: 0 0 8px var(--minecraft-emerald);
+}
+
+/* アニメーション定義 */
+@keyframes minecraft-float-grass {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-30px) rotate(90deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-15px) rotate(180deg);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-40px) rotate(270deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes minecraft-grow-tree {
+  0%, 40% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  60% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  90% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes minecraft-grow-trunk {
+  0% {
+    height: 0;
+  }
+  100% {
+    height: 40px;
+  }
+}
+
+@keyframes minecraft-grow-leaves {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes minecraft-break-particle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--random-x, 20px), var(--random-y, -30px)) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes minecraft-sparkle-move {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 0.7;
+  }
+  25% {
+    transform: translateY(-20px) scale(1.3) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px) scale(0.8) rotate(180deg);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateY(-25px) scale(1.5) rotate(270deg);
+    opacity: 0.9;
+  }
+}
+
+/* 地面の層状アニメーション */
+.minecraft-ground-layers {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom,
+    var(--minecraft-grass) 0%,
+    var(--minecraft-grass) 20%,
+    var(--minecraft-dirt) 20%,
+    var(--minecraft-dirt) 60%,
+    var(--minecraft-stone) 60%,
+    var(--minecraft-brown) 100%
+  );
+  animation: minecraft-ground-breathe 8s ease-in-out infinite;
+}
+
+@keyframes minecraft-ground-breathe {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.05);
+  }
+}
+
+/* マイクラ風雲の動き */
+.minecraft-cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+  opacity: 0.6;
+  animation: minecraft-cloud-drift 25s infinite linear;
+}
+
+.minecraft-cloud.small {
+  width: 60px;
+  height: 30px;
+  top: 10%;
+}
+
+.minecraft-cloud.medium {
+  width: 100px;
+  height: 50px;
+  top: 20%;
+}
+
+.minecraft-cloud.large {
+  width: 140px;
+  height: 70px;
+  top: 15%;
+}
+
+.minecraft-cloud::before,
+.minecraft-cloud::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+}
+
+.minecraft-cloud::before {
+  width: 40%;
+  height: 80%;
+  top: -40%;
+  left: 20%;
+}
+
+.minecraft-cloud::after {
+  width: 60%;
+  height: 60%;
+  top: -30%;
+  right: 10%;
+}
+
+@keyframes minecraft-cloud-drift {
+  0% {
+    transform: translateX(-200px);
+  }
+  100% {
+    transform: translateX(calc(100vw + 200px));
+  }
+}
+
+/* パーティクルシステム */
+.minecraft-particle-system {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.minecraft-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 0;
+  animation: minecraft-particle-rise 6s infinite ease-out;
+}
+
+.minecraft-particle.grass-particle {
+  background: var(--minecraft-grass);
+  border: 1px solid var(--minecraft-grass-dark);
+}
+
+.minecraft-particle.dirt-particle {
+  background: var(--minecraft-dirt);
+  border: 1px solid var(--minecraft-brown);
+}
+
+.minecraft-particle.emerald-particle {
+  background: var(--minecraft-emerald);
+  border: 1px solid var(--minecraft-grass);
+  box-shadow: 0 0 4px var(--minecraft-emerald);
+}
+
+@keyframes minecraft-particle-rise {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .minecraft-floating-grass {
+    width: 15px;
+    height: 15px;
+  }
+  
+  .minecraft-tree-trunk {
+    width: 8px;
+  }
+  
+  .minecraft-tree-leaves {
+    width: 20px;
+    height: 20px;
+    left: -6px;
+  }
+  
+  .minecraft-cloud.small {
+    width: 40px;
+    height: 20px;
+  }
+  
+  .minecraft-cloud.medium {
+    width: 70px;
+    height: 35px;
+  }
+  
+  .minecraft-cloud.large {
+    width: 100px;
+    height: 50px;
+  }
+}
+
+/* =====================================================
  * 認証セクション（ログインボタン配置用）
  * ===================================================== */
 
@@ -1101,6 +1917,14 @@ img.pixel {
 .avatar-container i {
   z-index: 1;
   animation: breathe-icon 3s ease-in-out infinite;
+}
+
+.avatar-container .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 @keyframes breathe-icon {

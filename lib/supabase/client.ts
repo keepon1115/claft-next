@@ -274,8 +274,13 @@ export function createServiceRoleSupabaseClient() {
 
 /**
  * Supabaseエラーハンドリングユーティリティ
+ * PostgRESTエラーの詳細情報を保持
  */
 export class SupabaseError extends Error {
+  public hint?: string
+  public status?: number
+  public originalError?: any
+
   constructor(
     message: string,
     public code?: string,
@@ -284,17 +289,52 @@ export class SupabaseError extends Error {
     super(message)
     this.name = 'SupabaseError'
   }
+
+  /**
+   * エラーの詳細情報を文字列として取得
+   */
+  getDetailedMessage(): string {
+    const parts = [this.message]
+    
+    if (this.code) {
+      parts.push(`Code: ${this.code}`)
+    }
+    
+    if (this.details) {
+      parts.push(`Details: ${JSON.stringify(this.details)}`)
+    }
+    
+    if (this.hint) {
+      parts.push(`Hint: ${this.hint}`)
+    }
+    
+    if (this.status) {
+      parts.push(`Status: ${this.status}`)
+    }
+    
+    return parts.join(' | ')
+  }
 }
 
 /**
  * Supabaseレスポンスのエラーハンドリング
+ * 元のエラー情報を保持し、詳細なデバッグ情報を提供
  */
 export function handleSupabaseError(error: any): never {
+  // 空のオブジェクトや falsy な値をチェック
+  if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+    throw new SupabaseError('Unknown error occurred', undefined, error)
+  }
+  
+  // 元のエラー情報をログ出力（デバッグ用）
+  console.error('[Supabase] Original error:', error)
+  
   if (error?.code) {
-    const errorMessages: Record<string, string> = {
+    // PostgRESTエラーコードに対する日本語メッセージ（可読性向上のため）
+    const friendlyMessages: Record<string, string> = {
       'PGRST116': 'データが見つかりません',
       'PGRST201': '認証が必要です',
-      'PGRST301': 'アクセス権限がありません',
+      'PGRST301': 'アクセス権限がありません', 
       '23505': 'このデータは既に存在します',
       '23503': '関連するデータが存在しないため処理できません',
       'auth/invalid-email': '無効なメールアドレスです',
@@ -304,10 +344,22 @@ export function handleSupabaseError(error: any): never {
       'auth/wrong-password': 'パスワードが間違っています'
     }
     
-    const message = errorMessages[error.code] || error.message || 'データベースエラーが発生しました'
-    throw new SupabaseError(message, error.code, error.details)
+    // 元のメッセージを優先し、日本語メッセージは補足として使用
+    const originalMessage = error.message || friendlyMessages[error.code] || 'データベースエラーが発生しました'
+    
+    // 元のエラー情報を全て保持
+    const supabaseError = new SupabaseError(originalMessage, error.code, error.details)
+    // エラーオブジェクトに追加情報を付与
+    Object.assign(supabaseError, {
+      hint: error.hint,
+      status: error.status,
+      originalError: error
+    })
+    
+    throw supabaseError
   }
   
+  // PostgRESTエラーではない場合も元のメッセージを保持
   throw new SupabaseError(
     error?.message || 'Supabaseエラーが発生しました',
     undefined,
@@ -317,6 +369,7 @@ export function handleSupabaseError(error: any): never {
 
 /**
  * 型安全なSupabaseクエリヘルパー
+ * 元のエラー情報を保持し、包み直しを最小限に抑制
  */
 export async function safeSupabaseQuery<T>(
   queryFn: () => Promise<{ data: T | null; error: any }>
@@ -324,20 +377,34 @@ export async function safeSupabaseQuery<T>(
   try {
     const { data, error } = await queryFn()
     
-    if (error) {
+    // 実際のエラーが存在する場合のみエラーハンドリング
+    const hasRealError = error && 
+      !(typeof error === 'object' && Object.keys(error).length === 0) &&
+      error.message !== undefined
+    
+    if (hasRealError) {
+      // 元のエラーをそのまま保持して投げる
       handleSupabaseError(error)
     }
     
-    if (data === null) {
-      throw new SupabaseError('データが見つかりません', 'PGRST116')
+    // データが null で、実際のエラーもない場合は「データなし」エラー
+    if (data === null && !hasRealError) {
+      throw new SupabaseError('No data returned', 'PGRST116')
     }
     
     return data
   } catch (error) {
+    // SupabaseErrorは既に適切に処理されているのでそのまま再投げ
     if (error instanceof SupabaseError) {
       throw error
     }
-    throw new SupabaseError('予期しないエラーが発生しました', undefined, error)
+    
+    // ネットワークエラーやその他の予期しないエラー
+    console.error('[Supabase] Unexpected error:', error)
+    
+    // 元のエラーメッセージを保持（包み直しを避ける）
+    const originalMessage = error instanceof Error ? error.message : 'Unexpected error'
+    throw new SupabaseError(originalMessage, undefined, error)
   }
 }
 
