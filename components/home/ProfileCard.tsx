@@ -128,7 +128,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
                   src={displayData.avatarUrl} 
                   alt={`${displayData.nickname}のアバター`}
                   className="avatar-image"
+                  onLoad={() => {
+                    console.log('✅ アバター画像読み込み成功:', displayData.avatarUrl)
+                  }}
                   onError={(e) => {
+                    console.warn('⚠️ アバター画像読み込み失敗:', displayData.avatarUrl)
                     // 画像読み込みエラー時はデフォルトアイコンを表示
                     e.currentTarget.style.display = 'none'
                     const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement

@@ -106,8 +106,17 @@ export default function ProfilePage() {
     setUploadingAvatar(true)
     try {
       const fileExtension = avatarFile.name.split('.').pop()
-      const fileName = `avatar-${user.id}-${Date.now()}.${fileExtension}`
-      const filePath = `avatars/${fileName}`
+      const fileName = `avatar-${Date.now()}.${fileExtension}`
+      const filePath = `${user.id}/${fileName}`
+
+      console.log('🔧 アバター画像アップロード開始:', {
+        fileName,
+        filePath,
+        fileSize: avatarFile.size,
+        fileType: avatarFile.type,
+        userId: user.id,
+        bucketId: 'user-avatars'
+      })
 
       // Supabase Storageにアップロード
       const { data, error } = await supabase.storage
@@ -117,18 +126,43 @@ export default function ProfilePage() {
           upsert: true
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ ストレージアップロードエラー:', {
+          error,
+          errorMessage: error?.message,
+          errorDetails: error?.details,
+          errorHint: error?.hint,
+          filePath,
+          userId: user.id
+        })
+        
+        // RLSエラーの場合は具体的なメッセージを表示
+        if (error?.message?.includes('row-level security') || error?.message?.includes('policy')) {
+          throw new Error(`権限エラー: ユーザー認証またはアクセス権限に問題があります。\n詳細: ${error.message}`)
+        }
+        
+        throw new Error(`アップロードに失敗しました: ${error?.message || 'Unknown error'}`)
+      }
 
       // パブリックURLを取得
       const { data: { publicUrl } } = supabase.storage
         .from('user-avatars')
         .getPublicUrl(filePath)
 
-      console.log('✅ アバター画像アップロード完了:', publicUrl)
+      console.log('✅ アバター画像アップロード完了:', {
+        publicUrl,
+        data
+      })
+      
       return publicUrl
 
     } catch (error) {
       console.error('❌ アバター画像アップロードエラー:', error)
+      const errorMessage = error instanceof Error ? error.message : 'アップロードに失敗しました'
+      
+      // ユーザーにわかりやすいエラーメッセージを表示
+      alert(`アバター画像のアップロードに失敗しました。\n\n${errorMessage}\n\n開発環境では、Supabaseの設定が必要です。`)
+      
       throw error
     } finally {
       setUploadingAvatar(false)
@@ -145,9 +179,17 @@ export default function ProfilePage() {
 
       // アバター画像がアップロードされている場合は先にアップロード
       if (avatarFile) {
-        avatarUrl = await uploadAvatar()
-        if (avatarUrl) {
-          setLocalProfileData(prev => ({ ...prev, avatarUrl }))
+        try {
+          avatarUrl = await uploadAvatar()
+          if (avatarUrl) {
+            setLocalProfileData(prev => ({ ...prev, avatarUrl }))
+            console.log('✅ アバターURL更新:', avatarUrl)
+          }
+        } catch (uploadError) {
+          console.error('❌ アバターアップロード失敗:', uploadError)
+          // アバターアップロードに失敗してもプロフィール保存は継続
+          setSaveStatus('error')
+          return
         }
       }
 

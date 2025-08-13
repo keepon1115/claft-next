@@ -34,8 +34,8 @@ export interface MinecraftStageProgress {
   description: string
   sdgsWorkUrl?: string // SDGsワーク動画URL
   sdgsFormUrl?: string // SDGsワーク回答フォームURL
-  programmingWorkUrl?: string // プログラミングワーク動画URL
-  programmingFormUrl?: string // プログラミングワーク回答フォームURL
+  programmingWorkUrl?: string // マイクラワーク動画URL
+  programmingFormUrl?: string // マイクラワーク回答フォームURL
   message: string
   iconImage?: string
   iconUrl?: string

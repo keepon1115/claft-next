@@ -33,10 +33,20 @@ function createMockSupabaseClient() {
     }),
     rpc: () => Promise.resolve({ data: null, error: null }),
     storage: {
-      from: () => ({
-        upload: () => Promise.resolve({ data: null, error: null }),
+      from: (bucket: string) => ({
+        upload: (path: string, file: File, options?: any) => {
+          console.warn('🔧 開発モック: ストレージアップロードをシミュレーション')
+          return Promise.resolve({
+            data: { path, fullPath: `${bucket}/${path}` },
+            error: null
+          })
+        },
         download: () => Promise.resolve({ data: null, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: '' } })
+        getPublicUrl: (path: string) => {
+          const mockUrl = `https://mock.supabase.co/storage/v1/object/public/${bucket}/${path}`
+          console.warn('🔧 開発モック: モックURLを生成:', mockUrl)
+          return { data: { publicUrl: mockUrl } }
+        }
       })
     }
   } as any

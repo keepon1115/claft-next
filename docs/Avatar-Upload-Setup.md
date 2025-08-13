@@ -96,8 +96,10 @@ ON users_profile(avatar_url);
 
 ### ファイル命名規則
 ```
-avatars/avatar-{userId}-{timestamp}.{extension}
+{userId}/avatar-{timestamp}.{extension}
 ```
+
+**変更理由**: RLSポリシーがパスの最初の部分をユーザーIDとして認識するため、ユーザーIDをディレクトリ名として使用します。
 
 ## 使用方法
 
