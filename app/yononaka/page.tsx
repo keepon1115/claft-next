@@ -99,15 +99,20 @@ export default function YononakaPage() {
                   href="https://forms.gle/3eiUz3xJyT25A24z9"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
                   【Yo94】世の中にはどんな仕事があるの？
                 </a>
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer">
-                  【Yo95】まだ押せません
-                </div>
                 <a
-                  href="https://forms.gle/3pBgXCR74Je6cqee6"
+                  href="https://forms.gle/tzm3yM8Be5Fs98q58"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo95】今年の夏休みはどうですか？
+                </a>
+                <a
+                  href="https://forms.gle/EyQ74Mya3UWg4Edi9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-purple-200 to-pink-200 border-2 border-purple-300 rounded-xl p-4 font-bold text-amber-900 relative overflow-hidden cursor-pointer hover:translate-x-1 hover:scale-105 transition-all duration-300"
