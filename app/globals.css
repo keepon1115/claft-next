@@ -1055,6 +1055,9 @@ img.pixel {
   gap: 25px;
   position: relative;
   z-index: 1;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* マイクラステージノード */
@@ -1099,6 +1102,7 @@ img.pixel {
     var(--minecraft-gold) 0%, 
     var(--minecraft-diamond) 100%
   );
+  cursor: pointer;
 }
 
 .minecraft-stage-node:hover:not(.locked) {
@@ -1213,17 +1217,21 @@ img.pixel {
 /* クリアバッジ */
 .minecraft-clear-badge {
   position: absolute;
-  top: -10px;
-  right: -10px;
+  top: -5px;
+  right: -5px;
   background: var(--minecraft-gold);
   color: var(--minecraft-brown);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
-  padding: 5px 10px;
+  padding: 3px 6px;
   border: 2px solid var(--minecraft-brown);
   transform: rotate(15deg);
   box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   z-index: 10;
+  min-width: 50px;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 2px;
 }
 
 /* SDGs目標バッジ */

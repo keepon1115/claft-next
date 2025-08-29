@@ -47,6 +47,12 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
   // 進行度から表示ステップを決定
   useEffect(() => {
     if (!stage) return
+    // 完了済みステージでは最初のステップから表示し、ユーザーが自由に選択できるようにする
+    if (stage.status === 'completed') {
+      setCurrentStep('sdgs_video')
+      return
+    }
+    
     switch (stage.status) {
       case 'current':
       case 'locked':
@@ -58,7 +64,6 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
       case 'programming_video_watched':
         setCurrentStep('programming_work'); break
       case 'programming_work_completed':
-      case 'completed':
         setCurrentStep('message'); break
       default:
         setCurrentStep('sdgs_video')
@@ -179,8 +184,14 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
             const isCompleted =
               ['sdgs_video', 'sdgs_work', 'programming_video', 'programming_work', 'message'].indexOf(currentStep) > i ||
               (stage.status === 'completed' && s === 'message')
+            const isClickable = stage.status === 'completed' // 完了済みステージでは全ステップクリック可能
+            
             return (
-              <div key={s} className={`minecraft-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
+              <div 
+                key={s} 
+                className={`minecraft-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isClickable ? 'clickable' : ''}`}
+                onClick={isClickable ? () => setCurrentStep(s as typeof currentStep) : undefined}
+              >
                 <div className="step-icon">{info.icon}</div>
                 <span className="step-label">{info.title}</span>
               </div>
@@ -230,24 +241,48 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
                       {currentStep.includes('video') ? '動画を見る' : 'フォームに回答する'}
                     </button>
 
-                    <button
-                      data-testid="complete-button"
-                      onClick={() => {
-                        const nextStatus =
-                          currentStep === 'sdgs_video'
-                            ? 'sdgs_video_watched'
-                            : currentStep === 'sdgs_work'
-                            ? 'sdgs_work_completed'
-                            : currentStep === 'programming_video'
-                            ? 'programming_video_watched'
-                            : 'programming_work_completed'
-                        handleStepComplete(nextStatus as MinecraftStageStatus)
-                      }}
-                      disabled={isLoading}
-                      className="minecraft-action-button secondary"
-                    >
-                      {isLoading ? (<><Clock className="w-4 h-4 animate-spin" />処理中...</>) : (<><CheckCircle className="w-4 h-4" />完了した</>)}
-                    </button>
+                    {currentStep === 'sdgs_video' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // TODO: 補助プリントのURLを追加
+                          window.open('#', '_blank', 'noopener,noreferrer')
+                        }}
+                        className="minecraft-action-button support"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        補助プリント
+                      </button>
+                    )}
+
+                    {stage.status !== 'completed' && (
+                      <button
+                        data-testid="complete-button"
+                        onClick={() => {
+                          const nextStatus =
+                            currentStep === 'sdgs_video'
+                              ? 'sdgs_video_watched'
+                              : currentStep === 'sdgs_work'
+                              ? 'sdgs_work_completed'
+                              : currentStep === 'programming_video'
+                              ? 'programming_video_watched'
+                              : 'programming_work_completed'
+                          handleStepComplete(nextStatus as MinecraftStageStatus)
+                        }}
+                        disabled={isLoading}
+                        className="minecraft-action-button secondary"
+                      >
+                        {isLoading ? (<><Clock className="w-4 h-4 animate-spin" />処理中...</>) : (<><CheckCircle className="w-4 h-4" />完了した</>)}
+                      </button>
+                    )}
+                    
+                    {stage.status === 'completed' && (
+                      <div className="text-center p-4 bg-green-50 border border-green-200 rounded">
+                        <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                        <p className="text-green-700 font-semibold">このステップは完了済みです</p>
+                        <p className="text-green-600 text-sm">動画やワークの内容を確認できます</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-minecraft-brown-light text-center">このステップはまだ準備中です</p>
@@ -296,6 +331,8 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
           .minecraft-step{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:80px;opacity:.5;transition:all .3s ease}
           .minecraft-step.active{opacity:1;transform:scale(1.1)}
           .minecraft-step.completed{opacity:.8}
+          .minecraft-step.clickable{cursor:pointer}
+          .minecraft-step.clickable:hover{opacity:1;transform:scale(1.05)}
           .minecraft-step .step-icon{
             width:30px;height:30px;background:rgba(255,255,255,.2);
             border:2px solid rgba(255,255,255,.3);border-radius:0;display:flex;align-items:center;justify-content:center;color:#fff;
@@ -331,6 +368,10 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
           }
           .minecraft-action-button.secondary{
             background:linear-gradient(135deg,#6a4b2f 0%,#5a3f27 100%);
+            color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5)
+          }
+          .minecraft-action-button.support{
+            background:linear-gradient(135deg,#4CAF50 0%,#388E3C 100%);
             color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5)
           }
           .minecraft-action-button:hover:not(:disabled){

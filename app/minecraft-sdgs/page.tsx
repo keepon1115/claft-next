@@ -94,7 +94,7 @@ export default function MinecraftSdgsPage() {
       <div className="min-h-screen minecraft-page flex items-center justify-center">
         <div className="text-center">
           <div className="minecraft-loading-cube mb-4"></div>
-          <p className="text-xl font-bold text-minecraft-brown">ワールドを生成中...</p>
+          <p className="text-xl font-bold text-minecraft-brown">コースを読み込み中...</p>
         </div>
       </div>
     )
@@ -110,9 +110,9 @@ export default function MinecraftSdgsPage() {
           <AuthButton variant="compact" size="md" redirectTo="/minecraft-sdgs" defaultTab="login" enableUserMenu={true} showAdminLink={true} />
         </div>
 
-        <div className="container">
+        <div className="container mx-auto max-w-7xl px-4">
           <header className="minecraft-header">
-            <h1>🌍 マイクラSDGsワールド</h1>
+            <h1>🌍 マイクラSDGsコース</h1>
             <p>持続可能な世界をクラフトしよう</p>
             {!isAuthenticated && (
               <div className="guest-notice minecraft-notice">
@@ -127,8 +127,6 @@ export default function MinecraftSdgsPage() {
 
           <MinecraftMap stages={stages} statistics={displayStatistics} onStageClick={handleStageClick} />
         </div>
-
-        {isAuthenticated && <button className="minecraft-next-button">次のSDGsワークへ</button>}
 
         {isModalOpen && selectedStageId && (
           <DynamicStageModal

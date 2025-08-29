@@ -56,7 +56,7 @@ export default function MinecraftStageNode({
   }
 
   const statusClass = getStatusClass(stage.status)
-  const isClickable = stage.status !== 'locked'
+  const isClickable = stage.status !== 'locked' // 完了済みステージもクリック可能にする
 
   return (
     <div 
@@ -105,26 +105,6 @@ export default function MinecraftStageNode({
       {/* ステージ情報 */}
       <div className="minecraft-stage-info">
         <h3 className="minecraft-stage-title">{stage.title}</h3>
-        <p className="minecraft-stage-description">{stage.description}</p>
-        
-        {/* 5ステップ進行表示 */}
-        <div className="minecraft-step-progress">
-          <div className={`step ${['sdgs_video_watched', 'sdgs_work_completed', 'programming_video_watched', 'programming_work_completed', 'completed'].includes(stage.status) ? 'active' : ''}`} title="SDGsワーク視聴">
-            <Book size={12} />
-          </div>
-          <div className={`step ${['sdgs_work_completed', 'programming_video_watched', 'programming_work_completed', 'completed'].includes(stage.status) ? 'active' : ''}`} title="SDGsワーク挑戦">
-            <CheckCircle size={12} />
-          </div>
-          <div className={`step ${['programming_video_watched', 'programming_work_completed', 'completed'].includes(stage.status) ? 'active' : ''}`} title="マイクラワーク視聴">
-            <Code size={12} />
-          </div>
-          <div className={`step ${['programming_work_completed', 'completed'].includes(stage.status) ? 'active' : ''}`} title="マイクラワーク挑戦">
-            <CheckCircle size={12} />
-          </div>
-          <div className={`step ${stage.status === 'completed' ? 'active' : ''}`} title="完了">
-            <Trophy size={12} />
-          </div>
-        </div>
       </div>
 
       {/* マイクラブロック風テクスチャ */}

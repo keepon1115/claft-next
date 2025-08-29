@@ -75,7 +75,7 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
         <div className="minecraft-header-stats">
           <div className="minecraft-stat-card">
             <Trophy className="w-5 h-5 text-minecraft-gold" />
-            <span>クリア済み: {statistics.completedStages}</span>
+            <span>進捗: {statistics.completedStages}/{statistics.totalStages}</span>
           </div>
           <button 
             onClick={() => setIsWorldDataModalOpen(true)}
