@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 // =====================================================
@@ -43,6 +44,7 @@ function PasswordResetContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resetComplete, setResetComplete] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSessionReady, setIsSessionReady] = useState(false)
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -58,18 +60,52 @@ function PasswordResetContent() {
   const accessToken = searchParams.get('access_token')
   const refreshToken = searchParams.get('refresh_token')
   const type = searchParams.get('type')
+  const code = searchParams.get('code')
 
   // コンポーネントマウント時の処理
   useEffect(() => {
-    // パスワードリセット用のアクセスの場合
-    if (type === 'recovery' && accessToken) {
-      // Supabaseのセッションが自動的に復元される
-      console.log('🔧 パスワードリセット用のアクセスを検出')
-    } else if (!accessToken && !isAuthenticated) {
-      // 不正なアクセスの場合はホームページにリダイレクト
-      setErrorMessage('無効なアクセスです。パスワードリセットメールから正しいリンクをクリックしてください。')
+    const supabase = createBrowserSupabaseClient()
+    const handleSessionFromUrl = async () => {
+      try {
+        // 1) 新フロー: /auth/v1/verify?code=...&type=recovery
+        if (type === 'recovery' && code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) throw error
+          console.log('✅ exchangeCodeForSession 成功', !!data.session)
+          setIsSessionReady(true)
+          return
+        }
+
+        // 2) 旧フロー: #access_token=...&refresh_token=...&type=recovery
+        let at = accessToken
+        let rt = refreshToken
+        if (!at) {
+          const hash = typeof window !== 'undefined' ? window.location.hash : ''
+          if (hash && hash.includes('access_token')) {
+            const params = new URLSearchParams(hash.replace(/^#/, ''))
+            at = params.get('access_token') || undefined
+            rt = params.get('refresh_token') || undefined
+          }
+        }
+        if (type === 'recovery' && at && rt) {
+          const { data, error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
+          if (error) throw error
+          console.log('✅ setSession 成功', !!data.session)
+          setIsSessionReady(true)
+          return
+        }
+
+        // どちらの形式でもない場合
+        if (!isAuthenticated) {
+          setErrorMessage('無効なアクセスです。パスワードリセットメールから正しいリンクをクリックしてください。')
+        }
+      } catch (e: any) {
+        console.error('❌ セッショントークン処理エラー:', e)
+        setErrorMessage('リンクの有効期限が切れている可能性があります。もう一度お試しください。')
+      }
     }
-  }, [accessToken, refreshToken, type, isAuthenticated])
+    handleSessionFromUrl()
+  }, [accessToken, refreshToken, type, code, isAuthenticated])
 
   // パスワード更新処理
   const handlePasswordReset = async (data: ResetPasswordFormData) => {
@@ -108,9 +144,7 @@ function PasswordResetContent() {
   }
 
   // ログインページに移動
-  const handleGoToLogin = () => {
-    router.push('/')
-  }
+  const handleGoToLogin = () => { router.push('/login') }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center p-4">
@@ -177,7 +211,7 @@ function PasswordResetContent() {
           /* パスワード設定フォーム */
           <div>
             {/* 無効なアクセスの場合 */}
-            {!accessToken && !isAuthenticated ? (
+            {!isSessionReady && !accessToken && !isAuthenticated ? (
               <div className="text-center space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <p className="text-red-800 text-sm">

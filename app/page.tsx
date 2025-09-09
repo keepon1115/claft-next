@@ -42,6 +42,8 @@ export default function Home() {
     setSidebarOpen(false)
   }
 
+  const displayName = profile?.nickname || (user as any)?.user_metadata?.name || user?.email || 'クラフター'
+
   return (
     <>
       {/* 背景アニメーション */}
@@ -65,8 +67,8 @@ export default function Home() {
           <div className="header-content">
             <div className="player-info">
               <div className="greeting-section">
-                <h1>こんにちは、クラフター！</h1>
-                <p>今日も一緒に未来をつくっていこう 🚀</p>
+                <h1>こんにちは、{displayName}</h1>
+                <p>よっしゃ今日もキャリアをつくっていこう🚀</p>
               </div>
             </div>
             
@@ -121,25 +123,17 @@ export default function Home() {
           {/* 右側: クラフトストーリー & JibunCraft */}
           <div className="content-area">
             <LockedContent
-              isLocked={!isAdmin && statistics.completedStages < 6}
+              isLocked={!isAdmin && statistics.completedStages < 12}
               unlockConditionText={
-                <>
-                  このエリアは
-                  <span className="text-purple-600 font-black">メインクエスト6</span>
-                  をクリアすると開放されます
-                </>
+                <>このエリアはクエスト12をクリアすると開放されます</>
               }
             >
               <CraftStory />
             </LockedContent>
             <LockedContent
-              isLocked={!isAdmin && statistics.completedStages < 20}
+              isLocked={!isAdmin && statistics.completedStages < 12}
               unlockConditionText={
-                <>
-                  このエリアは
-                  <span className="text-purple-600 font-black">クエスト20</span>
-                  をクリアすると開放されます
-                </>
+                <>このエリアはクエスト12をクリアすると開放されます</>
               }
             >
               <JibunCraft />

@@ -126,10 +126,11 @@ export const useCategorySystem = ({
             id: 'presentation-primary',
             category_id: 'presentation-communication',
             order: 1,
-            title: '準備中です',
+            title: 'コミュニケーションとは',
             kind: CategoryLessonKind.PRIMARY,
-            youtube_id: '2z9I_Y7fmyE', // プレゼン・コミュニケーションの動画
-            description: '準備中です',
+            youtube_id: 'hNBKZniVR3M', // プレゼン・コミュニケーションの動画
+            form_url: 'https://forms.gle/zNYKDM2x8MeozPyX9', // プレゼン・コミュニケーションのクエストフォーム
+            description: 'コミュニケーションの基本について考えてみましょう',
             unlock_required_stage: 1,
             created_at: baseDate,
             updated_at: baseDate
@@ -221,7 +222,8 @@ export const useCategorySystem = ({
             order: 1,
             title: 'SDGsってなんだろう？',
             kind: CategoryLessonKind.PRIMARY,
-            youtube_id: '2f180PMAK2Y', // SDGs・環境の動画
+            youtube_id: 'fryzvmt_cN8', // SDGs・環境の動画
+            form_url: 'https://forms.gle/pBbz5BqPtfohLtvr6', // SDGs・環境のクエストフォーム
             description: 'SDGsとは何か、まずは知りましょう',
             unlock_required_stage: 1,
             created_at: baseDate,
