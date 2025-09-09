@@ -8,6 +8,7 @@ import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/stores/userStore'
+import AccountSettings from '@/components/profile/AccountSettings'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -464,6 +465,13 @@ export default function ProfilePage() {
                 <i className="fas fa-heart"></i>
                 大切なこと
               </button>
+              <button 
+                className={`tab-button ${activeTab === 'account' ? 'active' : ''}`}
+                onClick={() => setActiveTab('account')}
+              >
+                <i className="fas fa-shield-alt"></i>
+                アカウント設定
+              </button>
             </div>
 
             {/* 保存ボタンエリア */}
@@ -697,6 +705,13 @@ export default function ProfilePage() {
                       rows={4}
                     />
                   </div>
+                </div>
+              )}
+
+              {/* アカウント設定タブ */}
+              {activeTab === 'account' && (
+                <div className="form-section">
+                  <AccountSettings />
                 </div>
               )}
             </div>
@@ -1437,6 +1452,7 @@ export default function ProfilePage() {
           display: flex;
           align-items: center;
           gap: 8px;
+          color: #333;
         }
 
         .tab-button::before {
@@ -1460,6 +1476,15 @@ export default function ProfilePage() {
         .tab-button:hover::before {
           width: 300px;
           height: 300px;
+        }
+        
+        .tab-button:hover {
+          color: white;
+        }
+        
+        .tab-button:hover > * {
+          position: relative;
+          z-index: 2;
         }
 
         .form-section {

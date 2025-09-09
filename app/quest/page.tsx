@@ -13,7 +13,8 @@ import type { StageProgress } from '@/stores/questStore'
 import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import { AuthButton } from '@/components/auth/AuthButton'
-import { ModalLoadingFallback } from '@/components/common/DynamicLoader';
+import { ModalLoadingFallback } from '@/components/common/DynamicLoader'
+import UnlockAnimation from '@/components/quest/UnlockAnimation'
 
 // ==========================================
 // 動的インポートコンポーネント
@@ -29,12 +30,19 @@ const DynamicLoginPromptModal = dynamic(
 
 export default function QuestPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, isInitialized: authInitialized, isLoading: authLoading } = useAuth()
   const { 
     stageDetails, 
     statistics, 
     isLoading, 
-    initialize
+    isInitialized: questInitialized,
+    currentArea,
+    areas,
+    showUnlockAnimation,
+    initialize,
+    switchArea,
+    checkAreaUnlock,
+    dismissUnlockAnimation
   } = useQuestStore()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -44,26 +52,48 @@ export default function QuestPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [promptStageId, setPromptStageId] = useState<number>(1)
 
-  // ステージ詳細を配列に変換
-  const stages: StageProgress[] = Object.values(stageDetails).sort((a, b) => a.stageId - b.stageId)
+  // 現在のエリアのステージのみを表示
+  const currentAreaStages = areas[currentArea].stages
+  const stages: StageProgress[] = Object.values(stageDetails)
+    .filter(stage => currentAreaStages.includes(stage.stageId))
+    .sort((a, b) => a.stageId - b.stageId)
+  
+  // 現在のテーマを取得
+  const currentTheme = areas[currentArea].theme
 
-  // 未ログインユーザー用のデモ統計
+  // 未ログインユーザー用のデモ統計（現在のエリアに応じて調整）
   const demoStatistics = {
-    totalStages: 6,
+    totalStages: currentAreaStages.length,
     completedStages: 0,
     currentStage: null,
     progressPercentage: 0,
     lastCompletedStage: null
   }
 
-  // 表示用の統計（ログイン状態に応じて切り替え）
-  const displayStatistics = isAuthenticated ? statistics : demoStatistics
+  // 表示用の統計（ログイン状態とエリアに応じて調整）
+  const displayStatistics = isAuthenticated ? {
+    ...statistics,
+    totalStages: currentAreaStages.length,
+    completedStages: currentAreaStages.filter(stageId => {
+      const stage = Object.values(stageDetails).find(s => s.stageId === stageId)
+      return stage?.status === 'completed'
+    }).length
+  } : demoStatistics
 
-  // 認証確認とデータロード
+  // 認証完了後にデータロード
   useEffect(() => {
-    // 常にクエストストアを初期化（未ログインの場合はデモモード）
-    initialize(user?.id)
-  }, [initialize, user?.id])
+    // 認証が初期化済みの場合のみクエストストアを初期化
+    if (authInitialized) {
+      initialize(user?.id)
+    }
+  }, [authInitialized, user?.id, initialize])
+
+  // エリア解放チェック
+  useEffect(() => {
+    if (questInitialized) {
+      checkAreaUnlock()
+    }
+  }, [questInitialized, checkAreaUnlock])
 
   // ステージクリック処理
   const handleStageClick = (stageId: number) => {
@@ -106,13 +136,16 @@ export default function QuestPage() {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
   const closeSidebar = () => setSidebarOpen(false)
 
-  // ローディング状態（認証済みユーザーのみ表示）
-  if (isLoading && isAuthenticated) {
+  // ローディング状態の改善（認証またはクエスト初期化中）
+  if (authLoading || !authInitialized || (authInitialized && isLoading && !questInitialized)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-white text-xl font-semibold">冒険の準備中...</p>
+          <p className="text-white/80 text-sm mt-2">
+            {!authInitialized ? '認証情報を確認中...' : 'クエストデータを読み込み中...'}
+          </p>
         </div>
       </div>
     )
@@ -149,6 +182,28 @@ export default function QuestPage() {
         <div className="container">
           <header className="map-header">
             <h1>🗺️ クエストマップ</h1>
+            
+            {/* エリア切り替えタブ */}
+            <div className="area-tabs">
+              {Object.entries(areas).map(([areaKey, areaInfo]) => (
+                <button
+                  key={areaKey}
+                  onClick={() => switchArea(areaKey as any)}
+                  className={`area-tab ${currentArea === areaKey ? 'active' : ''} ${
+                    !areaInfo.isUnlocked ? 'locked' : ''
+                  }`}
+                  disabled={!areaInfo.isUnlocked}
+                >
+                  <span className="area-icon">
+                    {areaInfo.theme === 'sky' ? '🌤️' : '🌇'}
+                  </span>
+                  <span className="area-name">{areaInfo.name}</span>
+                  <span className="area-range">({areaKey})</span>
+                  {!areaInfo.isUnlocked && <Lock size={14} className="lock-icon" />}
+                </button>
+              ))}
+            </div>
+
             {!isAuthenticated && (
               <div className="guest-notice">
                 <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
@@ -168,13 +223,15 @@ export default function QuestPage() {
             stages={stages}
             statistics={displayStatistics}
             onStageClick={handleStageClick}
+            theme={currentTheme}
+            area={currentArea as any}
           />
         </div>
 
         {/* 次の冒険ボタン（認証済みユーザーのみ） */}
         {isAuthenticated && (
           <button className="quest-button">
-            🔥 次の冒険へ進む！
+            {currentTheme === 'sky' ? '🔥 次の冒険へ進む！' : '🌇 次の冒険へ進む！'}
           </button>
         )}
 
@@ -184,7 +241,7 @@ export default function QuestPage() {
             className="quest-register-button"
             onClick={() => setShowAuthModal(true)}
           >
-            ✨ 冒険者登録して挑戦する！
+            {currentTheme === 'sky' ? '✨ 冒険者登録して挑戦する！' : '🌇 くれなずむ空に挑戦する！'}
           </button>
         )}
       </main>
@@ -216,17 +273,30 @@ export default function QuestPage() {
         />
       )}
 
+      {/* エリア解放アニメーション */}
+      <UnlockAnimation
+        isOpen={showUnlockAnimation}
+        onClose={() => {
+          dismissUnlockAnimation()
+          switchArea('7-12')
+        }}
+      />
+
       {/* ピクセルアート風スタイル */}
       <style jsx>{`
         .quest-page {
           font-family: var(--font-dot-gothic), var(--font-m-plus-rounded), sans-serif;
-          background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+          ${currentTheme === 'sky' 
+            ? 'background: radial-gradient(circle at 15% 12%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0) 20%), linear-gradient(to bottom, #aee8ff 0%, #c8f0ff 40%, #eaf9ff 70%, #ffffff 100%);' 
+            : 'background: radial-gradient(circle at 85% 18%, rgba(255,180,80,0.9) 0%, rgba(255,180,80,0.5) 10%, rgba(255,180,80,0) 22%), linear-gradient(to bottom, #ffb36b 0%, #ff8e6b 35%, #c065b8 65%, #1f2a44 100%);'
+          }
           min-height: 100vh;
           position: relative;
           padding-bottom: 100px;
           image-rendering: pixelated;
           image-rendering: -moz-crisp-edges;
           image-rendering: crisp-edges;
+          transition: background 0.8s ease-in-out;
         }
 
         .quest-auth-section {
@@ -271,6 +341,64 @@ export default function QuestPage() {
           display: inline-block;
           padding: 4px 16px;
           border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .area-tabs {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          margin: 20px 0;
+        }
+
+        .area-tab {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 20px;
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          border-radius: 25px;
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .area-tab:hover:not(.locked) {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .area-tab.active {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: white;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .area-tab.locked {
+          opacity: 0.6;
+          cursor: not-allowed;
+          background: rgba(128, 128, 128, 0.3);
+        }
+
+        .area-icon {
+          font-size: 20px;
+        }
+
+        .area-name {
+          font-size: 16px;
+        }
+
+        .area-range {
+          font-size: 12px;
+          opacity: 0.8;
+        }
+
+        .lock-icon {
+          margin-left: 4px;
         }
 
         .guest-notice {

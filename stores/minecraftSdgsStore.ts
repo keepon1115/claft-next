@@ -372,6 +372,12 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
 
         // アクション実装
         initialize: async (userId?: string) => {
+          // 既に同じユーザーで初期化済みの場合はスキップ
+          const currentState = get()
+          if (currentState.isInitialized && currentState.currentUserId === userId) {
+            return
+          }
+
           set((state) => {
             state.isLoading = true
             state.error = null

@@ -26,8 +26,8 @@ const DynamicStageModal = dynamic(
 
 export default function MinecraftSdgsPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
-  const { stageDetails, statistics, isLoading, initialize } = useMinecraftSdgsStore()
+  const { isAuthenticated, user, isInitialized: authInitialized, isLoading: authLoading } = useAuth()
+  const { stageDetails, statistics, isLoading, isInitialized: sdgsInitialized, initialize } = useMinecraftSdgsStore()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
@@ -43,7 +43,13 @@ export default function MinecraftSdgsPage() {
     ? { currentStage: statistics.currentStage || 1, completedStages: statistics.completedStages, totalStages: statistics.totalStages, sdgsGoalsCompleted: statistics.sdgsGoalsCompleted }
     : demoStatistics
 
-  useEffect(() => { initialize(user?.id) }, [initialize, user?.id])
+  // 認証完了後にデータロード
+  useEffect(() => {
+    // 認証が初期化済みの場合のみSDGsストアを初期化
+    if (authInitialized) {
+      initialize(user?.id)
+    }
+  }, [authInitialized, user?.id, initialize])
 
   // ── 復帰検知：pageshow + focus + visibilitychange ─────────────────────────────
   useEffect(() => {
@@ -89,12 +95,16 @@ export default function MinecraftSdgsPage() {
   const toggleSidebar = () => setSidebarOpen(v => !v)
   const closeSidebar = () => setSidebarOpen(false)
 
-  if (isLoading) {
+  // ローディング状態の改善（認証またはSDGs初期化中）
+  if (authLoading || !authInitialized || (authInitialized && isLoading && !sdgsInitialized)) {
     return (
       <div className="min-h-screen minecraft-page flex items-center justify-center">
         <div className="text-center">
           <div className="minecraft-loading-cube mb-4"></div>
           <p className="text-xl font-bold text-minecraft-brown">コースを読み込み中...</p>
+          <p className="text-minecraft-brown-light text-sm mt-2">
+            {!authInitialized ? '認証情報を確認中...' : 'SDGsデータを読み込み中...'}
+          </p>
         </div>
       </div>
     )

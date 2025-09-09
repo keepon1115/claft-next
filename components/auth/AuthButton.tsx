@@ -81,7 +81,9 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   }
 
   // ログインモーダルを開く
+  const [currentTab, setCurrentTab] = useState<'login' | 'signup'>(defaultTab)
   const openAuthModal = (tab: 'login' | 'signup' = defaultTab) => {
+    setCurrentTab(tab)
     setIsAuthModalOpen(true)
   }
 
@@ -171,7 +173,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
           <AuthModal 
             isOpen={isAuthModalOpen}
             onClose={() => setIsAuthModalOpen(false)}
-            defaultTab={defaultTab}
+            defaultTab={currentTab}
             redirectTo={redirectTo}
           />
         </>
@@ -200,7 +202,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
         <AuthModal 
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
-          defaultTab={defaultTab}
+          defaultTab={currentTab}
           redirectTo={redirectTo}
         />
       </>
@@ -246,11 +248,13 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
             bg-red-500 text-white rounded-lg hover:bg-red-600 
             focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors
+            flex items-center space-x-2
             ${currentSize.button}
           `}
           data-auth-action="logout"
         >
           <LogOut className={currentSize.icon} />
+          <span className="text-sm">{isLoading ? 'ログアウト中...' : 'ログアウト'}</span>
         </button>
       </div>
     )

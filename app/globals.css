@@ -2106,7 +2106,7 @@ img.pixel {
 }
 
 .ability-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #666;
 }
@@ -2122,7 +2122,7 @@ img.pixel {
   color: var(--text-dark);
   padding: 6px 12px;
   border-radius: 15px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -2797,7 +2797,7 @@ img.pixel {
   color: white;
   padding: 3px 8px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   z-index: 2;
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
@@ -2907,7 +2907,7 @@ img.pixel {
   }
   
   .ability-tag {
-    font-size: 0.75rem;
+    font-size: 16px;
     padding: 4px 10px;
   }
   

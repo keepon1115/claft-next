@@ -151,11 +151,13 @@ const LessonTile: React.FC<LessonTileProps> = ({ order, lesson, isUnlocked, onCl
   )
 }
 
-/* ============= EtcTile（…etc） ============= */
-interface EtcTileProps { onClick: () => void }
-const EtcTile: React.FC<EtcTileProps> = ({ onClick }) => (
-  <button className="tile tile--etc" onClick={onClick} aria-label="その他のレッスンを見る">
-    <div className="tile__image tile__image--etc"><span className="etc__dots">…</span></div>
+/* ============= ロックタイル（2枚目の固定表示） ============= */
+const LockedTile: React.FC = () => (
+  <button className="tile tile--lesson tile--locked" disabled aria-disabled title="メインクエスト6をクリアすると開放">
+    <div className="lesson-lock-content">
+      <span className="lesson-lock-icon">🔒</span>
+      メインクエスト6をクリアすると開放
+    </div>
   </button>
 )
 
@@ -166,6 +168,7 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
   userCategoryProgress,
   onOpenModal,
   className = '',
+  area,
 }) => {
   const { isAuthenticated } = useAuth()
 
@@ -194,8 +197,9 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
   // ①/講師：ログインユーザーなら可（未ログインはログイン誘導）
   const isPrimaryAccessible = true
 
-  // ②③：ログインかつメイン6クリアで解放
-  const areSecondaryLessonsUnlocked = isAuthenticated && userMainQuestProgress >= 6
+  // ②：エリアにより解放条件が異なる
+  // 1-6: 常時ロック / 7-12: ステージ6クリアで解放
+  const areSecondaryLessonsUnlocked = isAuthenticated && userMainQuestProgress >= 6 && area === '7-12'
 
   const handleOpenPrimaryModal = useCallback(() => {
     if (!primaryLesson) return
@@ -242,12 +246,8 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
     )
   }
 
-  // ---- ここがポイント：下段スロットを [2,3] に固定 ----
-  const getByOrder = (n: 2 | 3) => regularLessons.find(l => l.order === n) ?? null
-  const bottomSlots: Array<{ order: 2 | 3; lesson: CategoryLesson | null }> = [
-    { order: 2, lesson: getByOrder(2) },
-    { order: 3, lesson: getByOrder(3) },
-  ]
+  // 下段は2枚に固定（2枚目はロック固定表示）
+  const secondLesson = regularLessons.find(l => l.order === 2) ?? null
 
   return (
     <div
@@ -276,19 +276,16 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
           />
         </div>
 
-        {/* 下段：② / ③ / …etc（常に3タイル） */}
-        <div className="category-grid--bottom">
-          {bottomSlots.map(({ order, lesson }) => (
-            <LessonTile
-              key={order}
-              order={order}
-              lesson={lesson}
-              isUnlocked={areSecondaryLessonsUnlocked && !!lesson}
-              onClick={lesson ? () => handleOpenLessonModal(lesson) : undefined}
-            />
-          ))}
-
-          <EtcTile onClick={() => alert('Coming soon')} />
+        {/* 2タイル横並び：①(左) + ②orロック(右) */}
+        <div className="category-grid--two">
+          <LessonTile
+            key={2}
+            order={2}
+            lesson={secondLesson}
+            isUnlocked={areSecondaryLessonsUnlocked && !!secondLesson}
+            onClick={secondLesson ? () => handleOpenLessonModal(secondLesson) : undefined}
+          />
+          <LockedTile />
         </div>
       </div>
 
@@ -305,6 +302,7 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
         .category-grid{ display:grid; gap:16px; }
         .category-grid--top{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch; }
         .category-grid--bottom{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:12px; }
+        .category-grid--two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
 
         /* tiles */
         .category-block :global(.tile){ position:relative; border-radius:12px; overflow:hidden; border:none; background:white; cursor:pointer; transition:.3s; box-shadow:0 2px 8px rgba(0,0,0,.1); width:100%; display:block; }
@@ -329,6 +327,7 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
         @media (max-width:768px){
           .category-grid--top{ grid-template-columns:1fr; }
           .category-grid--bottom{ grid-template-columns:repeat(2,1fr); }
+          .category-grid--two{ grid-template-columns:1fr; }
           .category-title{ font-size:1.25rem; }
         }
         @media (max-width:480px){

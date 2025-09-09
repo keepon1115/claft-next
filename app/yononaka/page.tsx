@@ -88,20 +88,20 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <a
-                  href="https://forms.gle/bkYtfBkfwD5LNffg8"
+                  href="https://forms.gle/Hfqo88422ArweJP97"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo93】 「夏」ってなんやねん？
+                Yo97 夏休み明けも楽しんでいきまっしょい！
                 </a>
                 <a
-                  href="https://forms.gle/3eiUz3xJyT25A24z9"
+                  href="https://forms.gle/B9t8HCuePtpzUBvd8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo94】世の中にはどんな仕事があるの？
+                Yo98 仕事ってどんなイメージ？？
                 </a>
                 <a
                   href="https://forms.gle/tzm3yM8Be5Fs98q58"
@@ -109,7 +109,7 @@ export default function YononakaPage() {
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo95】今年の夏休みはどうですか？
+                準備中
                 </a>
                 <a
                   href="https://forms.gle/EyQ74Mya3UWg4Edi9"
@@ -142,21 +142,21 @@ export default function YononakaPage() {
 
               <div className="space-y-6">
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">知ってる？お祭りのヒミツ！</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">英語へのはじめの一歩</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 8月5日（火） 20時~21時</p>
+                    <p>📅 期間: 9月14日（日） 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/N4vYnsXMB77cY8xz7" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/iDrngUejW3Laa3q8A" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">覚えるコト忘れるモノ</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">楽しいのなぞ</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 8月31日（日） 20時~21時</p>
+                    <p>📅 期間: 9月24日（水） 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/N4vYnsXMB77cY8xz7" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/iDrngUejW3Laa3q8A" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>

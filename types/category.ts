@@ -161,6 +161,8 @@ export interface CategoryBlockProps {
   onOpenModal: (options: CategoryModalOptions) => void
   /** クラス名 */
   className?: string
+  /** 表示中のエリア（1-6 / 7-12） */
+  area?: '1-6' | '7-12'
 }
 
 /**

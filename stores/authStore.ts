@@ -26,6 +26,9 @@ interface AuthState {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, password: string, nickname?: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<{ success: boolean; error?: string }>
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
+  updateEmail: (newEmail: string) => Promise<{ success: boolean; error?: string }>
   checkAdminStatus: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>
   clearError: () => void
@@ -354,6 +357,164 @@ export const useAuthStore = create<AuthState>()(
           },
 
           // =====================================================
+          // パスワードリセット
+          // =====================================================
+          resetPassword: async (email: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!email.trim()) {
+                throw new Error('メールアドレスを入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: パスワードリセットメール送信をシミュレーション')
+                console.log('📧 リセットメール送信先:', email.trim())
+                
+                // 開発モードでは成功をシミュレート
+                return { success: true }
+              }
+
+              // 実際のSupabaseパスワードリセット
+              const supabase = createBrowserSupabaseClient()
+              const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo: `${window.location.origin}/auth/reset-password`
+              })
+              
+              if (error) {
+                throw new Error(`パスワードリセットメール送信エラー: ${error.message}`)
+              }
+
+              console.log('✅ パスワードリセットメール送信完了')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'パスワードリセットメール送信に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ パスワードリセットエラー:', error)
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // パスワード更新
+          // =====================================================
+          updatePassword: async (newPassword: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!newPassword.trim()) {
+                throw new Error('新しいパスワードを入力してください')
+              }
+
+              if (newPassword.length < 6) {
+                throw new Error('パスワードは6文字以上で入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: パスワード更新をシミュレーション')
+                return { success: true }
+              }
+
+              // 実際のSupabaseパスワード更新
+              const supabase = createBrowserSupabaseClient()
+              const { error } = await supabase.auth.updateUser({
+                password: newPassword
+              })
+              
+              if (error) {
+                throw new Error(`パスワード更新エラー: ${error.message}`)
+              }
+
+              console.log('✅ パスワード更新完了')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'パスワードの更新に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ パスワード更新エラー:', error)
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // メールアドレス更新
+          // =====================================================
+          updateEmail: async (newEmail: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!newEmail.trim()) {
+                throw new Error('新しいメールアドレスを入力してください')
+              }
+
+              // 簡単なメールアドレス形式チェック
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+              if (!emailRegex.test(newEmail.trim())) {
+                throw new Error('有効なメールアドレスを入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: メールアドレス更新をシミュレーション')
+                console.log('📧 新しいメールアドレス:', newEmail.trim())
+                return { success: true }
+              }
+
+              // 実際のSupabaseメールアドレス更新
+              const supabase = createBrowserSupabaseClient()
+              const { error } = await supabase.auth.updateUser({
+                email: newEmail.trim()
+              })
+              
+              if (error) {
+                throw new Error(`メールアドレス更新エラー: ${error.message}`)
+              }
+
+              console.log('✅ メールアドレス更新完了（確認メールをご確認ください）')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'メールアドレスの更新に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ メールアドレス更新エラー:', error)
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
           // 管理者権限チェック
           // =====================================================
           checkAdminStatus: async () => {
@@ -590,14 +751,17 @@ export const useAuth = () => {
     login: store.login,
     signup: store.signup,
     logout: store.logout,
+    resetPassword: store.resetPassword,
+    updatePassword: store.updatePassword,
+    updateEmail: store.updateEmail,
     updateProfile: store.updateProfile,
     clearError: store.clearError
   }
 }
 
 export const useAuthActions = () => {
-  const { initialize, login, signup, logout, updateProfile, clearError } = useAuthStore()
-  return { initialize, login, signup, logout, updateProfile, clearError }
+  const { initialize, login, signup, logout, resetPassword, updatePassword, updateEmail, updateProfile, clearError } = useAuthStore()
+  return { initialize, login, signup, logout, resetPassword, updatePassword, updateEmail, updateProfile, clearError }
 }
 
 export const useAuthState = () => {

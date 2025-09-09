@@ -40,6 +40,17 @@ export interface QuestStatistics {
   lastCompletedStage: number | null
 }
 
+export type QuestTheme = 'sky' | 'twilight'
+export type QuestArea = '1-6' | '7-12'
+
+export interface QuestAreaInfo {
+  area: QuestArea
+  theme: QuestTheme
+  name: string
+  stages: number[]
+  isUnlocked: boolean
+}
+
 interface QuestState {
   // 状態
   userProgress: UserQuestProgress
@@ -51,6 +62,11 @@ interface QuestState {
   lastSyncTime: string | null
   isInitialized: boolean
   currentUserId: string | null
+  
+  // エリア管理
+  currentArea: QuestArea
+  areas: Record<QuestArea, QuestAreaInfo>
+  showUnlockAnimation: boolean
 
   // アクション
   initialize: (userId?: string) => Promise<void>
@@ -68,13 +84,19 @@ interface QuestState {
   syncWithSupabase: () => Promise<void>
   clearError: () => void
   setDemoMode: () => void
+  
+  // エリア管理アクション
+  switchArea: (area: QuestArea) => void
+  checkAreaUnlock: () => boolean
+  triggerUnlockAnimation: () => void
+  dismissUnlockAnimation: () => void
 }
 
 // =====================================================
 // デフォルト値とスタティックデータ
 // =====================================================
 
-const TOTAL_STAGES = 6
+const TOTAL_STAGES = 12
 
 const defaultStageDetails: Record<number, StageProgress> = {
   1: {
@@ -148,6 +170,78 @@ const defaultStageDetails: Record<number, StageProgress> = {
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🏰'
+  },
+  7: {
+    stageId: 7,
+    status: 'locked',
+    title: 'キャリアってなんだ！？ 〜君が主役のストーリー〜',
+    description: '自分の生き方と働き方の軸を見つけよう',
+    message: '「自分だけのストーリーを描こう」',
+    videoUrl: 'https://youtu.be/Q_eMX4MY2-4',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '👤'
+  },
+  8: {
+    stageId: 8,
+    status: 'locked',
+    title: 'はたらくってなんだ！？ 〜"仕事"の世界をのぞく〜',
+    description: '社会で働くことの意味をのぞいてみよう',
+    message: '「働くことの意味を考えよう」',
+    videoUrl: 'https://youtu.be/fnkr-0eQLbY',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '💼'
+  },
+  9: {
+    stageId: 9,
+    status: 'locked',
+    title: '稼ぐってなんだ！？ 〜買ったお金はどこへいくのか〜',
+    description: 'お金の流れと価値の生まれ方を学ぼう',
+    message: '「お金の流れを理解しよう」',
+    videoUrl: 'https://youtu.be/TOJKajJH8hs',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '💰'
+  },
+  10: {
+    stageId: 10,
+    status: 'locked',
+    title: 'やりたいことってなんだ！？ 〜好きなことが仕事になるのか〜',
+    description: '好きと得意を仕事につなげるヒント',
+    message: '「情熱を仕事につなげる」',
+    videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '❤️'
+  },
+  11: {
+    stageId: 11,
+    status: 'locked',
+    title: '目標ってなんだ！？ 〜夢を実現する目標設定のコツ〜',
+    description: '実現可能な目標の立て方を学ぼう',
+    message: '「夢への道筋を立てよう」',
+    videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '🎯'
+  },
+  12: {
+    stageId: 12,
+    status: 'locked',
+    title: '自己理解ってなんだ！？ 〜はなして気づく自分らしさ〜',
+    description: '対話から自分らしさのヒントを見つけよう',
+    message: '「本当の自分を見つけよう」',
+    videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
+    formUrl: '',
+    iconImage: undefined,
+    iconUrl: undefined,
+    fallbackIcon: '🪞'
   }
 }
 
@@ -157,7 +251,13 @@ const defaultUserProgress: UserQuestProgress = {
   3: 'locked',
   4: 'locked',
   5: 'locked',
-  6: 'locked'
+  6: 'locked',
+  7: 'locked',
+  8: 'locked',
+  9: 'locked',
+  10: 'locked',
+  11: 'locked',
+  12: 'locked'
 }
 
 const defaultStatistics: QuestStatistics = {
@@ -166,6 +266,23 @@ const defaultStatistics: QuestStatistics = {
   currentStage: null,
   progressPercentage: 0,
   lastCompletedStage: null
+}
+
+const defaultAreas: Record<QuestArea, QuestAreaInfo> = {
+  '1-6': {
+    area: '1-6',
+    theme: 'sky',
+    name: 'はじまりの空',
+    stages: [1, 2, 3, 4, 5, 6],
+    isUnlocked: true
+  },
+  '7-12': {
+    area: '7-12',
+    theme: 'twilight',
+    name: 'くれなずむ空',
+    stages: [7, 8, 9, 10, 11, 12],
+    isUnlocked: false
+  }
 }
 
 // =====================================================
@@ -222,16 +339,27 @@ export const useQuestStore = create<QuestState>()(
           lastSyncTime: null,
           isInitialized: false,
           currentUserId: null,
+          
+          // エリア管理
+          currentArea: '1-6' as QuestArea,
+          areas: { ...defaultAreas },
+          showUnlockAnimation: false,
 
           // =====================================================
           // 初期化
           // =====================================================
-          initialize: async (userId?: string) => {
-            set((state) => {
-              state.isLoading = true
-              state.error = null
-              state.currentUserId = userId || null
-            })
+                  initialize: async (userId?: string) => {
+          // 既に同じユーザーで初期化済みの場合はスキップ
+          const currentState = get()
+          if (currentState.isInitialized && currentState.currentUserId === userId) {
+            return
+          }
+
+          set((state) => {
+            state.isLoading = true
+            state.error = null
+            state.currentUserId = userId || null
+          })
 
             try {
               if (userId) {
@@ -419,6 +547,14 @@ export const useQuestStore = create<QuestState>()(
               const nextStageId = stageId + 1
               if (nextStageId <= TOTAL_STAGES) {
                 await get().updateStageProgress(nextStageId, 'current', false)
+              }
+              
+              // ステージ6完了時は新エリア解放チェック
+              if (stageId === 6) {
+                const unlocked = get().checkAreaUnlock()
+                if (unlocked) {
+                  console.log('🎉 新エリア「くれなずむ空」が解放されました！')
+                }
               }
             }
 
@@ -780,6 +916,48 @@ export const useQuestStore = create<QuestState>()(
               state.statistics = get().calculateStatistics()
               state.currentUserId = null
               state.isInitialized = true
+            })
+          },
+
+          // =====================================================
+          // エリア管理アクション
+          // =====================================================
+          switchArea: (area: QuestArea) => {
+            set((state) => {
+              state.currentArea = area
+            })
+          },
+
+          checkAreaUnlock: () => {
+            const { userProgress, areas } = get()
+            // ステージ6が完了（管理者承認済み）の場合のみ解放
+            const stage6Completed = userProgress[6] === 'completed'
+            
+            if (stage6Completed && !areas['7-12'].isUnlocked) {
+              set((state) => {
+                state.areas['7-12'].isUnlocked = true
+                state.showUnlockAnimation = true
+                // ステージ7を解放
+                state.userProgress[7] = 'current'
+                state.stageDetails[7] = {
+                  ...state.stageDetails[7],
+                  status: 'current'
+                }
+              })
+              return true
+            }
+            return false
+          },
+
+          triggerUnlockAnimation: () => {
+            set((state) => {
+              state.showUnlockAnimation = true
+            })
+          },
+
+          dismissUnlockAnimation: () => {
+            set((state) => {
+              state.showUnlockAnimation = false
             })
           }
         }),

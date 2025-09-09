@@ -125,7 +125,7 @@ export default function Home() {
               unlockConditionText={
                 <>
                   このエリアは
-                  <span className="text-purple-600 font-black">クエスト6</span>
+                  <span className="text-purple-600 font-black">メインクエスト6</span>
                   をクリアすると開放されます
                 </>
               }

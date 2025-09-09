@@ -18,9 +18,11 @@ interface QuestMapProps {
     totalStages: number
   }
   onStageClick: (stageId: number) => void
+  theme?: 'sky' | 'twilight'
+  area?: '1-6' | '7-12'
 }
 
-export default function QuestMap({ stages, statistics, onStageClick }: QuestMapProps) {
+export default function QuestMap({ stages, statistics, onStageClick, theme = 'sky', area = '1-6' }: QuestMapProps) {
   const skyObjectsRef = useRef<HTMLDivElement>(null)
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
   const { isAuthenticated } = useAuth()
@@ -46,7 +48,7 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
     setImageErrors(prev => ({ ...prev, [stageId]: true }))
   }
 
-  // 空中オブジェクト（雲とUFO）を生成
+  // 空/夕景オブジェクト（雲/UFO/星）を生成
   useEffect(() => {
     if (!skyObjectsRef.current) return
 
@@ -60,8 +62,10 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
         const obj = document.createElement('div')
         obj.classList.add('sky-object')
         
-        // 95%確率で雲、5%確率でUFO
-        const type = Math.random() < 0.95 ? 'cloud' : 'ufo'
+        // テーマに応じてオブジェクトを変える
+        const type = theme === 'twilight'
+          ? (Math.random() < 0.85 ? 'cloud' : 'ufo')
+          : (Math.random() < 0.95 ? 'cloud' : 'ufo')
         obj.classList.add(type)
         
         // ランダムな位置と動きを設定
@@ -89,22 +93,15 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
     }
 
     createSkyObjects()
-  }, [])
+  }, [theme])
 
-  // ステージの静的データ
-  const stageStaticData = {
-    1: { title: '君はどんな冒険者？', description: '〜学びの地図をひらこう〜', iconUrl: '/images/quest/stage-1.png', fallbackIcon: '🏠' },
-    2: { title: '新時代の冒険者に必要なものって？', description: '〜武器と道具の話〜', iconUrl: '/images/quest/stage-2.png', fallbackIcon: '🌲' },
-    3: { title: '君はどんなキャラ？', description: '〜自分を育てる育成ゲーム〜', iconUrl: '/images/quest/stage-3.png', fallbackIcon: '⚔️' },
-    4: { title: 'ちがうって、おもしろい', description: '〜正解がないから広がる世界〜', iconUrl: '/images/quest/stage-4.png', fallbackIcon: '🛡️' },
-    5: { title: '「？」が世界をひらく', description: '〜ワクワク＆もやもや〜', iconUrl: '/images/quest/stage-5.png', fallbackIcon: '👥' },
-    6: { title: 'つくってつたえると気づける', description: '〜違いを生かして未来を創る〜', iconUrl: '/images/quest/stage-6.png', fallbackIcon: '🏰' }
-  }
+  // 描画対象ステージIDの配列をエリアで切替
+  const stageIds = area === '7-12' ? [7,8,9,10,11,12] : [1,2,3,4,5,6]
 
   return (
     <>
-      {/* 空中オブジェクトコンテナ */}
-      <div ref={skyObjectsRef} className="sky-objects-container" />
+      {/* テーマ別背景オブジェクトコンテナ */}
+      <div ref={skyObjectsRef} className={`${theme}-objects-container`} />
       
       <div className="quest-container">
         {/* ピクセルアート風クエストマップ */}
@@ -117,13 +114,11 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
             </div>
           </div>
           <div className="pixel-stage-grid">
-            {[1, 2, 3, 4, 5, 6].map((stageNumber) => {
+            {stageIds.map((stageNumber) => {
               const stage = stages.find(s => s.stageId === stageNumber) || {
                 stageId: stageNumber,
-                status: stageNumber === 1 ? 'current' : 'locked',
-                progress: 0
-              }
-              const staticInfo = stageStaticData[stageNumber as keyof typeof stageStaticData]
+                status: stageNumber === (area === '7-12' ? 7 : 1) ? 'current' : 'locked'
+              } as any
               const status = stage.status
 
               return (
@@ -159,26 +154,29 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
                   
                   {/* ステージアイコン */}
                   <div className="pixel-stage-icon">
-                    {imageErrors[stageNumber] || !staticInfo.iconUrl ? (
-                      <span className="stage-emoji">{staticInfo.fallbackIcon}</span>
-                    ) : (
-                      <Image
-                        src={staticInfo.iconUrl}
-                        alt={`${staticInfo.title} アイコン`}
-                        width={120}
-                        height={120}
-                        className="stage-image"
-                        onError={() => handleImageError(stageNumber)}
-                      />
-                    )}
+                    {
+                      // 画像が用意されていれば表示、なければ絵文字フォールバック
+                      imageErrors[stageNumber]
+                        ? <span className="stage-emoji">{stage.fallbackIcon || '✨'}</span>
+                        : (
+                          <Image
+                            src={`/images/quest/stage-${stageNumber}.png`}
+                            alt={`ステージ${stageNumber} アイコン`}
+                            width={120}
+                            height={120}
+                            className="stage-image"
+                            onError={() => handleImageError(stageNumber)}
+                          />
+                        )
+                    }
                     {status === 'completed' && (
                       <div className="clear-effect" />
                     )}
                   </div>
                   {/* ステージ情報 */}
                   <div className="pixel-stage-info">
-                    <h3 className="stage-title">{staticInfo.title}</h3>
-                    <p className="stage-description">{staticInfo.description}</p>
+                    <h3 className="stage-title">{stage.title}</h3>
+                    <p className="stage-description">{stage.description}</p>
                   </div>
                   
 
@@ -217,6 +215,7 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
                 userCategoryProgress={demoProgress.filter(p => p.category_id === category.id)}
                 onOpenModal={openModal}
                 className={`mb-8 ${getCategoryClass(category.id)}`}
+                area={area}
               />
             )
           })}
@@ -261,6 +260,15 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           pointer-events: none;
           z-index: 1;
         }
+        .twilight-objects-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 1;
+        }
 
         :global(.sky-object) {
           position: fixed;
@@ -277,6 +285,14 @@ export default function QuestMap({ stages, statistics, onStageClick }: QuestMapP
           background: white;
           border-radius: 100px;
           box-shadow: 20px 10px 0 10px white, -20px 10px 0 5px white;
+        }
+        /* 夕景の微弱な星 */
+        :global(.star) {
+          width: 2px;
+          height: 2px;
+          background: rgba(255,255,255,.9);
+          border-radius: 50%;
+          box-shadow: 0 0 6px rgba(255,255,255,.8);
         }
 
         :global(.ufo) {

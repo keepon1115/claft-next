@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { approveQuest, rejectQuest } from '@/app/admin/actions'
 import { Map, Trophy, Clock, CheckCircle, XCircle, ChevronLeft, RefreshCw, Users, TrendingUp, Filter, MessageSquare, Send, X } from 'lucide-react'
 
 // =====================================================
@@ -67,6 +68,8 @@ export default function QuestsPage() {
   const [selectedStage, setSelectedStage] = useState<number | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string>('feedback_pending')
   const [error, setError] = useState<string | null>(null)
+  const [stage6Approvals, setStage6Approvals] = useState<QuestProgress[]>([])
+  const [approving, setApproving] = useState<string | null>(null)
   const [feedbackModal, setFeedbackModal] = useState<{
     isOpen: boolean
     questId: string
@@ -112,6 +115,70 @@ export default function QuestsPage() {
 
     checkAdminStatus()
   }, [isAuthenticated, user, supabase])
+
+  // ステージ6承認待ちデータ取得
+  const loadStage6Approvals = async () => {
+    try {
+      console.log('ステージ6承認待ちデータを取得中...')
+      
+      // まずクエスト進捗データを取得
+      const { data: questData, error: questError } = await supabase
+        .from('quest_progress')
+        .select('id, user_id, stage_id, status, submitted_at, google_form_submitted')
+        .eq('stage_id', 6)
+        .eq('status', 'pending_approval')
+        .order('submitted_at', { ascending: false })
+
+      if (questError) {
+        console.error('クエスト進捗取得エラー:', questError)
+        throw questError
+      }
+
+      console.log('ステージ6クエスト進捗:', questData)
+
+      if (!questData || questData.length === 0) {
+        console.log('ステージ6の承認待ちはありません')
+        setStage6Approvals([])
+        return
+      }
+
+      // ユーザーIDを取得してプロファイルデータを個別取得
+      const userIds = questData.map(quest => quest.user_id)
+      const { data: profileData, error: profileError } = await supabase
+        .from('users_profile')
+        .select('id, nickname, email')
+        .in('id', userIds)
+
+      if (profileError) {
+        console.warn('ユーザープロファイル取得エラー:', profileError)
+        // プロファイルが取得できなくても進捗データは表示
+      }
+
+      console.log('ユーザープロファイル:', profileData)
+
+      // データを結合
+      const combinedData = questData.map(quest => ({
+        ...quest,
+        users_profile: profileData?.find(profile => profile.id === quest.user_id) || {
+          nickname: null,
+          email: 'プロファイル取得エラー'
+        }
+      }))
+
+      setStage6Approvals(combinedData)
+      console.log(`ステージ6承認待ち: ${combinedData.length}件`)
+      
+    } catch (error) {
+      console.error('ステージ6承認待ちデータ取得エラー:', error)
+      // エラーの詳細をログ出力
+      if (error instanceof Error) {
+        console.error('エラーメッセージ:', error.message)
+        console.error('エラースタック:', error.stack)
+      }
+      // エラーが発生してもアプリを止めない
+      setStage6Approvals([])
+    }
+  }
 
   // クエストデータ読み込み
   const loadQuestData = async () => {
@@ -283,6 +350,7 @@ export default function QuestsPage() {
   useEffect(() => {
     if (isAdmin) {
       loadQuestData()
+      loadStage6Approvals()
     }
   }, [isAdmin, selectedStage, selectedStatus])
 
@@ -341,6 +409,102 @@ export default function QuestsPage() {
       alert('フィードバック送信に失敗しました')
     } finally {
       setSendingFeedback(false)
+    }
+  }
+
+  // ステージ6承認処理（統一されたapproveQuest関数を使用）
+  const handleApproveStage6 = async (questId: string, userId: string) => {
+    if (!confirm('ステージ6を承認しますか？承認後、ユーザーは山エリア（7-12）に進むことができます。')) {
+      return
+    }
+
+    setApproving(questId)
+    try {
+      // 統一された承認関数を使用
+      const result = await approveQuest(userId, 6)
+      
+      if (result.success) {
+        // 通知送信
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: userId,
+            type: 'quest_approved',
+            title: '🎉 ステージ6承認完了！',
+            message: 'おめでとうございます！全ステージクリアが承認されました。新エリア「くれなずむ空」が解放されました！',
+            data: {
+              stage_id: 6,
+              unlock_area: '7-12'
+            }
+          })
+
+        if (notificationError) {
+          console.warn('通知送信エラー:', notificationError)
+        }
+
+        alert('ステージ6を承認しました！ユーザーに山エリアが解放されます。')
+        loadStage6Approvals()
+        loadQuestData()
+      } else {
+        throw new Error(result.error)
+      }
+
+    } catch (error) {
+      console.error('承認エラー:', error)
+      alert('承認処理に失敗しました')
+    } finally {
+      setApproving(null)
+    }
+  }
+
+  // ステージ6却下処理
+  const handleRejectStage6 = async (questId: string, userId: string) => {
+    const reason = prompt('却下理由を入力してください（ユーザーに通知されます）:')
+    if (!reason) return
+
+    setApproving(questId)
+    try {
+      // 却下処理
+      const { error: updateError } = await supabase
+        .from('quest_progress')
+        .update({
+          status: 'current',
+          rejected_at: new Date().toISOString(),
+          rejected_by: user?.id,
+          feedback_message: reason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', questId)
+
+      if (updateError) throw updateError
+
+      // 通知送信
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          type: 'quest_rejected',
+          title: 'ステージ6の再提出が必要です',
+          message: `ステージ6の提出内容について確認が必要です。理由: ${reason}`,
+          data: {
+            stage_id: 6,
+            reason: reason
+          }
+        })
+
+      if (notificationError) {
+        console.warn('通知送信エラー:', notificationError)
+      }
+
+      alert('ステージ6を却下しました。ユーザーに再提出を促します。')
+      loadStage6Approvals()
+      loadQuestData()
+
+    } catch (error) {
+      console.error('却下エラー:', error)
+      alert('却下処理に失敗しました')
+    } finally {
+      setApproving(null)
     }
   }
 
@@ -451,7 +615,10 @@ export default function QuestsPage() {
               </div>
             </div>
             <button
-              onClick={loadQuestData}
+              onClick={() => {
+                loadQuestData()
+                loadStage6Approvals()
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               <RefreshCw size={16} />
@@ -463,15 +630,27 @@ export default function QuestsPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 統計カード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Trophy size={24} className="text-blue-600" />
+                <Map size={24} className="text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">総完了数</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.completedQuests}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-red-100 rounded-lg">
+                <Clock size={24} className="text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">ステージ6承認待ち</p>
+                <p className="text-2xl font-bold text-gray-900">{stage6Approvals.length}</p>
               </div>
             </div>
           </div>
@@ -587,6 +766,84 @@ export default function QuestsPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* ステージ6承認待ちセクション */}
+        {stage6Approvals.length > 0 && (
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Clock size={20} className="text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-red-800">
+                    🏔️ ステージ6承認待ち ({stage6Approvals.length}件)
+                  </h3>
+                  <p className="text-sm text-red-600">
+                    最終ステージ完了の承認が必要です。承認後、ユーザーは山エリア（7-12）に進むことができます。
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={loadStage6Approvals}
+                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {stage6Approvals.map((quest) => {
+                const userName = quest.users_profile?.nickname || quest.users_profile?.email?.split('@')[0] || 'Unknown'
+                const isProcessing = approving === quest.id
+                
+                return (
+                  <div key={quest.id} className="bg-white rounded-lg border border-red-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-red-700">
+                              {userName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">{userName}</div>
+                            <div className="text-sm text-gray-600">{quest.users_profile?.email}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-500">
+                          <div>提出日時: {formatDate(quest.submitted_at)}</div>
+                          <div>Google Form: {quest.google_form_submitted ? '✅ 提出済み' : '❌ 未提出'}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveStage6(quest.id, quest.user_id)}
+                          disabled={isProcessing}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        >
+                          <CheckCircle size={16} />
+                          {isProcessing ? '承認中...' : '承認'}
+                        </button>
+                        <button
+                          onClick={() => handleRejectStage6(quest.id, quest.user_id)}
+                          disabled={isProcessing}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        >
+                          <XCircle size={16} />
+                          却下
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 

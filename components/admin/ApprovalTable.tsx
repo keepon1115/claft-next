@@ -409,7 +409,14 @@ export default function ApprovalTable({
         if (onApprovalChangeRef.current) onApprovalChangeRef.current()
         await loadPendingApprovalsRef.current?.()
       } else {
-        throw new Error(result.error)
+        // NEXT_REDIRECTエラーの場合は、エラーを投げずにログ出力のみ
+        if (result.error?.includes('NEXT_REDIRECT')) {
+          console.warn('NEXT_REDIRECT エラーが発生しましたが、処理は継続します:', result.error)
+          showNotification('warning', '承認処理は完了しましたが、画面の更新でエラーが発生しました')
+        } else {
+          console.error('一括承認エラー:', result.error)
+          showNotification('error', `一括承認に失敗しました: ${result.error}`)
+        }
       }
     } catch (error) {
       console.error('一括承認エラー:', error)

@@ -200,6 +200,7 @@ export async function approveQuest(userId: string, stageId: number) {
     
     // 2. 次のステージの処理
     if (stageId < 6) {
+      // ステージ1-5の場合は通常の次ステージ解放
       const nextStageId = stageId + 1
       
       // 次のステージのレコードが存在するか確認
@@ -240,6 +241,45 @@ export async function approveQuest(userId: string, stageId: number) {
         
         updates.push(unlockNextStage)
       }
+    } else if (stageId === 6) {
+      // ステージ6承認の場合は山エリア（ステージ7）を解放
+      const { data: existingStage7, error: checkError } = await supabase
+        .from('quest_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('stage_id', 7)
+        .maybeSingle()
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+      
+      if (!existingStage7) {
+        // ステージ7が存在しない場合は新規作成
+        const insertStage7 = supabase
+          .from('quest_progress')
+          .insert({
+            user_id: userId,
+            stage_id: 7,
+            status: 'current',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        
+        updates.push(insertStage7)
+      } else if (existingStage7.status === 'locked') {
+        // 存在するがロック状態の場合は解放
+        const unlockStage7 = supabase
+          .from('quest_progress')
+          .update({ 
+            status: 'current',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+          .eq('stage_id', 7)
+        
+        updates.push(unlockStage7)
+      }
     }
     
     // 並列実行でパフォーマンス向上
@@ -254,13 +294,17 @@ export async function approveQuest(userId: string, stageId: number) {
     // 3. 統計情報の更新
     await updateUserStats(userId, 'quest_completed')
     
-    // キャッシュを再検証
-    revalidatePath('/admin')
+    // キャッシュを再検証（エラーが発生しても処理を継続）
+    try {
+      revalidatePath('/admin')
+    } catch (revalidateError) {
+      console.warn('キャッシュ再検証エラー:', revalidateError)
+    }
     
     return {
       success: true,
       message: `ステージ${stageId}を承認しました`,
-      nextStageUnlocked: stageId < 6
+      nextStageUnlocked: stageId <= 6
     }
     
   } catch (error) {
@@ -317,8 +361,12 @@ export async function rejectQuest(userId: string, stageId: number) {
       throw error
     }
     
-    // キャッシュを再検証
-    revalidatePath('/admin')
+    // キャッシュを再検証（エラーが発生しても処理を継続）
+    try {
+      revalidatePath('/admin')
+    } catch (revalidateError) {
+      console.warn('キャッシュ再検証エラー:', revalidateError)
+    }
     
     return {
       success: true,

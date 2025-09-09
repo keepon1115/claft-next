@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/stores/authStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuestStore } from '@/stores/questStore';
+import { useUserGoals } from '@/hooks/useUserGoals';
 
 // =====================================================
 // 型定義
@@ -11,14 +13,7 @@ interface CraftStoryProps {
   className?: string;
 }
 
-interface Goal {
-  id: string;
-  type: 'short' | 'long';
-  label: string;
-  text: string;
-  progress: number; // 0-100
-  icon: string;
-}
+interface Goal { id: string; type: 'short' | 'long'; label: string; text: string; icon: string; }
 
 interface ActionItem {
   id: string;
@@ -34,22 +29,8 @@ interface ActionItem {
 // =====================================================
 
 const defaultGoals: Goal[] = [
-  {
-    id: 'short-goal',
-    type: 'short',
-    label: '短期目標',
-    text: '夏休み中に「学校の不便を解決するミニサービス」を3つ考えてメモする',
-    progress: 75,
-    icon: 'fa-flag-checkered'
-  },
-  {
-    id: 'long-goal',
-    type: 'long',
-    label: '長期目標',
-    text: 'アイデアコンテストで優勝する',
-    progress: 30,
-    icon: 'fa-mountain'
-  }
+  { id: 'short-goal', type: 'short', label: '短期目標', text: '', icon: 'fa-flag-checkered' },
+  { id: 'long-goal', type: 'long', label: '長期目標', text: '', icon: 'fa-mountain' }
 ];
 
 const defaultActions: ActionItem[] = [
@@ -58,7 +39,7 @@ const defaultActions: ActionItem[] = [
     title: 'つくったもの',
     description: '作品ギャラリーを見る',
     icon: 'fa-palette',
-    href: '#created',
+    href: 'https://jet-vinyl-ae2.notion.site/d1c14aebdb6747b794d15100958c9d96?source=copy_link',
     color: 'primary'
   },
   {
@@ -66,7 +47,7 @@ const defaultActions: ActionItem[] = [
     title: 'はなしたこと',
     description: '会話の記録を見る',
     icon: 'fa-comments',
-    href: '#talked',
+    href: 'https://jet-vinyl-ae2.notion.site/d1c14aebdb6747b794d15100958c9d96?source=copy_link',
     color: 'secondary'
   }
 ];
@@ -86,59 +67,38 @@ const CardHeader: React.FC = () => {
   );
 };
 
-const ProgressBar: React.FC<{ progress: number }> = ({ progress }) => {
-  const [animatedProgress, setAnimatedProgress] = useState(0);
+// ProgressBar（メーター）は廃止
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedProgress(progress);
-    }, 500); // 0.5秒遅延でアニメーション開始
-
-    return () => clearTimeout(timer);
-  }, [progress]);
-
-  return (
-    <div className="goal-progress">
-      <div 
-        className="goal-progress-bar" 
-        style={{ width: `${animatedProgress}%` }}
-      ></div>
-    </div>
-  );
-};
-
-const GoalCard: React.FC<{ goal: Goal }> = ({ goal }) => {
+const GoalCard: React.FC<{ goal: Goal; value: string; onChange: (v: string) => void; disabled?: boolean }> = ({ goal, value, onChange, disabled }) => {
   return (
     <div className="goal-card">
       <div className="goal-content">
-        <div className="goal-icon">
-          <i className={`fas ${goal.icon}`}></i>
-        </div>
+        <div className="goal-icon"><i className={`fas ${goal.icon}`}></i></div>
         <div className="goal-label">{goal.label}</div>
-        <div className="goal-text">{goal.text}</div>
-        <ProgressBar progress={goal.progress} />
+        <textarea
+          className="goal-textarea"
+          placeholder={`${goal.label} を入力しよう`}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          maxLength={300}
+          rows={3}
+        />
       </div>
     </div>
   );
 };
 
-const GoalsSection: React.FC<{ goals: Goal[] }> = ({ goals }) => {
-  return (
-    <div className="goals-section">
-      {goals.map((goal) => (
-        <GoalCard key={goal.id} goal={goal} />
-      ))}
-    </div>
-  );
-};
+const GoalsSection: React.FC<{ goals: Goal[]; shortValue: string; longValue: string; onShort: (v: string) => void; onLong: (v: string) => void; disabled?: boolean }> = ({ goals, shortValue, longValue, onShort, onLong, disabled }) => (
+  <div className="goals-section">
+    <GoalCard goal={goals[0]} value={shortValue} onChange={onShort} disabled={disabled} />
+    <GoalCard goal={goals[1]} value={longValue} onChange={onLong} disabled={disabled} />
+  </div>
+);
 
 const ActionLink: React.FC<{ action: ActionItem }> = ({ action }) => {
   const handleClick = (e: React.MouseEvent) => {
-    if (action.href.startsWith('#')) {
-      e.preventDefault();
-      console.log(`Navigate to: ${action.href}`);
-      // TODO: 実際のルーティング処理を実装
-    }
+    // 外部リンクのみ。内部アンカー時の特別処理は不要
   };
 
   return (
@@ -146,6 +106,7 @@ const ActionLink: React.FC<{ action: ActionItem }> = ({ action }) => {
       href={action.href} 
       className="action-link"
       onClick={handleClick}
+      target="_blank" rel="noopener noreferrer"
     >
       <div className="action-icon">
         <i className={`fas ${action.icon}`}></i>
@@ -176,16 +137,24 @@ const ActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions }) => {
 // =====================================================
 
 const CraftStory: React.FC<CraftStoryProps> = ({ className = '' }) => {
-  const { isAuthenticated } = useAuth();
-  
-  // ユーザーのデータを取得（今後userStoreと連携）
+  const { isAuthenticated, user } = useAuth();
+  const { userProgress } = useQuestStore();
+  const stage6Cleared = userProgress[6] === 'completed';
+  const { shortTermGoal, longTermGoal, setShortTermGoal, setLongTermGoal, isSaving } = useUserGoals(user?.id);
   const goals = defaultGoals;
   const actions = defaultActions;
 
   return (
     <div className={`craft-story-card ${className}`}>
       <CardHeader />
-      <GoalsSection goals={goals} />
+      <GoalsSection
+        goals={goals}
+        shortValue={shortTermGoal}
+        longValue={longTermGoal}
+        onShort={setShortTermGoal}
+        onLong={setLongTermGoal}
+        disabled={!isAuthenticated}
+      />
       <ActionsSection actions={actions} />
       
       {/* スタイル定義（既存のCSSを完全再現） */}
@@ -311,12 +280,7 @@ const CraftStory: React.FC<CraftStoryProps> = ({ className = '' }) => {
           font-size: 16px;
         }
 
-        .goal-text {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--text-dark);
-          line-height: 1.4;
-        }
+        .goal-textarea { width: 100%; resize: vertical; background:#fff; border:2px solid #eee; border-radius:10px; padding:12px; font-size:16px; color:var(--text-dark); }
 
         .goal-progress {
           margin-top: 12px;

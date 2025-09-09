@@ -32,6 +32,9 @@ export interface UseAuthReturn {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, password: string, nickname?: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<{ success: boolean; error?: string }>
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
+  updateEmail: (newEmail: string) => Promise<{ success: boolean; error?: string }>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>
   clearError: () => void
   checkAdminStatus: () => Promise<void>
@@ -106,6 +109,9 @@ export const useAuth = (): UseAuthReturn => {
     login: store.login,
     signup: store.signup,
     logout: store.logout,
+    resetPassword: store.resetPassword,
+    updatePassword: store.updatePassword,
+    updateEmail: store.updateEmail,
     updateProfile: store.updateProfile,
     clearError: store.clearError,
     checkAdminStatus: store.checkAdminStatus
