@@ -178,7 +178,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: '自分の生き方と働き方の軸を見つけよう',
     message: '「自分だけのストーリーを描こう」',
     videoUrl: 'https://youtu.be/Q_eMX4MY2-4',
-    formUrl: '',
+    formUrl: 'https://forms.gle/M1kaHzcKxAyJyDtb6',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '👤'
@@ -190,7 +190,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: '社会で働くことの意味をのぞいてみよう',
     message: '「働くことの意味を考えよう」',
     videoUrl: 'https://youtu.be/fnkr-0eQLbY',
-    formUrl: '',
+    formUrl: 'https://forms.gle/DgyPZCYwRU7YfGBk6',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '💼'
@@ -202,7 +202,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: 'お金の流れと価値の生まれ方を学ぼう',
     message: '「お金の流れを理解しよう」',
     videoUrl: 'https://youtu.be/TOJKajJH8hs',
-    formUrl: '',
+    formUrl: 'https://forms.gle/fdo5AkAcD8NExcjUA',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '💰'
@@ -214,7 +214,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: '好きと得意を仕事につなげるヒント',
     message: '「情熱を仕事につなげる」',
     videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
-    formUrl: '',
+    formUrl: 'https://forms.gle/jQUpwf31FvYDsKW79',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '❤️'
@@ -226,7 +226,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: '実現可能な目標の立て方を学ぼう',
     message: '「夢への道筋を立てよう」',
     videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
-    formUrl: '',
+    formUrl: 'https://forms.gle/rcFrauadFJbA1Nix5',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🎯'
@@ -238,7 +238,7 @@ const defaultStageDetails: Record<number, StageProgress> = {
     description: '対話から自分らしさのヒントを見つけよう',
     message: '「本当の自分を見つけよう」',
     videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
-    formUrl: '',
+    formUrl: 'https://forms.gle/pbi74bdeSyAwS68B9',
     iconImage: undefined,
     iconUrl: undefined,
     fallbackIcon: '🪞'

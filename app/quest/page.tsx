@@ -192,13 +192,13 @@ export default function QuestPage() {
                   className={`area-tab ${currentArea === areaKey ? 'active' : ''} ${
                     !areaInfo.isUnlocked ? 'locked' : ''
                   }`}
+                  data-area={areaKey}
                   disabled={!areaInfo.isUnlocked}
                 >
                   <span className="area-icon">
                     {areaInfo.theme === 'sky' ? '🌤️' : '🌇'}
                   </span>
                   <span className="area-name">{areaInfo.name}</span>
-                  <span className="area-range">({areaKey})</span>
                   {!areaInfo.isUnlocked && <Lock size={14} className="lock-icon" />}
                 </button>
               ))}
@@ -346,59 +346,68 @@ export default function QuestPage() {
         .area-tabs {
           display: flex;
           justify-content: center;
-          gap: 16px;
-          margin: 20px 0;
+          gap: 40px;
+          margin: 20px 0 30px;
+          padding: 0 20px;
         }
 
         .area-tab {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 12px 20px;
-          border: 3px solid rgba(255, 255, 255, 0.3);
-          border-radius: 25px;
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          font-weight: bold;
+          gap: 6px;
+          padding: 12px 0;
+          background: transparent;
+          border: none;
+          color: #666;
+          font-weight: 500;
+          font-size: 14px;
           cursor: pointer;
           transition: all 0.3s ease;
           position: relative;
-          overflow: hidden;
+          border-bottom: 3px solid transparent;
         }
 
         .area-tab:hover:not(.locked) {
-          transform: translateY(-2px);
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.5);
+          color: #333;
         }
 
-        .area-tab.active {
-          background: rgba(255, 255, 255, 0.3);
-          border-color: white;
-          box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        .area-tab[data-area="1-6"]:hover:not(.locked) {
+          color: #1976d2;
+        }
+
+        .area-tab[data-area="7-12"]:hover:not(.locked) {
+          color: #f57c00;
+        }
+
+        .area-tab[data-area="1-6"].active {
+          color: #1976d2;
+          border-bottom-color: #1976d2;
+          font-weight: 600;
+        }
+
+        .area-tab[data-area="7-12"].active {
+          color: #f57c00;
+          border-bottom-color: #f57c00;
+          font-weight: 600;
         }
 
         .area-tab.locked {
-          opacity: 0.6;
+          opacity: 0.4;
           cursor: not-allowed;
-          background: rgba(128, 128, 128, 0.3);
+          color: #999;
         }
 
         .area-icon {
-          font-size: 20px;
-        }
-
-        .area-name {
           font-size: 16px;
         }
 
-        .area-range {
-          font-size: 12px;
-          opacity: 0.8;
+        .area-name {
+          font-size: 14px;
         }
 
         .lock-icon {
           margin-left: 4px;
+          font-size: 12px;
         }
 
         .guest-notice {

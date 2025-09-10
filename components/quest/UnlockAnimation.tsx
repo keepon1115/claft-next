@@ -95,7 +95,7 @@ export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProp
                   className="mb-8"
                 >
                   <div className="text-8xl mb-4">🎉</div>
-                  <h2 className="text-4xl font-bold mb-2">空のエリア完全制覇！</h2>
+                  <h2 className="text-4xl font-bold mb-2">はじまりの空完全制覇！</h2>
                   <p className="text-xl text-blue-300">すべてのステージをクリアしました</p>
                 </motion.div>
               )}
@@ -161,7 +161,7 @@ export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProp
                       ease: "easeInOut"
                     }}
                   >
-                    <div className="text-8xl mb-4">⛰️</div>
+                    <div className="text-8xl mb-4">🌇</div>
                   </motion.div>
                   <h2 className="text-4xl font-bold mb-2 text-green-300">新たなエリアを発見！</h2>
                   <h3 className="text-2xl text-green-200">「くれなずむ空」</h3>
