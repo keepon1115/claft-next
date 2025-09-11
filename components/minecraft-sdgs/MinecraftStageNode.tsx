@@ -105,6 +105,9 @@ export default function MinecraftStageNode({
       {/* ステージ情報 */}
       <div className="minecraft-stage-info">
         <h3 className="minecraft-stage-title">{stage.title}</h3>
+        {stage.stageId >= 3 && (
+          <div className="minecraft-limited-badge">※マイクラコース限定</div>
+        )}
       </div>
 
       {/* マイクラブロック風テクスチャ */}
@@ -221,6 +224,19 @@ export default function MinecraftStageNode({
           50% { opacity: 1; }
         }
 
+        .minecraft-limited-badge {
+          font-size: 10px;
+          color: #FF6B35;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 4px;
+          background: rgba(255, 107, 53, 0.1);
+          border: 1px solid rgba(255, 107, 53, 0.3);
+          padding: 2px 6px;
+          border-radius: 4px;
+          white-space: nowrap;
+        }
+
         /* レスポンシブ対応 */
         @media (max-width: 768px) {
           .minecraft-step-progress {
@@ -235,6 +251,11 @@ export default function MinecraftStageNode({
           
           .minecraft-stage-info {
             font-size: 12px;
+          }
+
+          .minecraft-limited-badge {
+            font-size: 9px;
+            padding: 1px 4px;
           }
         }
       `}</style>

@@ -241,12 +241,24 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
                       {currentStep.includes('video') ? '動画を見る' : 'フォームに回答する'}
                     </button>
 
-                    {currentStep === 'sdgs_video' && (
+                    {currentStep === 'sdgs_video' && stage.sdgsSupportPrintUrl && (
                       <button
                         type="button"
                         onClick={() => {
-                          // TODO: 補助プリントのURLを追加
-                          window.open('#', '_blank', 'noopener,noreferrer')
+                          window.open(stage.sdgsSupportPrintUrl!, '_blank', 'noopener,noreferrer')
+                        }}
+                        className="minecraft-action-button support"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        補助プリント
+                      </button>
+                    )}
+
+                    {currentStep === 'programming_work' && stage.programmingSupportPrintUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.open(stage.programmingSupportPrintUrl!, '_blank', 'noopener,noreferrer')
                         }}
                         className="minecraft-action-button support"
                       >

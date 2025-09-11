@@ -57,6 +57,16 @@ export const useAuthStore = create<AuthState>()(
           // 初期化
           // =====================================================
           initialize: async () => {
+            // 既に初期化済み/ローディング中はスキップ
+            const alreadyInitialized = get().isInitialized
+            const alreadyLoading = get().isLoading
+            if (alreadyInitialized || alreadyLoading) {
+              console.log(`Auth: 初期化スキップ (initialized=${alreadyInitialized}, loading=${alreadyLoading})`)
+              return
+            }
+
+            console.log('Auth: 初期化開始')
+
             set((state) => {
               state.isLoading = true
               state.error = null
@@ -65,10 +75,10 @@ export const useAuthStore = create<AuthState>()(
             try {
               // Supabaseクライアントの初期化を試行
               const supabase = createBrowserSupabaseClient()
-              
+
               // 現在のセッションを取得
               const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-              
+
               if (sessionError) {
                 throw new Error(`セッション取得エラー: ${sessionError.message}`)
               }
@@ -83,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
               // 認証状態の変更を監視
               supabase.auth.onAuthStateChange(async (event, session) => {
                 console.log('Auth state changed:', event, !!session?.user)
-                
+
                 try {
                   if (session?.user) {
                     set((state) => {
@@ -111,15 +121,16 @@ export const useAuthStore = create<AuthState>()(
               console.log('✅ Supabase認証初期化完了')
               set((state) => {
                 state.isInitialized = true
+                state.isLoading = false
               })
-
             } catch (error) {
               console.warn('⚠️ Supabase初期化失敗、開発モックモードで動作します:', error)
-              
+
               // 開発環境でのモックモード
               if (process.env.NODE_ENV === 'development') {
                 set((state) => {
                   state.isInitialized = true
+                  state.isLoading = false
                   state.error = '開発モード: Supabase設定なしで動作中'
                   state.user = null
                   state.profile = null
@@ -128,14 +139,12 @@ export const useAuthStore = create<AuthState>()(
                 })
                 console.log('🔧 開発モード: 認証機能を無効化して動作継続')
               } else {
-              set((state) => {
+                set((state) => {
+                  state.isInitialized = true
+                  state.isLoading = false
                   state.error = error instanceof Error ? error.message : '認証初期化に失敗しました'
-              })
+                })
               }
-            } finally {
-              set((state) => {
-                state.isLoading = false
-              })
             }
           },
 
@@ -231,6 +240,18 @@ export const useAuthStore = create<AuthState>()(
                 }
                 
                 throw new Error(errorMessage)
+              }
+
+              // 成功時：即座にユーザー情報を反映し、ポストログイン処理を実行
+              if (data?.user) {
+                set((state) => {
+                  state.user = data.user as any
+                })
+                try {
+                  await get().handlePostLogin(data.user as any)
+                } catch (e) {
+                  console.warn('handlePostLogin 実行時の警告:', e)
+                }
               }
 
               return { success: true }

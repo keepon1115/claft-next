@@ -43,9 +43,8 @@ export default function MinecraftSdgsPage() {
     ? { currentStage: statistics.currentStage || 1, completedStages: statistics.completedStages, totalStages: statistics.totalStages, sdgsGoalsCompleted: statistics.sdgsGoalsCompleted }
     : demoStatistics
 
-  // 認証完了後にデータロード
+  // 認証完了後にデータロード（ログイン後の再初期化も許可）
   useEffect(() => {
-    // 認証が初期化済みの場合のみSDGsストアを初期化
     if (authInitialized) {
       initialize(user?.id)
     }
@@ -95,8 +94,10 @@ export default function MinecraftSdgsPage() {
   const toggleSidebar = () => setSidebarOpen(v => !v)
   const closeSidebar = () => setSidebarOpen(false)
 
-  // ローディング状態の改善（認証またはSDGs初期化中）
-  if (authLoading || !authInitialized || (authInitialized && isLoading && !sdgsInitialized)) {
+  // ローディング状態の簡素化
+  const isPageLoading = !authInitialized || (authInitialized && !sdgsInitialized && isLoading)
+  
+  if (isPageLoading) {
     return (
       <div className="min-h-screen minecraft-page flex items-center justify-center">
         <div className="text-center">
@@ -122,8 +123,8 @@ export default function MinecraftSdgsPage() {
 
         <div className="container mx-auto max-w-7xl px-4">
           <header className="minecraft-header">
-            <h1>🌍 マイクラSDGsコース</h1>
-            <p>持続可能な世界をクラフトしよう</p>
+            <h1>🌍 マイクラSDGs</h1>
+            <p>世界の課題をマイクラで解決しよう！</p>
             {!isAuthenticated && (
               <div className="guest-notice minecraft-notice">
                 <div className="flex items-center justify-center gap-2 text-minecraft-brown mb-2">

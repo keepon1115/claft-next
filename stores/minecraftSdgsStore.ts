@@ -34,8 +34,10 @@ export interface MinecraftStageProgress {
   description: string
   sdgsWorkUrl?: string // SDGsワーク動画URL
   sdgsFormUrl?: string // SDGsワーク回答フォームURL
+  sdgsSupportPrintUrl?: string // SDGsワーク補助プリントURL
   programmingWorkUrl?: string // マイクラワーク動画URL
   programmingFormUrl?: string // マイクラワーク回答フォームURL
+  programmingSupportPrintUrl?: string // マイクラワーク補助プリントURL
   message: string
   iconImage?: string
   iconUrl?: string
@@ -101,10 +103,12 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     title: 'SDGsって何だろう？',
     description: '〜ウェディングケーキモデルで全体像を理解しよう(前編)〜',
     message: 'SDGsの基本を学ぼう！',
-    sdgsWorkUrl: 'https://youtu.be/sample1-sdgs',
-    sdgsFormUrl: 'https://forms.gle/sample1-sdgs',
-    programmingWorkUrl: 'https://youtu.be/sample1-programming',
-    programmingFormUrl: 'https://forms.gle/sample1-programming',
+    sdgsWorkUrl: 'https://youtu.be/fryzvmt_cN8',
+    sdgsFormUrl: 'https://forms.gle/DXPLF6bZB3Wo26pVA',
+    sdgsSupportPrintUrl: 'https://www.canva.com/design/DAGxDTjOMo8/irXI-r2wI1O2cIPO74cd2Q/edit?utm_content=DAGxDTjOMo8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
+    programmingWorkUrl: 'https://youtu.be/fryzvmt_cN8',
+    programmingFormUrl: 'https://forms.gle/3aqJuMPhjtL9bkAe7',
+    programmingSupportPrintUrl: 'https://www.canva.com/design/DAGyoEbJUe0/JXH-kgcYUifhlFI1-EnTJg/edit?utm_content=DAGyoEbJUe0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
     fallbackIcon: '🌍',
     sdgsGoal: 0 // ウェディングケーキモデル
   },
@@ -114,10 +118,12 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     title: 'SDGsって何だろう？',
     description: '〜ウェディングケーキモデルで全体像を理解しよう(後編)〜',
     message: 'SDGsの構造を深く理解しよう！',
-    sdgsWorkUrl: 'https://youtu.be/sample2-sdgs',
-    sdgsFormUrl: 'https://forms.gle/sample2-sdgs',
-    programmingWorkUrl: 'https://youtu.be/sample2-programming',
-    programmingFormUrl: 'https://forms.gle/sample2-programming',
+    sdgsWorkUrl: 'https://youtu.be/fryzvmt_cN8',
+    sdgsFormUrl: 'https://forms.gle/DXPLF6bZB3Wo26pVA',
+    sdgsSupportPrintUrl: 'https://example.com/stage-2-sdgs-support',
+    programmingWorkUrl: 'https://youtu.be/fryzvmt_cN8',
+    programmingFormUrl: 'https://forms.gle/3aqJuMPhjtL9bkAe7',
+    programmingSupportPrintUrl: 'https://example.com/stage-2-programming-support',
     fallbackIcon: '🎂',
     sdgsGoal: 0 // ウェディングケーキモデル
   },
@@ -129,8 +135,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: '世界から貧困をなくす方法を考えよう！',
     sdgsWorkUrl: 'https://youtu.be/sample3-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample3-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-3-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample3-programming',
     programmingFormUrl: 'https://forms.gle/sample3-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-3-programming-support',
     fallbackIcon: '🏠',
     sdgsGoal: 1
   },
@@ -142,8 +150,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: '食料問題を解決する技術を学ぼう！',
     sdgsWorkUrl: 'https://youtu.be/sample4-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample4-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-4-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample4-programming',
     programmingFormUrl: 'https://forms.gle/sample4-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-4-programming-support',
     fallbackIcon: '🌾',
     sdgsGoal: 2
   },
@@ -155,8 +165,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'ヘルステックで世界を変えよう！',
     sdgsWorkUrl: 'https://youtu.be/sample5-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample5-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-5-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample5-programming',
     programmingFormUrl: 'https://forms.gle/sample5-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-5-programming-support',
     fallbackIcon: '⚕️',
     sdgsGoal: 3
   },
@@ -168,8 +180,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'EdTechで教育を革新しよう！',
     sdgsWorkUrl: 'https://youtu.be/sample6-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample6-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-6-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample6-programming',
     programmingFormUrl: 'https://forms.gle/sample6-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-6-programming-support',
     fallbackIcon: '📚',
     sdgsGoal: 4
   },
@@ -181,8 +195,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: '平等な社会をプログラミングで実現！',
     sdgsWorkUrl: 'https://youtu.be/sample7-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample7-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-7-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample7-programming',
     programmingFormUrl: 'https://forms.gle/sample7-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-7-programming-support',
     fallbackIcon: '⚖️',
     sdgsGoal: 5
   },
@@ -194,8 +210,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'クリーンウォーター技術を開発しよう！',
     sdgsWorkUrl: 'https://youtu.be/sample8-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample8-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-8-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample8-programming',
     programmingFormUrl: 'https://forms.gle/sample8-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-8-programming-support',
     fallbackIcon: '💧',
     sdgsGoal: 6
   },
@@ -207,8 +225,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: '再生可能エネルギーをプログラミング！',
     sdgsWorkUrl: 'https://youtu.be/sample9-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample9-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-9-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample9-programming',
     programmingFormUrl: 'https://forms.gle/sample9-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-9-programming-support',
     fallbackIcon: '⚡',
     sdgsGoal: 7
   },
@@ -220,8 +240,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'ワークテックで働き方を変革！',
     sdgsWorkUrl: 'https://youtu.be/sample10-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample10-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-10-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample10-programming',
     programmingFormUrl: 'https://forms.gle/sample10-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-10-programming-support',
     fallbackIcon: '💼',
     sdgsGoal: 8
   },
@@ -233,8 +255,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'イノベーションでインフラを構築！',
     sdgsWorkUrl: 'https://youtu.be/sample11-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample11-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-11-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample11-programming',
     programmingFormUrl: 'https://forms.gle/sample11-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-11-programming-support',
     fallbackIcon: '🏭',
     sdgsGoal: 9
   },
@@ -246,8 +270,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'テクノロジーで格差を解消！',
     sdgsWorkUrl: 'https://youtu.be/sample12-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample12-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-12-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample12-programming',
     programmingFormUrl: 'https://forms.gle/sample12-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-12-programming-support',
     fallbackIcon: '🤝',
     sdgsGoal: 10
   },
@@ -259,8 +285,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'スマートシティをプログラミング！',
     sdgsWorkUrl: 'https://youtu.be/sample13-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample13-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-13-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample13-programming',
     programmingFormUrl: 'https://forms.gle/sample13-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-13-programming-support',
     fallbackIcon: '🏙️',
     sdgsGoal: 11
   },
@@ -272,8 +300,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'サステナブルなプロダクトを開発！',
     sdgsWorkUrl: 'https://youtu.be/sample14-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample14-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-14-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample14-programming',
     programmingFormUrl: 'https://forms.gle/sample14-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-14-programming-support',
     fallbackIcon: '♻️',
     sdgsGoal: 12
   },
@@ -285,8 +315,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'クライメートテックで地球を守ろう！',
     sdgsWorkUrl: 'https://youtu.be/sample15-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample15-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-15-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample15-programming',
     programmingFormUrl: 'https://forms.gle/sample15-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-15-programming-support',
     fallbackIcon: '🌡️',
     sdgsGoal: 13
   },
@@ -298,8 +330,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'オーシャンテックで海を救おう！',
     sdgsWorkUrl: 'https://youtu.be/sample16-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample16-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-16-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample16-programming',
     programmingFormUrl: 'https://forms.gle/sample16-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-16-programming-support',
     fallbackIcon: '🌊',
     sdgsGoal: 14
   },
@@ -311,8 +345,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'グリーンテックで自然を保護！',
     sdgsWorkUrl: 'https://youtu.be/sample17-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample17-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-17-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample17-programming',
     programmingFormUrl: 'https://forms.gle/sample17-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-17-programming-support',
     fallbackIcon: '🌳',
     sdgsGoal: 15
   },
@@ -324,8 +360,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'リーガルテックで正義を実現！',
     sdgsWorkUrl: 'https://youtu.be/sample18-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample18-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-18-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample18-programming',
     programmingFormUrl: 'https://forms.gle/sample18-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-18-programming-support',
     fallbackIcon: '⚖️',
     sdgsGoal: 16
   },
@@ -337,8 +375,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     message: 'グローバルな協力をテクノロジーで！',
     sdgsWorkUrl: 'https://youtu.be/sample19-sdgs',
     sdgsFormUrl: 'https://forms.gle/sample19-sdgs',
+    sdgsSupportPrintUrl: 'https://example.com/stage-19-sdgs-support',
     programmingWorkUrl: 'https://youtu.be/sample19-programming',
     programmingFormUrl: 'https://forms.gle/sample19-programming',
+    programmingSupportPrintUrl: 'https://example.com/stage-19-programming-support',
     fallbackIcon: '🤝',
     sdgsGoal: 17
   }
@@ -372,12 +412,28 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
 
         // アクション実装
         initialize: async (userId?: string) => {
-          // 既に同じユーザーで初期化済みの場合はスキップ
           const currentState = get()
-          if (currentState.isInitialized && currentState.currentUserId === userId) {
+          
+          // 既に初期化済みで、同じユーザーまたはデモモードの場合はスキップ
+          if (currentState.isInitialized) {
+            if (userId && currentState.currentUserId === userId) {
+              console.log('MinecraftSDGs: 既に同じユーザーで初期化済み、スキップ')
+              return
+            }
+            if (!userId && !currentState.currentUserId) {
+              console.log('MinecraftSDGs: 既にデモモードで初期化済み、スキップ')
+              return
+            }
+          }
+
+          // ローディング中はスキップ
+          if (currentState.isLoading) {
+            console.log('MinecraftSDGs: 既にローディング中、スキップ')
             return
           }
 
+          console.log('MinecraftSDGs: 初期化開始', { userId, isInitialized: currentState.isInitialized })
+          
           set((state) => {
             state.isLoading = true
             state.error = null
@@ -400,6 +456,8 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
               state.isInitialized = true
               state.isLoading = false
             })
+            
+            console.log('MinecraftSDGs: 初期化完了')
           } catch (error) {
             console.error('MinecraftSDGs初期化エラー:', error)
             set((state) => {
@@ -589,19 +647,24 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
               // ステージ1は常にcurrentに設定（アクセス可能）
               const finalStatus = stage.id === 1 && status === 'locked' ? 'current' : status
               
+              // 既定の定義をベースに、バックエンド値で上書き（欠落値は既定を使う）
+              const defaults = defaultStageDetails[stage.id] || ({} as MinecraftStageProgress)
               stageDetails[stage.id] = {
                 stageId: stage.id,
                 status: finalStatus,
-                title: stage.title,
-                description: stage.description,
-                message: stage.message,
-                sdgsWorkUrl: stage.sdgs_work_video_url || undefined,
-                sdgsFormUrl: stage.sdgs_form_url || undefined,
-                programmingWorkUrl: stage.programming_work_video_url || undefined,
-                programmingFormUrl: stage.programming_form_url || undefined,
-                iconUrl: stage.icon_url || undefined,
-                fallbackIcon: stage.fallback_icon,
-                sdgsGoal: stage.sdgs_goal || undefined,
+                title: stage.title || defaults.title,
+                description: stage.description || defaults.description,
+                message: stage.message || defaults.message,
+                // ステージ1は常にローカル定義を優先（指定URLの保証）
+                sdgsWorkUrl: stage.id === 1 ? defaults.sdgsWorkUrl : (stage.sdgs_work_video_url || defaults.sdgsWorkUrl),
+                sdgsFormUrl: stage.id === 1 ? defaults.sdgsFormUrl : (stage.sdgs_form_url || defaults.sdgsFormUrl),
+                sdgsSupportPrintUrl: (stage as any).sdgs_support_print_url || defaults.sdgsSupportPrintUrl,
+                programmingWorkUrl: stage.id === 1 ? defaults.programmingWorkUrl : (stage.programming_work_video_url || defaults.programmingWorkUrl),
+                programmingFormUrl: stage.id === 1 ? defaults.programmingFormUrl : (stage.programming_form_url || defaults.programmingFormUrl),
+                programmingSupportPrintUrl: (stage as any).programming_support_print_url || defaults.programmingSupportPrintUrl,
+                iconUrl: stage.icon_url || defaults.iconUrl,
+                fallbackIcon: stage.fallback_icon || defaults.fallbackIcon,
+                sdgsGoal: stage.sdgs_goal || defaults.sdgsGoal,
                 completedAt: progress?.completed_at || undefined,
                 submittedAt: progress?.sdgs_form_submitted_at || progress?.programming_form_submitted_at || undefined,
                 lastUpdated: progress?.updated_at || undefined
