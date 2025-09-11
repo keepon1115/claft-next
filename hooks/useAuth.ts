@@ -85,6 +85,7 @@ export const useAuth = (): UseAuthReturn => {
   
   // 初期化確認
   useEffect(() => {
+    // isInitializedがfalse、またはuserがnullで一度も初期化していない場合に初期化を促す
     if (!store.isInitialized) {
       store.initialize()
     }

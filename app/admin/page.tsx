@@ -7,6 +7,7 @@ import { AuthButton } from '@/components/auth/AuthButton'
 import AdminDashboard from './AdminDashboard'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { grantAdminAccess } from './actions'
+import Link from 'next/link'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -228,10 +229,10 @@ export default function AdminPage() {
         {/* 管理画面サイドバー */}
         <nav className="w-64 bg-slate-700 py-5 shadow-xl">
           <ul className="space-y-1">
-            <li><a href="/admin" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">📊 ダッシュボード</a></li>
-            <li><a href="/admin/users" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">👥 ユーザー管理</a></li>
-            <li><a href="/admin/quests" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">🗺️ クエスト管理</a></li>
-            <li><a href="/admin/settings" className="block px-6 py-4 text-gray-200 hover:border-l-4 hover:border-blue-400 transition-all">⚙️ システム設定</a></li>
+            <li><Link href="/admin" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">📊 ダッシュボード</Link></li>
+            <li><Link href="/admin/users" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">👥 ユーザー管理</Link></li>
+            <li><Link href="/admin/quests" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">🗺️ クエスト管理</Link></li>
+            <li><Link href="/admin/settings" className="block px-6 py-4 text-gray-200 hover:border-l-4 hover:border-blue-400 transition-all">⚙️ システム設定</Link></li>
           </ul>
         </nav>
         

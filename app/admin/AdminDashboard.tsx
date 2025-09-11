@@ -129,7 +129,7 @@ function StatCard({
     primary: 'from-blue-500 to-blue-600 shadow-blue-200',
     success: 'from-green-500 to-green-600 shadow-green-200',
     warning: 'from-orange-500 to-orange-600 shadow-orange-200',
-    accent: 'from-purple-500 to-purple-600 shadow-purple-200'
+    accent: 'from-purple-600 to-indigo-700 shadow-purple-300'
   }
 
   return (
@@ -142,17 +142,17 @@ function StatCard({
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-white/80 text-sm mb-1">{title}</p>
+          <p className="text-white text-sm drop-shadow-sm mb-1">{title}</p>
           {loading ? (
-            <div className="w-16 h-8 bg-white/20 rounded animate-pulse" />
+            <div className="w-20 h-8 bg-white/30 rounded animate-pulse" />
           ) : (
-            <p className="text-3xl font-bold text-white">
+            <p className="text-3xl font-extrabold text-white drop-shadow">
               {value.toLocaleString()}{suffix}
             </p>
           )}
         </div>
-        <div className="text-white/60">
-          <Icon size={32} />
+        <div className="text-white">
+          <Icon size={32} className="opacity-90 drop-shadow" />
         </div>
       </div>
     </div>
@@ -302,7 +302,7 @@ function UserGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               </div>
               <div className="bg-yellow-100 p-3 rounded border-l-4 border-yellow-400">
                 <p className="text-sm text-yellow-800">
-                  <strong>重要:</strong> ステージ6の承認後、ユーザーは自動的に山エリア（ステージ7-12）に進めるようになります。
+                  <strong>重要:</strong> ステージ6クリアで自動的に「くれなずむ空」（ステージ7-12）が開放されます。
                 </p>
               </div>
             </div>

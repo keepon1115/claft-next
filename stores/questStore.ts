@@ -648,6 +648,15 @@ export const useQuestStore = create<QuestState>()(
                   .upsert(nextStageData)
               }
 
+              // ステージ6完了時は新エリア解放チェック（即時フローでも発火）
+              if (stageId === 6) {
+                try {
+                  get().checkAreaUnlock()
+                } catch (e) {
+                  console.warn('エリア解放チェック中に警告:', e)
+                }
+              }
+
               // 統計を再計算
               const statistics = get().calculateStatistics()
               set((state) => {

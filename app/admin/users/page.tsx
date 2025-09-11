@@ -62,7 +62,7 @@ export default function UsersPage() {
   const pageSize = 20
   const supabase = createBrowserSupabaseClient()
 
-  // 管理者権限チェック
+  // 管理者権限チェック（初期化完了を待つ）
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!isAuthenticated || !user) {
@@ -88,8 +88,11 @@ export default function UsersPage() {
       }
     }
 
-    checkAdminStatus()
-  }, [isAuthenticated, user, supabase])
+    // 認証初期化完了後に実行
+    if (!isLoading) {
+      checkAdminStatus()
+    }
+  }, [isAuthenticated, isLoading, user, supabase])
 
   // ユーザーデータ読み込み
   const loadUsers = async () => {

@@ -66,7 +66,7 @@ export default function SettingsPage() {
   
   const supabase = createBrowserSupabaseClient()
 
-  // 管理者権限チェック
+  // 管理者権限チェック（初期化完了を待つ）
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!isAuthenticated || !user) {
@@ -92,8 +92,10 @@ export default function SettingsPage() {
       }
     }
 
-    checkAdminStatus()
-  }, [isAuthenticated, user, supabase])
+    if (!isLoading) {
+      checkAdminStatus()
+    }
+  }, [isAuthenticated, isLoading, user, supabase])
 
   // システム健全性チェック
   const checkSystemHealth = async () => {

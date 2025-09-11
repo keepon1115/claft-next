@@ -735,8 +735,7 @@ export const useAuthStore = create<AuthState>()(
           name: 'claft-auth-store',
           partialize: (state) => ({
             // セキュリティのため、永続化するのは必要最小限のデータのみ
-            isAdmin: state.isAdmin,
-            isInitialized: state.isInitialized
+            isAdmin: state.isAdmin
           })
         }
       )
