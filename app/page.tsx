@@ -11,6 +11,7 @@ import { AuthButton } from '@/components/auth/AuthButton'
 import { useAuth } from '@/hooks/useAuth'
 import { LockedContent } from '@/components/common/LockedContent'
 import { useQuestStore } from '@/stores/questStore'
+import HowToModal from '@/components/home/HowToModal'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
@@ -43,6 +44,7 @@ export default function Home() {
   }
 
   const displayName = profile?.nickname || (user as any)?.user_metadata?.name || user?.email || 'クラフター'
+  const [howToOpen, setHowToOpen] = useState(false)
 
   return (
     <>
@@ -106,6 +108,12 @@ export default function Home() {
                   <div className="tooltip">クエスト参加</div>
                 </div>
               )}
+            {/* 追加: クイックリンク */}
+            <div className="quick-actions">
+              <button className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
+              <a className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
+              <a className="quick-btn" href="/yononaka#adventurers">冒険者</a>
+            </div>
             </div>
           </div>
           
@@ -141,6 +149,9 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* 歩き方モーダル */}
+      <HowToModal isOpen={howToOpen} onClose={() => setHowToOpen(false)} />
     </>
   )
 }

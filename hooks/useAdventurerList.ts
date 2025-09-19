@@ -29,7 +29,7 @@ interface UseAdventurerListResult {
 // 冒険者一覧取得フック
 // =====================================================
 
-export function useAdventurerList(limit: number = 20): UseAdventurerListResult {
+export function useAdventurerList(limit?: number): UseAdventurerListResult {
   const [adventurers, setAdventurers] = useState<AdventurerData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,13 +41,18 @@ export function useAdventurerList(limit: number = 20): UseAdventurerListResult {
       setError(null)
 
       // プロフィールデータを取得（プロフィール完成度の高い順に並べ替え）
-      const { data: profileData, error: profileError } = await supabase
+      let query = supabase
         .from('users_profile')
         .select('id, nickname, character_type, avatar_url, profile_completion, created_at')
         .not('nickname', 'is', null) // ニックネームがあるユーザーのみ
         .order('profile_completion', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(limit)
+
+      if (typeof limit === 'number' && limit > 0) {
+        query = query.limit(limit)
+      }
+
+      const { data: profileData, error: profileError } = await query
 
       if (profileError) {
         throw profileError

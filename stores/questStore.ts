@@ -5,6 +5,9 @@ import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery } from '@/lib/supabase/client'
 import type { QuestProgress, QuestStatus } from '@/types/quest'
+import type { GradeBand, QuestDataSource } from './quest/types'
+import { get1to6DataSource } from '@/data/quests/1-6'
+import { get7to12DataSource } from '@/data/quests/7-12/provider'
 
 // =====================================================
 // クエストストアの型定義
@@ -90,6 +93,9 @@ interface QuestState {
   checkAreaUnlock: () => boolean
   triggerUnlockAnimation: () => void
   dismissUnlockAnimation: () => void
+
+  // 追加: カテゴリ動画データソース取得
+  getQuestDataSource: (gradeBand: GradeBand) => Promise<QuestDataSource>
 }
 
 // =====================================================
@@ -443,6 +449,15 @@ export const useQuestStore = create<QuestState>()(
                 state.isInitialized = true
                 state.lastSyncTime = new Date().toISOString()
               })
+
+              // 初期化完了時に安全にエリア解放チェック
+              try {
+                get().checkAreaUnlock()
+              } catch (e) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('checkAreaUnlock on init warning:', e)
+                }
+              }
 
             } catch (error) {
               // 開発モードでは警告レベルで表示
@@ -889,6 +904,15 @@ export const useQuestStore = create<QuestState>()(
                   state.statistics = get().calculateStatistics()
                   state.lastSyncTime = new Date().toISOString()
                 })
+
+                // 同期後にもエリア解放チェックを実行
+                try {
+                  get().checkAreaUnlock()
+                } catch (e) {
+                  if (process.env.NODE_ENV === 'development') {
+                    console.warn('checkAreaUnlock on sync warning:', e)
+                  }
+                }
               }
 
             } catch (error) {
@@ -939,22 +963,35 @@ export const useQuestStore = create<QuestState>()(
 
           checkAreaUnlock: () => {
             const { userProgress, areas } = get()
-            // ステージ6が完了（管理者承認済み）の場合のみ解放
+            // ステージ6が完了（管理者承認済み）
             const stage6Completed = userProgress[6] === 'completed'
-            
-            if (stage6Completed && !areas['7-12'].isUnlocked) {
+            // 7以降を既に開始/完了しているか（= ポップを出したくない条件）
+            const started7Plus = [7,8,9,10,11,12].some((id) => userProgress[id] && userProgress[id] !== 'locked')
+
+            if (!stage6Completed) return false
+
+            // エリア自体は常に解放状態に寄せる
+            set((state) => {
+              state.areas['7-12'].isUnlocked = true
+            })
+
+            if (!areas['7-12'].isUnlocked && !started7Plus) {
+              // 初回解放タイミングのみポップ表示し、7をcurrentにする
               set((state) => {
-                state.areas['7-12'].isUnlocked = true
                 state.showUnlockAnimation = true
-                // ステージ7を解放
-                state.userProgress[7] = 'current'
-                state.stageDetails[7] = {
-                  ...state.stageDetails[7],
-                  status: 'current'
+                if (state.userProgress[7] === 'locked') {
+                  state.userProgress[7] = 'current'
+                  state.stageDetails[7] = {
+                    ...state.stageDetails[7],
+                    status: 'current'
+                  }
                 }
               })
               return true
             }
+
+            // すでに7以降に着手済みならポップは出さない
+            set((state) => { state.showUnlockAnimation = false })
             return false
           },
 
@@ -968,6 +1005,14 @@ export const useQuestStore = create<QuestState>()(
             set((state) => {
               state.showUnlockAnimation = false
             })
+          },
+
+          // 追加: データソース取得
+          getQuestDataSource: async (gradeBand: GradeBand) => {
+            if (gradeBand === '1-6') {
+              return get1to6DataSource()
+            }
+            return await get7to12DataSource()
           }
         }),
         {

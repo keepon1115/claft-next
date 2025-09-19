@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { Lock } from 'lucide-react'
 import OptimizedImage from '@/components/common/OptimizedImage'
 import {
@@ -11,6 +11,9 @@ import {
   getInstructorThumbnail,
 } from '@/types/category'
 import { useAuth } from '@/hooks/useAuth'
+import { useCategorySystem } from '@/hooks/useCategorySystem'
+import type { VideoItem } from '@/stores/quest/types'
+import { useQuestStore } from '@/stores/questStore'
 
 /* ============= PrimaryTile（①） ============= */
 interface PrimaryTileProps {
@@ -171,6 +174,14 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
   area,
 }) => {
   const { isAuthenticated } = useAuth()
+  const questStore = useQuestStore()
+  const {
+    loadCategoryVideos,
+  } = useCategorySystem({
+    userMainQuestProgress,
+    isAuthenticated,
+    area,
+  })
 
   const theme = (() => {
     switch (category.id) {
@@ -198,8 +209,47 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
   const isPrimaryAccessible = true
 
   // ②：エリアにより解放条件が異なる
-  // 1-6: 常時ロック / 7-12: ステージ6クリアで解放
-  const areSecondaryLessonsUnlocked = isAuthenticated && userMainQuestProgress >= 6 && area === '7-12'
+  // 1-6: 常時ロック / 7-12: ステージ6クリアで解放（グローバル進捗 or エリア解放フラグ）
+  const is7to12Unlocked = questStore.areas['7-12']?.isUnlocked || questStore.userProgress[6] === 'completed'
+  const areSecondaryLessonsUnlocked = isAuthenticated && area === '7-12' && is7to12Unlocked
+
+  // 7-12用: カテゴリIDのマッピング
+  const categoryIdFor7to12 = useMemo(() => {
+    switch (category.id) {
+      case 'money-economics':
+        return 'money' as const
+      case 'presentation-communication':
+        return 'presentation' as const
+      case 'ai-it-skills':
+        return 'aiit' as const
+      case 'sdgs-environment':
+        return 'sdgs' as const
+      default:
+        return null
+    }
+  }, [category.id])
+
+  // 7-12用: 動画一覧のロード
+  const [videoItems, setVideoItems] = useState<VideoItem[]>([])
+  const [videosLoading, setVideosLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchVideos = async () => {
+      if (area !== '7-12' || !areSecondaryLessonsUnlocked || !categoryIdFor7to12) return
+      setVideosLoading(true)
+      try {
+        const { items } = await loadCategoryVideos({ categoryId: categoryIdFor7to12, page: 1, pageSize: 12 })
+        if (!cancelled) setVideoItems(items)
+      } catch (e) {
+        // noop
+      } finally {
+        if (!cancelled) setVideosLoading(false)
+      }
+    }
+    fetchVideos()
+    return () => { cancelled = true }
+  }, [area, areSecondaryLessonsUnlocked, categoryIdFor7to12, loadCategoryVideos])
 
   const handleOpenPrimaryModal = useCallback(() => {
     if (!primaryLesson) return
@@ -230,6 +280,24 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
     [areSecondaryLessonsUnlocked, isAuthenticated, onOpenModal, category]
   )
 
+  // 7-12用: VideoItem -> CategoryLesson 変換
+  const convertToLesson = useCallback((v: VideoItem, index: number): CategoryLesson => {
+    return {
+      id: `video-${v.id}`,
+      category_id: category.id,
+      order: v.order ?? index + 2,
+      title: v.title,
+      kind: CategoryLessonKind.LESSON,
+      youtube_id: v.source === 'youtube' ? v.sourceId : undefined,
+      video_url: v.videoUrl,
+      form_url: v.formUrl,
+      description: undefined,
+      unlock_required_stage: 6,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  }, [category.id])
+
   if (!isCategoryUnlocked) {
     return (
       <div className={`category-block category-block--locked ${className}`}>
@@ -246,7 +314,7 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
     )
   }
 
-  // 下段は2枚に固定（2枚目はロック固定表示）
+  // 下段：1-6は従来の2枚構成。7-12で解放済みなら動画グリッド表示。
   const secondLesson = regularLessons.find(l => l.order === 2) ?? null
 
   return (
@@ -276,17 +344,47 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
           />
         </div>
 
-        {/* 2タイル横並び：①(左) + ②orロック(右) */}
-        <div className="category-grid--two">
-          <LessonTile
-            key={2}
-            order={2}
-            lesson={secondLesson}
-            isUnlocked={areSecondaryLessonsUnlocked && !!secondLesson}
-            onClick={secondLesson ? () => handleOpenLessonModal(secondLesson) : undefined}
-          />
-          <LockedTile />
-        </div>
+        {area === '7-12' && areSecondaryLessonsUnlocked ? (
+          <div className="category-grid--video">
+            {videosLoading && (
+              <div className="video-loading">読み込み中...</div>
+            )}
+            {!videosLoading && videoItems.map((v, idx) => {
+              const lesson = convertToLesson(v, idx)
+              return (
+                <button
+                  key={lesson.id}
+                  className="tile tile--lesson"
+                  onClick={() => handleOpenLessonModal(lesson)}
+                >
+                  <div className="tile__badge tile__badge--small"><span className="badge__number">{lesson.order}</span></div>
+                  <div className="tile__media">
+                    <OptimizedImage
+                      src={v.thumbnailUrl}
+                      alt={lesson.title}
+                      width={300}
+                      height={169}
+                      className="tile__img"
+                      fallbackSrc="/images/quest/default-thumbnail.png"
+                    />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          /* 1-6 もしくは未解放時は従来表示 */
+          <div className="category-grid--two">
+            <LessonTile
+              key={2}
+              order={2}
+              lesson={secondLesson}
+              isUnlocked={areSecondaryLessonsUnlocked && !!secondLesson}
+              onClick={secondLesson ? () => handleOpenLessonModal(secondLesson) : undefined}
+            />
+            <LockedTile />
+          </div>
+        )}
       </div>
 
       {/* CSS */}
@@ -303,6 +401,9 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
         .category-grid--top{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:stretch; }
         .category-grid--bottom{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:12px; }
         .category-grid--two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+        .category-grid--video{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:12px; }
+        @media (min-width: 900px){ .category-grid--video{ grid-template-columns:repeat(3,1fr); } }
+        .video-loading{ grid-column:1/-1; text-align:center; padding:16px; background:#f3f4f6; border:2px solid #e5e7eb; border-radius:8px; font-weight:600; color:#4b5563; }
 
         /* tiles */
         .category-block :global(.tile){ position:relative; border-radius:12px; overflow:hidden; border:none; background:white; cursor:pointer; transition:.3s; box-shadow:0 2px 8px rgba(0,0,0,.1); width:100%; display:block; }
@@ -328,6 +429,7 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
           .category-grid--top{ grid-template-columns:1fr; }
           .category-grid--bottom{ grid-template-columns:repeat(2,1fr); }
           .category-grid--two{ grid-template-columns:1fr; }
+          .category-grid--video{ grid-template-columns:1fr; }
           .category-title{ font-size:1.25rem; }
         }
         @media (max-width:480px){

@@ -11,8 +11,8 @@ export default function YononakaPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   
-  // 冒険者一覧データを取得
-  const { adventurers, loading: adventurersLoading, error: adventurersError } = useAdventurerList(12)
+  // 冒険者一覧データを取得（制限なしで全件）
+  const { adventurers, loading: adventurersLoading, error: adventurersError } = useAdventurerList()
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -88,20 +88,20 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <a
-                  href="https://forms.gle/Hfqo88422ArweJP97"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                Yo97 夏休み明けも楽しんでいきまっしょい！
-                </a>
-                <a
                   href="https://forms.gle/B9t8HCuePtpzUBvd8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
                 Yo98 仕事ってどんなイメージ？？
+                </a>
+                <a
+                  href="https://forms.gle/5CwhSrvtuZGSuP2J9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                Yo99 外国で暮らすってどんな感じ？
                 </a>
                 <a
                   href="https://forms.gle/tzm3yM8Be5Fs98q58"
@@ -224,7 +224,7 @@ export default function YononakaPage() {
           </div>
 
           {/* 冒険者アバターセクション */}
-          <section className="max-w-4xl mx-auto mt-12">
+          <section id="adventurers" className="max-w-4xl mx-auto mt-12">
             <div className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-amber-900 text-center mb-8">🏃‍♀️ CLAFTの冒険者一覧</h2>
               

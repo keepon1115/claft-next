@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
+import type { GradeBand, QuestDataSource, ListResult } from '@/stores/quest/types'
+import { get1to6DataSource } from '@/data/quests/1-6'
+import { get7to12DataSource } from '@/data/quests/7-12/provider'
 import { 
   CategoryModalOptions,
   CategoryWithLessons,
@@ -20,6 +23,8 @@ interface UseCategorySystemProps {
   userMainQuestProgress: number
   /** 認証状態 */
   isAuthenticated: boolean
+  /** 表示中のエリア（1-6/7-12）: 省略時は1-6 */
+  area?: '1-6' | '7-12'
 }
 
 interface UseCategorySystemReturn {
@@ -36,11 +41,15 @@ interface UseCategorySystemReturn {
   
   /** ユーザー進行状況生成（デモ用） */
   generateDemoProgress: () => UserCategoryProgress[]
+
+  /** 7-12向け: カテゴリ動画一覧取得（ページング対応） */
+  loadCategoryVideos: (params: { categoryId: 'money' | 'presentation' | 'aiit' | 'sdgs'; page?: number; pageSize?: number; query?: string }) => Promise<ListResult>
 }
 
 export const useCategorySystem = ({
   userMainQuestProgress,
-  isAuthenticated
+  isAuthenticated,
+  area = '1-6'
 }: UseCategorySystemProps): UseCategorySystemReturn => {
   
   // モーダル状態
@@ -265,12 +274,28 @@ export const useCategorySystem = ({
     ]
   }, [])
 
+  // 7-12向けデータソース（必要時に取得）
+  const [dataSource, setDataSource] = useState<QuestDataSource | null>(null)
+
+  const ensureDataSource = useCallback(async (): Promise<QuestDataSource> => {
+    if (dataSource) return dataSource
+    const ds = area === '7-12' ? await get7to12DataSource() : get1to6DataSource()
+    setDataSource(ds)
+    return ds
+  }, [area, dataSource])
+
+  const loadCategoryVideos = useCallback(async (params: { categoryId: 'money' | 'presentation' | 'aiit' | 'sdgs'; page?: number; pageSize?: number; query?: string }) => {
+    const ds = await ensureDataSource()
+    return ds.listVideos(params)
+  }, [ensureDataSource])
+
   return {
     modalOptions,
     isModalOpen,
     openModal,
     closeModal,
     generateDemoCategories,
-    generateDemoProgress
+    generateDemoProgress,
+    loadCategoryVideos
   }
 }

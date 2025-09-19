@@ -1800,6 +1800,27 @@ img.pixel {
   bottom: -40px;
 }
 
+/* quick actions next to badges */
+.header .quick-actions {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 12px;
+  align-items: center;
+}
+.quick-btn {
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid #333;
+  background: #fff;
+  color: var(--text-dark);
+  border-radius: 8px;
+  box-shadow: 0 2px 0 #333;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.quick-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 0 #333; }
+.quick-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #333; }
+
 .exp-bar-container {
   position: absolute;
   bottom: 0;
@@ -2846,6 +2867,30 @@ img.pixel {
   .achievements {
     justify-content: center;
   }
+  /* バッジとクイックボタンを同一行で収める */
+  .header .achievements {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  .header .quick-actions {
+    gap: 6px;
+    margin-left: 8px;
+  }
+  .quick-btn {
+    font-size: 10px;
+    padding: 5px 6px;
+    white-space: nowrap;
+  }
+  /* バッジの縮小で1行に収める */
+  .achievement-badge {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+  .achievements { gap: 8px; }
   
   .greeting-section h1 {
     font-size: 24px;

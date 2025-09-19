@@ -34,15 +34,25 @@ export default function QuestMap({ stages, statistics, onStageClick, theme = 'sk
     openModal,
     closeModal,
     generateDemoCategories,
-    generateDemoProgress
+    generateDemoProgress,
+    loadCategoryVideos,
   } = useCategorySystem({
     userMainQuestProgress: statistics.completedStages,
-    isAuthenticated
+    isAuthenticated,
+    area,
   })
 
   // デモカテゴリデータを生成
   const demoCategories = generateDemoCategories()
   const demoProgress = generateDemoProgress()
+
+  // 7-12: カテゴリ動画を必要に応じて読み込み（将来のUIで使用）
+  // 例: 初回にお金カテゴリの先頭ページをプリフェッチ（UI改修で活用予定）
+  useEffect(() => {
+    if (area !== '7-12') return
+    // 軽いプリフェッチ例（失敗しても無視）
+    loadCategoryVideos({ categoryId: 'money', page: 1, pageSize: 12 }).catch(() => {})
+  }, [area, loadCategoryVideos])
 
   const handleImageError = (stageId: number) => {
     setImageErrors(prev => ({ ...prev, [stageId]: true }))
