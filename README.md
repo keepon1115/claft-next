@@ -14,32 +14,59 @@ npm run dev
 
 アプリケーションは http://localhost:3000 で起動します。
 
-## 📁 プロジェクト構成
+## 📁 プロジェクト構成（現状）
 
-詳細なディレクトリ構成については、[PROJECT_STRUCTURE.md](./docs/PROJECT_STRUCTURE.md) をご覧ください。
+詳細の説明は `docs/PROJECT_STRUCTURE.md` も参照してください。以下は現在の実体ベースのツリーです。
 
 ```
 claft-next/
-├── app/                   # Next.js App Router (ページ・API)
-├── components/            # 再利用可能なUIコンポーネント
-├── hooks/                 # カスタムReactフック
-├── lib/                   # ライブラリとユーティリティ
-├── stores/                # 状態管理 (Zustand)
-├── types/                 # TypeScript型定義
-├── docs/                  # ドキュメント・ガイド
-├── public/                # 静的ファイル
-└── reference/             # 参考資料
+├── app/
+│  ├── admin/ (actions.ts, AdminDashboard.tsx, page.tsx, quests/, settings/, users/)
+│  ├── api/test/ (route.ts)
+│  ├── auth/callback/page.tsx, auth/reset-password/page.tsx
+│  ├── entrepreneur/page.tsx
+│  ├── minecraft-sdgs/(loading.tsx, page.tsx)
+│  ├── mirai/page.tsx, profile/page.tsx, quest/(loading.tsx, page.tsx), unauthorized/page.tsx, yononaka/page.tsx
+│  ├── app-layout.tsx, error.tsx, global-error.tsx, globals.css, layout.tsx, not-found.tsx,
+│  ├── opengraph-image.tsx, page.tsx, providers.tsx, robots.ts, sitemap.ts, favicon.ico
+├── components/
+│  ├── admin/(ApprovalTable.tsx, DynamicAdminDashboard.tsx, FilterSection.tsx)
+│  ├── auth/(AuthButton.tsx, AuthModal.tsx, DynamicAuthModal.tsx, PasswordResetModal.tsx)
+│  ├── common/(AnimationProvider.tsx, BackgroundAnimations.tsx, DynamicLoader.tsx, HamburgerMenu.tsx,
+│  │           Header.tsx, InAppBrowserModal.tsx, LevelUpModal.tsx, LockedContent.tsx, NotificationSystem.tsx,
+│  │           OptimizedImage.tsx, PerformanceMonitor.tsx, PWAInstallPrompt.tsx, Sidebar.tsx)
+│  ├── home/(CraftStory.tsx, DynamicProfileCard.tsx, HomePageInteractions.tsx, HowToModal.tsx, JibunCraft.tsx, ProfileCard.tsx)
+│  ├── minecraft-sdgs/(DynamicStageModal.tsx, LoginPromptModal.tsx, MinecraftAnimations.tsx, MinecraftMap.tsx,
+│  │                   MinecraftStageModal.tsx, MinecraftStageNode.tsx, WorldDataModal.tsx)
+│  ├── profile/AccountSettings.tsx
+│  └── quest/(CategoryBlock.tsx, CategoryModal.tsx, DynamicStageModal.tsx, LoginPromptModal.tsx,
+│            QuestMap.tsx, StageModal.tsx, StageNode.tsx, UnlockAnimation.tsx)
+├── data/quests/(1-6/*.ts, 7-12/*.ts)
+├── hooks/(useAdventurerList.ts, useAuth.ts, useCategorySystem.ts, useMediaQuery.ts, usePWA.ts, useRealtimeUpdates.ts, useToast.ts, useUserGoals.ts)
+├── lib/
+│  ├── api/(minecraft-sdgs.ts, quests.ts)
+│  ├── supabase/(client.ts, hooks.ts)
+│  └── utils/(imageUtils.ts, performance.ts, seo.ts)
+├── stores/(authStore.ts, minecraftSdgsStore.ts, questStore.ts, userStore.ts, quest/*.ts)
+├── types/(category.ts, database.ts, index.ts, quest.ts, user.ts)
+├── docs/(各種ガイド, examples/*.md, PROJECT_STRUCTURE.md)
+├── public/(images/*.png, manifest.json, robots.txt, sw.js, workbox-*.js, アイコン類)
+├── reference/（削除済）
+├── scripts/(health-check.js, performance-audit.js)
+├── next.config.ts, tsconfig.json, tailwind.config.js, postcss.config.mjs, eslint.config.mjs
+├── package.json, package-lock.json, next-env.d.ts
+└── README.md
 ```
 
-## 🛠️ 技術スタック
+## 🛠️ 技術スタック（現状）
 
-- **フレームワーク**: Next.js 14 (App Router)
+- **フレームワーク**: Next.js 15 (App Router) + next-pwa
 - **言語**: TypeScript
 - **スタイリング**: Tailwind CSS
 - **状態管理**: Zustand + Immer + Persist
 - **データベース**: Supabase
 - **認証**: Supabase Auth
-- **PWA**: next-pwa
+- **PWA**: next-pwa + Workbox
 - **アイコン**: Lucide React
 
 ## 🎯 主要機能
@@ -62,7 +89,7 @@ npm install
 # 開発サーバー
 npm run dev
 
-# プロダクションビルド  
+# プロダクションビルド
 npm run build
 
 # プロダクション起動
@@ -90,6 +117,7 @@ npm run lint
 node_modules/     # 依存関係（59,000+ファイル）
 .next/           # Next.jsビルドキャッシュ
 .git/            # Gitデータ
+workbox-*.js     # PWA ビルド成果物（public/ 配下）
 ```
 
 ### バックアップ対象（重要なソースコード）
@@ -103,6 +131,7 @@ types/           # TypeScript型定義
 docs/            # ドキュメント
 public/          # 静的ファイル
 package.json     # 依存関係設定
+next.config.ts   # Next.js設定（PWA含む）
 ```
 
 ## 🚀 デプロイ
@@ -118,6 +147,12 @@ package.json     # 依存関係設定
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+## 🧹 整理メモ（2025-09 現在）
+
+- `reference/` はアプリ本体からの参照が見つからず、削除候補です（docs/ と README 以外からの参照なし）。
+- `public/` 直下の `next.svg`, `vercel.svg`, `window.svg`, `globe.svg`, `file.svg`, `fallback-*.js` はコード参照が見当たらず、未使用の可能性が高いです。必要に応じて削除してください。
+- `public/sw.js` と `public/workbox-*.js` は next-pwa による生成物です。ビルドごとに再生成されます。
 
 ## 🤝 コントリビューション
 

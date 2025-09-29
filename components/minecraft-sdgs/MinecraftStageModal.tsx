@@ -141,13 +141,13 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
       case 'sdgs_video':
         return { title: 'SDGsワークを見る', icon: <Book className="w-6 h-6" />, description: 'SDGsについて学ぼう！', url: stage.sdgsWorkUrl, intent: 'sdgs_video' as const }
       case 'sdgs_work':
-        return { title: 'SDGsワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: '学んだ内容を実践しよう！', url: stage.sdgsFormUrl, intent: 'sdgs_work' as const }
+        return { title: 'SDGsワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: 'SDGsの解決案を建築しよう！', url: stage.sdgsFormUrl, intent: 'sdgs_work' as const }
       case 'programming_video':
         return { title: 'マイクラワークを見る', icon: <Code className="w-6 h-6" />, description: 'プログラミングスキルを身につけよう！', url: stage.programmingWorkUrl, intent: 'programming_video' as const }
       case 'programming_work':
-        return { title: 'マイクラワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: 'コードを書いて解決策を作ろう！', url: stage.programmingFormUrl, intent: 'programming_work' as const }
+        return { title: 'マイクラワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: 'プログラミング＆マイクラ建築を提出しよう！', url: stage.programmingFormUrl, intent: 'programming_work' as const }
       case 'message':
-        return { title: 'みんなの作品', icon: <Trophy className="w-6 h-6" />, description: '完了メッセージを確認しよう！', url: null, intent: undefined }
+        return { title: 'ステージクリア', icon: <Trophy className="w-6 h-6" />, description: '完了メッセージを確認しよう！', url: null, intent: undefined }
       default:
         return { title: '', icon: null, description: '', url: null, intent: undefined }
     }
@@ -163,12 +163,6 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
             <span className="text-3xl">{stage.fallbackIcon}</span>
             <div>
               <h2 className="text-xl font-bold text-white">{stage.title}</h2>
-              <p className="text-sm text-gray-200">{stage.description}</p>
-              {stage.sdgsGoal && stage.sdgsGoal > 0 && (
-                <span className="inline-block bg-minecraft-emerald text-white text-xs px-2 py-1 rounded mt-1">
-                  SDG {stage.sdgsGoal}
-                </span>
-              )}
             </div>
           </div>
           <button onClick={onClose} className="minecraft-close-button" disabled={isLoading}>
@@ -184,7 +178,10 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
             const isCompleted =
               ['sdgs_video', 'sdgs_work', 'programming_video', 'programming_work', 'message'].indexOf(currentStep) > i ||
               (stage.status === 'completed' && s === 'message')
-            const isClickable = stage.status === 'completed' // 完了済みステージでは全ステップクリック可能
+            // 進行中ステージでも「前のステップ」へは戻れるようクリック可能
+            const activeIndex = ['sdgs_video', 'sdgs_work', 'programming_video', 'programming_work', 'message'].indexOf(currentStep)
+            // 完了済みのステップはいつでも振り返れる（アクティブ以前は常に可、完了後も可）
+            const isClickable = i <= activeIndex || stage.status === 'completed'
             
             return (
               <div 
@@ -230,12 +227,28 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
               </div>
             ) : (
               <div className="minecraft-action-content">
-                {stepInfo.url ? (
+                {stepInfo.url !== undefined ? (
                   <div className="action-buttons">
+                    {/* SDGsワークに挑む: 発表ステージダウンロード（未設定時はdisabledで表示） */}
+                    {currentStep === 'sdgs_work' && (
+                      <button
+                        type="button"
+                        onClick={() => stage.sdgsStageDownloadUrl && window.open(stage.sdgsStageDownloadUrl!, '_blank', 'noopener,noreferrer')}
+                        className="minecraft-action-button primary"
+                        aria-label="発表ステージをダウンロード"
+                        disabled={!stage.sdgsStageDownloadUrl}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        発表ステージダウンロード
+                      </button>
+                    )}
+
+                    {/* メインCTA（動画/フォーム） */}
                     <button
                       type="button"
-                      onClick={() => openExternal(stepInfo.url!, stepInfo.intent!)}
+                      onClick={() => stepInfo.url && openExternal(stepInfo.url!, stepInfo.intent!)}
                       className="minecraft-action-button primary"
+                      disabled={!stepInfo.url}
                     >
                       <ExternalLink className="w-4 h-4" />
                       {currentStep.includes('video') ? '動画を見る' : 'フォームに回答する'}
@@ -254,17 +267,29 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
                       </button>
                     )}
 
-                    {currentStep === 'programming_work' && stage.programmingSupportPrintUrl && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          window.open(stage.programmingSupportPrintUrl!, '_blank', 'noopener,noreferrer')
-                        }}
-                        className="minecraft-action-button support"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        補助プリント
-                      </button>
+                    {/* マイクラワークに挑む: CTA順序 1) AP道場 2) 補助プリント 3) フォーム */}
+                    {currentStep === 'programming_work' && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => stage.programmingApDojoUrl && window.open(stage.programmingApDojoUrl!, '_blank', 'noopener,noreferrer')}
+                          className="minecraft-action-button support"
+                          aria-label="AP道場をダウンロード"
+                          disabled={!stage.programmingApDojoUrl}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          AP道場ダウンロード
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => stage.programmingSupportPrintUrl && window.open(stage.programmingSupportPrintUrl!, '_blank', 'noopener,noreferrer')}
+                          className="minecraft-action-button support"
+                          disabled={!stage.programmingSupportPrintUrl}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          補助プリント
+                        </button>
+                      </>
                     )}
 
                     {stage.status !== 'completed' && (

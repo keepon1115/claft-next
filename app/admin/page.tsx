@@ -203,46 +203,38 @@ export default function AdminPage() {
   // 管理者権限確認済み - AdminDashboardを表示
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* 管理画面専用ヘッダー */}
-      <div className="bg-slate-800 text-white px-6 py-4 flex justify-between items-center shadow-lg z-50">
-        <h1 className="text-2xl font-semibold">🛠️ CLAFT管理画面</h1>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-200">{userInfo?.nickname || userInfo?.email}</span>
-          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">管理者</span>
-          <button
-            onClick={async () => {
-              const result = await logout()
-              if (result.success) {
-                router.push('/')
-              } else {
-                alert('ログアウトに失敗しました')
-              }
-            }}
-            className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-600 transition-colors"
-          >
-            ログアウト
-          </button>
+      {/* 管理画面専用ヘッダー（コンテンツ側に配置。サイドバーはレイアウトに委譲） */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="px-6 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-gray-900">🛠️ CLAFT管理画面</h1>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-gray-700">{userInfo?.nickname || userInfo?.email}</span>
+            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">管理者</span>
+            <button
+              onClick={async () => {
+                const result = await logout()
+                if (result.success) {
+                  router.push('/')
+                } else {
+                  alert('ログアウトに失敗しました')
+                }
+              }}
+              className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700 transition-colors"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
       </div>
-      
-      <div className="flex flex-1">
-        {/* 管理画面サイドバー */}
-        <nav className="w-64 bg-slate-700 py-5 shadow-xl">
-          <ul className="space-y-1">
-            <li><Link href="/admin" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">📊 ダッシュボード</Link></li>
-            <li><Link href="/admin/users" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">👥 ユーザー管理</Link></li>
-            <li><Link href="/admin/quests" className="block px-6 py-4 text-gray-200 hover:bg-slate-600 hover:border-l-4 hover:border-blue-400 transition-all">🗺️ クエスト管理</Link></li>
-            <li><Link href="/admin/settings" className="block px-6 py-4 text-gray-200 hover:border-l-4 hover:border-blue-400 transition-all">⚙️ システム設定</Link></li>
-          </ul>
-        </nav>
-        
-        {/* メインコンテンツエリア */}
-        <main className="flex-1 bg-white m-4 rounded-lg shadow-lg overflow-hidden">
-          <div className="p-8 min-h-full">
+
+      {/* メインコンテンツ */}
+      <main className="p-4">
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6">
             <AdminDashboard />
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   )
 } 

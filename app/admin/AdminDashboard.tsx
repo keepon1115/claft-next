@@ -125,34 +125,31 @@ function StatCard({
   suffix?: string
   onClick?: () => void
 }) {
-  const colorClasses = {
-    primary: 'from-blue-500 to-blue-600 shadow-blue-200',
-    success: 'from-green-500 to-green-600 shadow-green-200',
-    warning: 'from-orange-500 to-orange-600 shadow-orange-200',
-    accent: 'from-purple-600 to-indigo-700 shadow-purple-300'
-  }
+  const iconColor = {
+    primary: 'text-blue-600',
+    success: 'text-green-600',
+    warning: 'text-orange-600',
+    accent: 'text-purple-600'
+  } as const
 
   return (
     <div 
-      className={`
-        bg-gradient-to-r ${colorClasses[color]} text-white p-6 rounded-xl shadow-lg 
-        ${onClick ? 'cursor-pointer hover:shadow-xl transition-all duration-300' : ''}
-      `}
+      className={`bg-white text-slate-900 p-6 rounded-xl shadow-md border ${onClick ? 'cursor-pointer hover:shadow-lg transition-all duration-300' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-white text-sm drop-shadow-sm mb-1">{title}</p>
+          <p className="text-slate-600 text-sm mb-1">{title}</p>
           {loading ? (
-            <div className="w-20 h-8 bg-white/30 rounded animate-pulse" />
+            <div className="w-24 h-7 bg-slate-100 rounded animate-pulse" />
           ) : (
-            <p className="text-3xl font-extrabold text-white drop-shadow">
+            <p className="text-3xl font-extrabold">
               {value.toLocaleString()}{suffix}
             </p>
           )}
         </div>
-        <div className="text-white">
-          <Icon size={32} className="opacity-90 drop-shadow" />
+        <div className={iconColor[color]}>
+          <Icon size={32} />
         </div>
       </div>
     </div>
@@ -179,11 +176,11 @@ function QuickActionButton({
   disabled?: boolean
 }) {
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-    secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
-    success: 'bg-green-600 hover:bg-green-700 text-white',
-    warning: 'bg-orange-600 hover:bg-orange-700 text-white'
-  }
+    primary: 'border-blue-500 text-slate-800 hover:bg-blue-50',
+    secondary: 'border-gray-400 text-slate-800 hover:bg-gray-50',
+    success: 'border-green-500 text-slate-800 hover:bg-green-50',
+    warning: 'border-orange-500 text-slate-800 hover:bg-orange-50'
+  } as const
 
   return (
     <button
@@ -191,8 +188,8 @@ function QuickActionButton({
       disabled={disabled}
       className={`
         relative flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all
-        ${variants[variant]}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}
+        bg-white border ${variants[variant]}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
       `}
     >
       <Icon size={20} />
@@ -394,9 +391,7 @@ export default function AdminDashboard() {
   // タブ定義
   const tabs: TabData[] = [
     { id: 'overview', label: '概要', icon: BarChart3 },
-    { id: 'approvals', label: 'クエスト承認', icon: CheckCircle, badge: stats.pendingApprovals },
     { id: 'users', label: 'ユーザー管理', icon: Users },
-    { id: 'history', label: '承認履歴', icon: History },
     { id: 'settings', label: 'システム設定', icon: Settings }
   ]
 
@@ -480,7 +475,7 @@ export default function AdminDashboard() {
 
   const loadUserData = useCallback(async () => {
     try {
-      // users_profileとuser_statsを別々に取得
+      // users_profile と user_stats, quest_progress 集計を取得
       const [usersResponse, statsResponse] = await Promise.all([
         supabase
           .from('users_profile')
@@ -497,15 +492,31 @@ export default function AdminDashboard() {
       // データを結合
       const users = usersResponse.data || []
       const stats = statsResponse.data || []
-      
+
+      // quest_progress から完了数を集計
+      let completedCounts: Record<string, number> = {}
+      if (users.length > 0) {
+        const { data: progressRows } = await supabase
+          .from('quest_progress')
+          .select('user_id')
+          .eq('status', 'completed')
+          .in('user_id', users.map(u => u.id))
+
+        completedCounts = (progressRows || []).reduce((acc: Record<string, number>, row: any) => {
+          acc[row.user_id] = (acc[row.user_id] || 0) + 1
+          return acc
+        }, {})
+      }
+
       const formattedData = users.map(user => {
         const userStats = stats.find(stat => stat.user_id === user.id)
+        const completed = completedCounts[user.id] ?? userStats?.quest_clear_count ?? 0
         return {
           id: user.id,
           email: user.email,
           nickname: user.nickname,
           created_at: user.created_at,
-          quest_clear_count: userStats?.quest_clear_count || 0,
+          quest_clear_count: completed,
           total_exp: userStats?.total_exp || 0,
           last_login_date: userStats?.last_login_date || null
         }
@@ -579,30 +590,17 @@ export default function AdminDashboard() {
   // クイックアクション
   const quickActions = [
     {
-      icon: CheckCircle,
-      label: '承認待ちクエスト',
-      onClick: () => setActiveTab('approvals'),
-      variant: 'success' as const,
-      badge: stats.pendingApprovals
-    },
-    {
       icon: Users,
       label: 'ユーザー管理',
       onClick: () => setActiveTab('users'),
       variant: 'primary' as const
     },
     {
-      icon: History,
-      label: '承認履歴',
-      onClick: () => setActiveTab('history'),
-      variant: 'secondary' as const
-    },
-    {
       icon: HelpCircle,
       label: '使い方ガイド',
       onClick: () => setShowGuide(true),
       variant: 'warning' as const
-    }
+    },
   ]
 
   if (loading) {
@@ -628,13 +626,13 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 text-slate-800">
       {/* ヘッダー */}
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-gray-900">🛠️ CLAFT 管理画面</h1>
+              <h1 className="text-xl font-bold text-slate-900">🛠️ CLAFT 管理画面</h1>
               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                 Admin Dashboard v2.0
               </span>
@@ -662,7 +660,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 統計カード */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="総ユーザー数"
             value={stats.totalUsers}
@@ -672,20 +670,12 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('users')}
           />
           <StatCard
-            title="承認待ちクエスト"
-            value={stats.pendingApprovals}
-            icon={Clock}
-            color="warning"
-            loading={statsLoading}
-            onClick={() => setActiveTab('approvals')}
-          />
-          <StatCard
             title="完了クエスト"
             value={stats.completedQuests}
             icon={CheckCircle}
             color="success"
             loading={statsLoading}
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab('overview')}
           />
           <StatCard
             title="平均進捗率"
@@ -698,9 +688,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* クイックアクション */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 text-slate-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">⚡ クイックアクション</h2>
+            <h2 className="text-lg font-semibold text-slate-900">⚡ クイックアクション</h2>
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -799,26 +789,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'approvals' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">✅ クエスト承認管理</h2>
-                <p className="text-gray-600">ユーザーから提出されたクエストの承認・却下を行います。</p>
-              </div>
-              
-              <FilterSection
-                initialFilters={filters}
-                onFilterChange={setFilters}
-                loading={statsLoading}
-              />
-              
-              <ApprovalTable
-                filters={filters}
-                onApprovalChange={loadAllData}
-                onNotification={showNotification}
-              />
-            </div>
-          )}
+          {/* 承認タブは不要のため削除 */}
 
           {activeTab === 'users' && (
             <div className="p-6">
@@ -902,88 +873,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'history' && (
-            <div className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">📋 承認履歴</h2>
-                <p className="text-gray-600">過去の承認・却下履歴を確認できます。</p>
-              </div>
-              
-              {approvalHistory.length === 0 ? (
-                <div className="text-center py-12">
-                  <History className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">承認履歴なし</h3>
-                  <p className="mt-1 text-sm text-gray-500">まだ承認履歴がありません。</p>
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      onClick={loadApprovalHistory}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <RefreshCw className="-ml-1 mr-2 h-4 w-4" />
-                      再読み込み
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          ユーザー
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          ステージ
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          状態
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          承認日時
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {approvalHistory.map(item => (
-                        <tr key={item.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {item.users_profile?.nickname || 'ユーザー名なし'}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {item.users_profile?.email}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              ステージ {item.stage_id}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              承認済み
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.approved_at 
-                              ? new Date(item.approved_at).toLocaleString('ja-JP')
-                              : (
-                                <span className="text-gray-500">未設定</span>
-                              )
-                            }
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+          {/* 承認履歴は承認機能廃止に合わせて非表示 */}
 
           {activeTab === 'settings' && (
             <div className="p-6">

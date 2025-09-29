@@ -75,7 +75,7 @@ export default function YononakaPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {/* ちょこっとYononaka */}
-            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px] flex flex-col">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-lg animate-float">
                   <span className="text-2xl">☺</span>
@@ -86,7 +86,7 @@ export default function YononakaPage() {
                 かんたんなお題から、正解がひとつでない問いに向き合いましょう！
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <a
                   href="https://forms.gle/B9t8HCuePtpzUBvd8"
                   target="_blank"
@@ -103,23 +103,6 @@ export default function YononakaPage() {
                 >
                 Yo99 外国で暮らすってどんな感じ？
                 </a>
-                <a
-                  href="https://forms.gle/tzm3yM8Be5Fs98q58"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                準備中
-                </a>
-                <a
-                  href="https://forms.gle/EyQ74Mya3UWg4Edi9"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-purple-200 to-pink-200 border-2 border-purple-300 rounded-xl p-4 font-bold text-amber-900 relative overflow-hidden cursor-pointer hover:translate-x-1 hover:scale-105 transition-all duration-300"
-                >
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl opacity-50">⭐</span>
-                  【マンスリー】街で見つけた面白い看板をさがせ！
-                </a>
               </div>
 
               <a href="https://www.canva.com/design/DAGsulhyDNA/cmqZ6G-eGMVs7ABWtFKskg/edit?utm_content=DAGsulhyDNA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer" className="group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
@@ -129,7 +112,7 @@ export default function YononakaPage() {
             </section>
 
             {/* Yononakaワーク */}
-            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px]">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-float" style={{animationDelay: '0.5s'}}>
                   <span className="text-2xl">🌍</span>
@@ -140,27 +123,32 @@ export default function YononakaPage() {
                 オンラインで集まり、参加者同士がお題に対して話し合う、対話ワーク。
               </p>
 
-              <div className="space-y-6">
-                <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">英語へのはじめの一歩</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch flex-grow">
+                <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">CLAFTミーティング</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 9月14日（日） 20時~21時</p>
+                    <p>📅 10月5日(日) 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/iDrngUejW3Laa3q8A" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    参加する
+                  <a href="https://us02web.zoom.us/j/82137245892?pwd=ix0AqWKrcQ759hGfn5b2zgjC7qjEwm.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    ZOOMに入る
                   </a>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">楽しいのなぞ</h3>
+                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">世界が集結、万博の魅力！</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 期間: 9月24日（水） 20時~21時</p>
+                    <p>📅 10月14日(火) 20時~21時</p>
                   </div>
-                  <a href="https://forms.gle/iDrngUejW3Laa3q8A" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    参加する
+                  <a href="https://us02web.zoom.us/j/85330585563?pwd=UVUGAqqCz3OmQAdPbEF840axleQOKk.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    ZOOMに入る
                   </a>
                 </div>
               </div>
+
+              <a href="https://forms.gle/syCwTNqCbH5ZXs9f7" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <span className="relative z-10">10月の参加申し込みはこちら</span>
+                <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+              </a>
             </section>
 
             {/* 振り返り動画セクション */}

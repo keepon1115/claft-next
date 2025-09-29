@@ -228,6 +228,19 @@ export const useUserStore = create<UserState>()(
               })
               return
             }
+            
+            // 直近のキャッシュが新鮮なら、スピナーを出さずにバックグラウンド更新
+            const { lastSyncTime, extendedStats, isInitialized } = get()
+            const sameUser = extendedStats?.userId === userId
+            const lastSyncMs = lastSyncTime ? Date.parse(lastSyncTime) : 0
+            const isFresh = lastSyncMs && (Date.now() - lastSyncMs) < 3 * 60 * 1000 // 3分
+
+            if (isInitialized && sameUser && isFresh) {
+              // 既存表示を維持しつつ、最新化だけ行う
+              get().refreshProfile(userId)
+              return
+            }
+
             set((state) => {
               state.isLoading = true
               state.error = null
@@ -235,35 +248,37 @@ export const useUserStore = create<UserState>()(
 
             try {
               console.log('🔧 userStore初期化開始:', userId)
-              
-              // Supabaseクライアント作成
+
               const supabase = createBrowserSupabaseClient()
-              
-              // プロフィールデータを取得
-              const { data: profileData, error: profileError } = await supabase
-                .from('users_profile')
-                .select('*')
-                .eq('id', userId)
-                .maybeSingle()
+
+              // プロフィールと統計を並列取得
+              const [profileResult, statsResult] = await Promise.all([
+                supabase
+                  .from('users_profile')
+                  .select('*')
+                  .eq('id', userId)
+                  .maybeSingle(),
+                supabase
+                  .from('user_stats')
+                  .select('*')
+                  .eq('user_id', userId)
+                  .maybeSingle()
+              ])
+
+              const profileError = (profileResult as any).error
+              const statsError = (statsResult as any).error
+              const profileData = (profileResult as any).data
+              const statsData = (statsResult as any).data
 
               if (profileError && profileError.code !== 'PGRST116') {
                 console.error('❌ プロフィール取得エラー:', profileError)
                 throw profileError
               }
-
-              // 統計データを取得
-              const { data: statsData, error: statsError } = await supabase
-                .from('user_stats')
-                .select('*')
-                .eq('user_id', userId)
-                .maybeSingle()
-
               if (statsError && statsError.code !== 'PGRST116') {
                 console.error('❌ 統計データ取得エラー:', statsError)
                 throw statsError
               }
 
-              // プロフィールデータを変換
               const profile: ProfileData = profileData ? {
                 nickname: profileData.nickname || defaultProfileData.nickname,
                 character: profileData.character_type || defaultProfileData.character,
@@ -278,7 +293,6 @@ export const useUserStore = create<UserState>()(
                 profileCompletion: profileData.profile_completion || 0,
               } : { ...defaultProfileData }
 
-              // 統計データを変換
               const stats: ExtendedUserStats = statsData ? {
                 userId,
                 loginCount: statsData.login_count || 0,
@@ -299,7 +313,6 @@ export const useUserStore = create<UserState>()(
                 updatedAt: statsData.updated_at || new Date().toISOString(),
               } : { ...defaultExtendedStats, userId }
 
-              // 状態を更新
               set((state) => {
                 state.profileData = profile
                 state.extendedStats = stats
@@ -326,14 +339,13 @@ export const useUserStore = create<UserState>()(
                 state.lastSyncTime = new Date().toISOString()
                 state.error = null
               })
-              
+
               console.log('✅ userStore: 初期化完了')
-              
+
             } catch (error) {
               console.error('❌ userStore初期化エラー:', error)
               set((state) => {
                 state.error = 'userStore初期化に失敗しました'
-                // エラーの場合でもデフォルトデータで初期化
                 state.profileData = { ...defaultProfileData }
                 state.extendedStats = { ...defaultExtendedStats, userId }
                 state.achievements = predefinedAchievements.map(achievement => ({ ...achievement }))

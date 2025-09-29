@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { Compass, Star, Trophy, Zap, Target, FileText } from 'lucide-react'
+import { Compass, Star, Trophy, Zap, Target, FileText, Users, Route, X } from 'lucide-react'
 import MinecraftStageNode from './MinecraftStageNode'
 import WorldDataModal from './WorldDataModal'
 import type { MinecraftStageProgress } from '@/stores/minecraftSdgsStore'
@@ -22,6 +22,8 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
   const animationContainerRef = useRef<HTMLDivElement>(null)
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
   const [isWorldDataModalOpen, setIsWorldDataModalOpen] = useState(false)
+  const [isWorksModalOpen, setIsWorksModalOpen] = useState(false)
+  const [isFlowModalOpen, setIsFlowModalOpen] = useState(false)
 
   const handleImageError = (stageId: number) => {
     setImageErrors(prev => ({ ...prev, [stageId]: true }))
@@ -65,25 +67,61 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
     return () => clearInterval(interval)
   }, [])
 
+  // ESCキーで各モーダルを閉じる
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isWorldDataModalOpen) setIsWorldDataModalOpen(false)
+        if (isWorksModalOpen) setIsWorksModalOpen(false)
+        if (isFlowModalOpen) setIsFlowModalOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isWorldDataModalOpen, isWorksModalOpen, isFlowModalOpen])
+
   return (
     <>
       {/* マイクラ風アニメーション背景 */}
       <div ref={animationContainerRef} className="minecraft-animations-container" />
       
       <div className="minecraft-map">
-        {/* 簡素化されたヘッダー統計 */}
-        <div className="minecraft-header-stats">
-          <div className="minecraft-stat-card">
-            <Trophy className="w-5 h-5 text-minecraft-gold" />
+        {/* ヘッダー下の機能ボタン */}
+        <div className="minecraft-header-stats" aria-label="機能メニュー">
+          {/* 進捗（元の左側を残しつつ、他ボタンと同デザインに統一） */}
+          <div className="minecraft-feature-button brown" role="button" aria-label="進捗" aria-live="polite">
+            <Trophy className="w-5 h-5" />
             <span>進捗: {statistics.completedStages}/{statistics.totalStages}</span>
           </div>
-          <button 
-            onClick={() => setIsWorldDataModalOpen(true)}
-            className="minecraft-world-data-button"
-          >
-            <FileText className="w-5 h-5 text-white" />
-            <span>ワールドデータについて</span>
-          </button>
+          <div className="minecraft-feature-buttons" role="group" aria-label="マイクラ機能">
+            <button 
+              onClick={() => setIsFlowModalOpen(true)}
+              className="minecraft-feature-button yellow"
+              role="button"
+              aria-label="学習の流れ"
+            >
+              <Route className="w-5 h-5" />
+              <span>学習の流れ</span>
+            </button>
+            <button 
+              onClick={() => setIsWorksModalOpen(true)}
+              className="minecraft-feature-button pink"
+              role="button"
+              aria-label="みんなの作品"
+            >
+              <Users className="w-5 h-5" />
+              <span>みんなの作品</span>
+            </button>
+            <button 
+              onClick={() => setIsWorldDataModalOpen(true)}
+              className="minecraft-feature-button green"
+              role="button"
+              aria-label="ワールドデータについて"
+            >
+              <FileText className="w-5 h-5" />
+              <span>ワールドデータについて</span>
+            </button>
+          </div>
         </div>
 
         {/* マイクラSDGsマップ */}
@@ -117,6 +155,49 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
           isOpen={isWorldDataModalOpen}
           onClose={() => setIsWorldDataModalOpen(false)}
         />
+        {isWorksModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="works-modal-title" onClick={(e) => { if (e.target === e.currentTarget) setIsWorksModalOpen(false) }}>
+            <div className="relative bg-white minecraft-modal max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="minecraft-modal-header">
+                <h2 id="works-modal-title" className="text-2xl font-bold text-minecraft-brown flex items-center gap-2">🎨 みんなの作品</h2>
+                <button onClick={() => setIsWorksModalOpen(false)} className="minecraft-close-button" aria-label="閉じる"><X size={24} /></button>
+              </div>
+              <div className="minecraft-modal-content">
+                <p className="text-minecraft-brown mb-3">ここでは発表ステージで創ったみんなの作品ワールドが見れるぞ！</p>
+                <p className="text-minecraft-brown mb-6">みんなの作品を参考にスキルアップを目指そう！</p>
+                <a
+                  className="works-cta-btn"
+                  href="https://www.canva.com/design/DAG0UePXGZY/tcddPlbN4kPAPYc1xE2lfw/edit?utm_content=DAG0UePXGZY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="みんなの作品を見る"
+                >
+                  みんなの作品を見る
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+        {isFlowModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="flow-modal-title" onClick={(e) => { if (e.target === e.currentTarget) setIsFlowModalOpen(false) }}>
+            <div className="relative bg-white minecraft-modal max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="minecraft-modal-header">
+                <h2 id="flow-modal-title" className="text-2xl font-bold text-minecraft-brown flex items-center gap-2">🧭 学習の流れ</h2>
+                <button onClick={() => setIsFlowModalOpen(false)} className="minecraft-close-button" aria-label="閉じる"><X size={24} /></button>
+              </div>
+              <div className="minecraft-modal-content whitespace-pre-wrap text-sm leading-6 text-minecraft-brown">
+{`①SDGsワーク
+まずはテーマ動画を見よう！補助プリントを参考にしながらフォームに回答しよう！
+発表ステージをダウンロードしてワークの解決案をマインクラフトの世界で表現するぞ！
+しかし、いきなり建築するのではなく、プリントの地図で建築計画を立てて建築をはじめよう！
+
+②マイクラワーク
+まずはテーマ動画を見よう！AP道場をダウンロードして補助プリントを参考にプログラミングにチャレンジ！
+できたプログラミングと発表ステージで作ったワールドをフォームに回答できたら、ミッション完了だ！`}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* マイクラパーティクルアニメーション用CSS */}
@@ -191,7 +272,7 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
           }
         }
 
-        /* 簡素化されたヘッダー統計 */
+        /* 旧ヘッダーボタンスタイルは残す（他ページ互換）。本ページでは.feature-buttonsを使用 */
         .minecraft-header-stats {
           display: flex;
           justify-content: space-between;
@@ -247,6 +328,24 @@ export default function MinecraftMap({ stages, statistics, onStageClick }: Minec
             0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        /* 作品モーダルCTA（強調） */
+        .works-cta-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          padding: 14px 18px;
+          font-weight: 800;
+          color: #fff;
+          background: linear-gradient(135deg, var(--btn-pink) 0%, #FF2E7E 100%);
+          border: 3px solid var(--minecraft-brown);
+          box-shadow: inset 2px 2px 0 rgba(255,255,255,.3), inset -2px -2px 0 rgba(0,0,0,.25), 4px 4px 0 rgba(0,0,0,.25);
+          border-radius: 10px;
+          text-decoration: none;
+          transition: transform .1s ease, box-shadow .1s ease;
+        }
+        .works-cta-btn:hover { transform: translate(-1px, -1px); box-shadow: inset 2px 2px 0 rgba(255,255,255,.35), inset -2px -2px 0 rgba(0,0,0,.3), 6px 6px 0 rgba(0,0,0,.28); }
+        .works-cta-btn:active { transform: translate(0,0); box-shadow: inset 2px 2px 0 rgba(0,0,0,.3), inset -2px -2px 0 rgba(255,255,255,.1), 2px 2px 0 rgba(0,0,0,.2); }
 
       `}</style>
     </>

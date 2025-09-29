@@ -57,6 +57,7 @@ export default function MinecraftStageNode({
 
   const statusClass = getStatusClass(stage.status)
   const isClickable = stage.status !== 'locked' // 完了済みステージもクリック可能にする
+  const defaultIconPath = `/assets/minecraft/stages/stage-${String(stage.stageId).padStart(2, '0')}.png`
 
   return (
     <div 
@@ -64,12 +65,7 @@ export default function MinecraftStageNode({
       onClick={isClickable ? onClick : undefined}
       data-stage={stage.stageId}
     >
-      {/* SDGs目標バッジ */}
-      {stage.sdgsGoal && stage.sdgsGoal > 0 && (
-        <div className="minecraft-sdgs-badge">
-          {getSdgsText(stage.sdgsGoal)}
-        </div>
-      )}
+      {/* 仕様更新により左上のSDGsバッジは非表示（DOM自体を出力しない） */}
 
       {/* クリア完了バッジ */}
       {stage.status === 'completed' && (
@@ -83,18 +79,34 @@ export default function MinecraftStageNode({
       
       {/* ステージアイコン */}
       <div className="minecraft-stage-icon">
-        {imageError || !stage.iconUrl ? (
-          <span className="stage-emoji">{stage.fallbackIcon}</span>
-        ) : (
-          <Image
-            src={stage.iconUrl}
-            alt={`${stage.title} アイコン`}
-            width={80}
-            height={80}
-            className="stage-image pixel-art"
-            onError={onImageError}
-          />
-        )}
+        {(() => {
+          // 優先度: 明示的iconUrl > 規定アセットパス > 絵文字フォールバック
+          if (!imageError && stage.iconUrl) {
+            return (
+              <Image
+                src={stage.iconUrl}
+                alt={`${stage.title} アイコン`}
+                width={80}
+                height={80}
+                className="stage-image pixel-art"
+                onError={onImageError}
+              />
+            )
+          }
+          if (!imageError && !stage.iconUrl) {
+            return (
+              <Image
+                src={defaultIconPath}
+                alt={`${stage.title} アイコン`}
+                width={80}
+                height={80}
+                className="stage-image pixel-art"
+                onError={onImageError}
+              />
+            )
+          }
+          return <span className="stage-emoji">{stage.fallbackIcon}</span>
+        })()}
         
         {/* ブロック風エフェクト */}
         {stage.status === 'completed' && (
@@ -106,7 +118,7 @@ export default function MinecraftStageNode({
       <div className="minecraft-stage-info">
         <h3 className="minecraft-stage-title">{stage.title}</h3>
         {stage.stageId >= 3 && (
-          <div className="minecraft-limited-badge">※マイクラコース限定</div>
+          <div className="minecraft-limited-badge">マイクラコース限定</div>
         )}
       </div>
 
@@ -226,14 +238,14 @@ export default function MinecraftStageNode({
 
         .minecraft-limited-badge {
           font-size: 10px;
-          color: #FF6B35;
-          font-weight: bold;
+          color: #FFFFFF;
+          font-weight: 600;
           text-align: center;
           margin-top: 4px;
-          background: rgba(255, 107, 53, 0.1);
-          border: 1px solid rgba(255, 107, 53, 0.3);
+          background: var(--badge-orange, #FF7A00);
+          border: 1px solid rgba(0,0,0,0.08);
           padding: 2px 6px;
-          border-radius: 4px;
+          border-radius: 6px;
           white-space: nowrap;
         }
 

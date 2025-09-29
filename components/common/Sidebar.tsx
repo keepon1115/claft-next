@@ -183,21 +183,83 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
             </li>
             
             {isAuthenticated && isAdmin && (
-              <li>
-                <Link 
-                  href="/admin" 
-                  className="
-                    flex items-center py-[15px] px-[25px] text-white/80 no-underline
-                    transition-all duration-300 ease-in-out font-medium
-                    hover:bg-white/10 hover:text-white hover:pl-[35px]
-                    focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
-                  "
-                  onClick={onClose}
-                >
-                  <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
-                  <span className="text-base">管理画面</span>
-                </Link>
-              </li>
+              <>
+                <li className="mt-2 px-[25px] py-[8px] text-xs uppercase tracking-wide text-white/50">
+                  管理セクション
+                </li>
+                <li>
+                  <Link 
+                    href="/admin/minecraft-sdgs" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      hover:text-white hover:bg-white/10 transition-colors duration-150
+                    "
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">🧱</i>
+                    <span className="text-base">マイクラSDGs管理</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/admin" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      transition-all duration-300 ease-in-out font-medium
+                      hover:bg-white/10 hover:text-white hover:pl-[35px]
+                      focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                    "
+                    onClick={onClose}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">📊</i>
+                    <span className="text-base">ダッシュボード</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/admin/users" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      transition-all duration-300 ease-in-out font-medium
+                      hover:bg白/10 hover:text-white hover:pl-[35px]
+                      focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                    "
+                    onClick={onClose}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">👥</i>
+                    <span className="text-base">ユーザー管理</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/admin/quests" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      transition-all duration-300 ease-in-out font-medium
+                      hover:bg-white/10 hover:text-white hover:pl-[35px]
+                      focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                    "
+                    onClick={onClose}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">🗺️</i>
+                    <span className="text-base">クエスト管理</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/admin/settings" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      transition-all duration-300 ease-in-out font-medium
+                      hover:bg-white/10 hover:text-white hover:pl-[35px]
+                      focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                    "
+                    onClick={onClose}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
+                    <span className="text-base">システム設定</span>
+                  </Link>
+                </li>
+              </>
             )}
             
             {/* 「認証」ページは不要なため削除 */}

@@ -123,11 +123,25 @@ export default function UsersPage() {
 
       setTotalUsers(count || 0)
 
-      // ユーザー統計情報を取得
+      // ユーザー統計情報を取得（quest_progressの真値集計を優先）
       const userIds = usersData?.map(u => u.id) || []
       let userStats: any[] = []
+      let completedCounts: Record<string, number> = {}
       
       if (userIds.length > 0) {
+        // 1) quest_progress から完了数を集計
+        const { data: progressRows } = await supabase
+          .from('quest_progress')
+          .select('user_id')
+          .eq('status', 'completed')
+          .in('user_id', userIds)
+
+        completedCounts = (progressRows || []).reduce((acc: Record<string, number>, row: any) => {
+          acc[row.user_id] = (acc[row.user_id] || 0) + 1
+          return acc
+        }, {})
+
+        // 2) user_stats で補完（XP/ログイン回数、最終ログイン）
         const { data: statsData } = await supabase
           .from('user_stats')
           .select('user_id, quest_clear_count, total_exp, last_login_date, login_count')
@@ -139,9 +153,10 @@ export default function UsersPage() {
       // データを結合
       const combinedUsers = usersData?.map(user => {
         const stats = userStats.find(s => s.user_id === user.id)
+        const completed = completedCounts[user.id] ?? stats?.quest_clear_count ?? 0
         return {
           ...user,
-          quest_clear_count: stats?.quest_clear_count || 0,
+          quest_clear_count: completed,
           total_exp: stats?.total_exp || 0,
           last_login_date: stats?.last_login_date,
           login_count: stats?.login_count || 0

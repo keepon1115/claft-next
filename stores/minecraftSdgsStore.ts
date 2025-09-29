@@ -35,9 +35,11 @@ export interface MinecraftStageProgress {
   sdgsWorkUrl?: string // SDGsワーク動画URL
   sdgsFormUrl?: string // SDGsワーク回答フォームURL
   sdgsSupportPrintUrl?: string // SDGsワーク補助プリントURL
+  sdgsStageDownloadUrl?: string // 発表ステージダウンロードURL（新規）
   programmingWorkUrl?: string // マイクラワーク動画URL
   programmingFormUrl?: string // マイクラワーク回答フォームURL
   programmingSupportPrintUrl?: string // マイクラワーク補助プリントURL
+  programmingApDojoUrl?: string // AP道場ダウンロードURL（新規）
   message: string
   iconImage?: string
   iconUrl?: string
@@ -659,9 +661,11 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
                 sdgsWorkUrl: stage.id === 1 ? defaults.sdgsWorkUrl : (stage.sdgs_work_video_url || defaults.sdgsWorkUrl),
                 sdgsFormUrl: stage.id === 1 ? defaults.sdgsFormUrl : (stage.sdgs_form_url || defaults.sdgsFormUrl),
                 sdgsSupportPrintUrl: (stage as any).sdgs_support_print_url || defaults.sdgsSupportPrintUrl,
+                sdgsStageDownloadUrl: (stage as any).sdgs_stage_download_url || defaults.sdgsStageDownloadUrl,
                 programmingWorkUrl: stage.id === 1 ? defaults.programmingWorkUrl : (stage.programming_work_video_url || defaults.programmingWorkUrl),
                 programmingFormUrl: stage.id === 1 ? defaults.programmingFormUrl : (stage.programming_form_url || defaults.programmingFormUrl),
                 programmingSupportPrintUrl: (stage as any).programming_support_print_url || defaults.programmingSupportPrintUrl,
+                programmingApDojoUrl: (stage as any).programming_ap_dojo_url || defaults.programmingApDojoUrl,
                 iconUrl: stage.icon_url || defaults.iconUrl,
                 fallbackIcon: stage.fallback_icon || defaults.fallbackIcon,
                 sdgsGoal: stage.sdgs_goal || defaults.sdgsGoal,
