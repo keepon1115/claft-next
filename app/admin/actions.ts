@@ -529,4 +529,181 @@ export async function grantAdminAccess(userId: string, email: string) {
       error: error instanceof Error ? error.message : '管理者権限の付与に失敗しました'
     }
   }
+}
+
+// =====================================================
+// マイクラSDGs承認関連アクション
+// =====================================================
+
+/**
+ * マイクラSDGsステージを承認
+ */
+export async function approveMinecraftSdgsStage(
+  targetUserId: string,
+  stageId: number
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const { userId: adminUserId, supabase } = await checkAdminPermission()
+    
+    // 承認待ちのステージを取得
+    const { data: progress, error: fetchError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+      .eq('status', 'pending_approval')
+      .single()
+    
+    if (fetchError || !progress) {
+      return {
+        success: false,
+        error: '承認待ちのステージが見つかりません'
+      }
+    }
+    
+    // ステージを承認（completedに変更）
+    const { error: updateError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        approved_at: new Date().toISOString(),
+        approved_by: adminUserId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+    
+    if (updateError) throw updateError
+    
+    // 次のステージを解放
+    const nextStageId = stageId + 1
+    if (nextStageId <= 19) {
+      // 既存レコードがあるか確認
+      const { data: nextProgress } = await supabase
+        .from('minecraft_sdgs_progress')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .eq('stage_id', nextStageId)
+        .single()
+      
+      if (!nextProgress) {
+        // 次のステージのレコードを作成
+        await supabase
+          .from('minecraft_sdgs_progress')
+          .insert({
+            user_id: targetUserId,
+            stage_id: nextStageId,
+            status: 'current',
+            baseline_stage: progress.baseline_stage || 0
+          })
+      } else {
+        // 既存レコードをcurrentに更新
+        await supabase
+          .from('minecraft_sdgs_progress')
+          .update({
+            status: 'current',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', targetUserId)
+          .eq('stage_id', nextStageId)
+      }
+    }
+    
+    // 通知を送信
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: targetUserId,
+        type: 'minecraft_sdgs_approval',
+        title: 'ステージが承認されました！',
+        message: `ステージ${stageId}が承認されました。次のステージに挑戦できます！`,
+        data: { stage_id: stageId, next_stage_id: nextStageId }
+      })
+    
+    revalidatePath('/admin/minecraft-sdgs')
+    revalidatePath('/minecraft-sdgs')
+    
+    return {
+      success: true,
+      message: `ステージ${stageId}を承認しました`
+    }
+    
+  } catch (error) {
+    console.error('マイクラSDGs承認エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'ステージの承認に失敗しました'
+    }
+  }
+}
+
+/**
+ * マイクラSDGsステージを却下
+ */
+export async function rejectMinecraftSdgsStage(
+  targetUserId: string,
+  stageId: number,
+  reason: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const { userId: adminUserId, supabase } = await checkAdminPermission()
+    
+    // 承認待ちのステージを取得
+    const { data: progress, error: fetchError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+      .eq('status', 'pending_approval')
+      .single()
+    
+    if (fetchError || !progress) {
+      return {
+        success: false,
+        error: '承認待ちのステージが見つかりません'
+      }
+    }
+    
+    // ステージを却下（programming_work_completedに戻す）
+    const { error: updateError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .update({
+        status: 'programming_work_completed',
+        rejected_at: new Date().toISOString(),
+        rejected_by: adminUserId,
+        rejection_reason: reason,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+    
+    if (updateError) throw updateError
+    
+    // 通知を送信
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: targetUserId,
+        type: 'minecraft_sdgs_rejection',
+        title: 'ステージが却下されました',
+        message: `ステージ${stageId}が却下されました。理由: ${reason}`,
+        data: { stage_id: stageId, reason }
+      })
+    
+    revalidatePath('/admin/minecraft-sdgs')
+    revalidatePath('/minecraft-sdgs')
+    
+    return {
+      success: true,
+      message: `ステージ${stageId}を却下しました`
+    }
+    
+  } catch (error) {
+    console.error('マイクラSDGs却下エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'ステージの却下に失敗しました'
+    }
+  }
 } 

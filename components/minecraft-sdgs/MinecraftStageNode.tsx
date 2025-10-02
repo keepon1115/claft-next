@@ -72,6 +72,11 @@ export default function MinecraftStageNode({
         <div className="minecraft-clear-badge">CLEAR!</div>
       )}
       
+      {/* 承認待ちバッジ */}
+      {stage.status === 'pending_approval' && (
+        <div className="minecraft-pending-badge">承認待ち</div>
+      )}
+      
       {/* 進行状況インジケーター */}
       <div className="minecraft-progress-indicator">
         {getProgressIcon(stage.status)}
@@ -126,6 +131,26 @@ export default function MinecraftStageNode({
       <div className="minecraft-block-texture" />
 
       <style jsx>{`
+        .minecraft-pending-badge {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background: linear-gradient(135deg, #FF9800, #F57C00);
+          color: white;
+          padding: 4px 8px;
+          font-size: 11px;
+          font-weight: bold;
+          z-index: 7;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          animation: minecraft-pending-badge-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes minecraft-pending-badge-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+
         .minecraft-progress-indicator {
           position: absolute;
           top: 10px;

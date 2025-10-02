@@ -14,6 +14,8 @@ import {
   markProgrammingVideoWatched,
   markProgrammingWorkCompleted,
   markStageCompleted,
+  submitStageForApproval,
+  shouldRequireApproval,
   unlockNextStage,
   generateDemoStats,
   type MinecraftSdgsProgressRow,
@@ -61,6 +63,7 @@ export interface MinecraftStatistics {
   progressPercentage: number
   lastCompletedStage: number | null
   sdgsGoalsCompleted: number[] // 完了済みSDGs目標のリスト
+  baselineStage: number // 承認不要の基準ステージ
 }
 
 interface MinecraftSdgsState {
@@ -403,7 +406,8 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
           currentStage: null,
           progressPercentage: 0,
           lastCompletedStage: null,
-          sdgsGoalsCompleted: []
+          sdgsGoalsCompleted: [],
+          baselineStage: 0
         },
         isLoading: false,
         isSyncing: false,
@@ -507,9 +511,25 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
                 apiCall = markProgrammingWorkCompleted(currentUserId, stageId)
                 break
               case 'completed':
-                apiCall = markStageCompleted(currentUserId, stageId)
-                // ステージ完了時は次のステージを解放
-                await unlockNextStage(currentUserId, stageId)
+                // 承認が必要かどうかを判定
+                const requiresApproval = await shouldRequireApproval(currentUserId, stageId)
+                
+                if (requiresApproval) {
+                  // 承認が必要な場合は pending_approval に変更
+                  set((state) => {
+                    state.userProgress[stageId] = 'pending_approval'
+                    if (state.stageDetails[stageId]) {
+                      state.stageDetails[stageId].status = 'pending_approval'
+                    }
+                  })
+                  apiCall = submitStageForApproval(currentUserId, stageId)
+                  // 承認待ちの場合は次のステージを解放しない
+                } else {
+                  // 承認不要の場合は即座に完了
+                  apiCall = markStageCompleted(currentUserId, stageId)
+                  // ステージ完了時は次のステージを解放
+                  await unlockNextStage(currentUserId, stageId)
+                }
                 break
               default:
                 throw new Error(`未対応のステータス: ${status}`)
@@ -591,13 +611,16 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
             .map(([stageIdStr, _]) => parseInt(stageIdStr))
             .sort((a, b) => a - b)[0] || (completedStages < TOTAL_STAGES ? completedStages + 1 : null)
 
+          const baselineStage = get().statistics.baselineStage || 0
+          
           return {
             totalStages: TOTAL_STAGES,
             completedStages,
             currentStage: currentStageId,
             progressPercentage: Math.round((completedStages / TOTAL_STAGES) * 100),
             lastCompletedStage: completedStages > 0 ? completedStages : null,
-            sdgsGoalsCompleted: [...new Set(sdgsGoalsCompleted)] // 重複除去
+            sdgsGoalsCompleted: [...new Set(sdgsGoalsCompleted)], // 重複除去
+            baselineStage
           }
         },
 
@@ -684,7 +707,8 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
               currentStage: statsData.current_stage,
               progressPercentage: statsData.progress_percentage,
               lastCompletedStage: statsData.completed_stages > 0 ? statsData.completed_stages : null,
-              sdgsGoalsCompleted: statsData.sdgs_goals_completed || []
+              sdgsGoalsCompleted: statsData.sdgs_goals_completed || [],
+              baselineStage: statsData.baseline_stage || 0
             }
 
             // 状態を更新
@@ -733,7 +757,8 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
               currentStage: demoStats.current_stage,
               progressPercentage: demoStats.progress_percentage,
               lastCompletedStage: demoStats.last_stage_completed_at ? demoStats.completed_stages : null,
-              sdgsGoalsCompleted: demoStats.sdgs_goals_completed
+              sdgsGoalsCompleted: demoStats.sdgs_goals_completed,
+              baselineStage: demoStats.baseline_stage
             }
             state.currentUserId = null
             state.isInitialized = true

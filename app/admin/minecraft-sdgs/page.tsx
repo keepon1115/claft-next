@@ -1,307 +1,451 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useState, useEffect, useMemo } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { Map, RefreshCw, ChevronLeft, Filter, Users, Layers } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, List, ShieldCheck } from 'lucide-react'
 
-interface SdgsProgressRow {
+interface PendingApproval {
   id: string
   user_id: string
   stage_id: number
-  status: string
+  submitted_at: string
   sdgs_form_submitted_at: string | null
   programming_form_submitted_at: string | null
-  completed_at: string | null
-  updated_at: string
-}
-
-interface UserProfile {
-  id: string
-  nickname: string | null
-  email: string | null
-}
-
-interface StageDef {
-  id: number
-  title: string
+  user_nickname: string
+  user_email: string
 }
 
 export default function MinecraftSdgsAdminPage() {
-  const router = useRouter()
-  const { isAuthenticated, user, isLoading } = useAuth()
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [adminLoading, setAdminLoading] = useState(true)
-
-  const [rows, setRows] = useState<(SdgsProgressRow & { user: UserProfile; stageTitle: string })[]>([])
+  const [activeTab, setActiveTab] = useState<'overview' | 'pending'>('pending')
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
+  const [allProgress, setAllProgress] = useState<PendingApproval[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null)
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
 
-  const [stageFilter, setStageFilter] = useState<number | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [userQuery, setUserQuery] = useState('')
-
-  const supabase = createBrowserSupabaseClient()
-
-  // 管理者権限チェック
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!isAuthenticated || !user) {
-        setIsAdmin(false)
-        setAdminLoading(false)
-        return
-      }
-      try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single()
-        setIsAdmin(!error && data?.is_active === true)
-      } catch (e) {
-        console.error(e)
-        setIsAdmin(false)
-      } finally {
-        setAdminLoading(false)
-      }
-    }
-    if (!isLoading) checkAdmin()
-  }, [isAuthenticated, isLoading, supabase, user])
-
-  const formatDate = (value: string | null) => (value ? new Date(value).toLocaleString('ja-JP') : '-')
-
-  const loadData = async () => {
+  // 承認待ちデータを取得
+  const fetchPendingApprovals = async () => {
     try {
       setLoading(true)
-      setError(null)
-
-      let query = supabase
+      const supabase = createBrowserSupabaseClient()
+      
+      const { data, error } = await supabase
         .from('minecraft_sdgs_progress')
-        .select('id,user_id,stage_id,status,sdgs_form_submitted_at,programming_form_submitted_at,completed_at,updated_at')
-        .order('completed_at', { ascending: false })
-        .limit(300)
-
-      if (stageFilter) query = query.eq('stage_id', stageFilter)
-      if (statusFilter !== 'all') query = query.eq('status', statusFilter)
-
-      const { data: progress, error: progressError } = await query
-      if (progressError) throw progressError
-
-      const userIds = Array.from(new Set((progress || []).map(p => p.user_id)))
-      const stageIds = Array.from(new Set((progress || []).map(p => p.stage_id)))
-
-      let profiles: UserProfile[] = []
-      if (userIds.length > 0) {
-        const { data: profileData } = await supabase
-          .from('users_profile')
-          .select('id, nickname, email')
-          .in('id', userIds)
-        profiles = profileData || []
-      }
-
-      let stages: StageDef[] = []
-      if (stageIds.length > 0) {
-        const { data: stageData } = await supabase
-          .from('minecraft_sdgs_stages')
-          .select('id, title')
-          .in('id', stageIds)
-        stages = stageData || []
-      }
-
-      const combined = (progress || []).map(row => ({
-        ...row,
-        user: profiles.find(p => p.id === row.user_id) || { id: row.user_id, nickname: null, email: null },
-        stageTitle: stages.find(s => s.id === row.stage_id)?.title || `ステージ ${row.stage_id}`,
-      }))
-
-      setRows(combined)
-    } catch (e) {
-      console.error('minecraft sdgs 管理データの取得失敗:', e)
-      setError('データの取得に失敗しました')
+        .select(`
+          id,
+          user_id,
+          stage_id,
+          submitted_at,
+          sdgs_form_submitted_at,
+          programming_form_submitted_at
+        `)
+        .eq('status', 'pending_approval')
+        .order('submitted_at', { ascending: true })
+      
+      if (error) throw error
+      
+      // ユーザー情報を取得
+      const userIds = [...new Set(data?.map(d => d.user_id) || [])]
+      const { data: users, error: usersError } = await supabase
+        .from('users_profile')
+        .select('id, nickname, email')
+        .in('id', userIds)
+      
+      if (usersError) throw usersError
+      
+      // データをマージ
+      const merged = data?.map(approval => {
+        const user = users?.find(u => u.id === approval.user_id)
+        return {
+          ...approval,
+          user_nickname: user?.nickname || '名無し',
+          user_email: user?.email || ''
+        }
+      }) || []
+      
+      setPendingApprovals(merged)
+    } catch (error) {
+      console.error('承認待ちデータ取得エラー:', error)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (isAdmin) loadData()
-  }, [isAdmin, stageFilter, statusFilter])
+    fetchPendingApprovals()
+  }, [])
 
-  const filteredRows = useMemo(() => {
-    if (!userQuery.trim()) return rows
-    const q = userQuery.trim().toLowerCase()
-    return rows.filter(r => (r.user.nickname || '').toLowerCase().includes(q) || (r.user.email || '').toLowerCase().includes(q))
-  }, [rows, userQuery])
+  // 進捗一覧取得
+  const fetchAllProgress = async () => {
+    try {
+      setLoading(true)
+      const supabase = createBrowserSupabaseClient()
 
-  if (adminLoading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 text-xl font-semibold">管理者権限確認中...</p>
-        </div>
-      </div>
-    )
+      const { data, error } = await supabase
+        .from('minecraft_sdgs_progress')
+        .select(`
+          id,
+          user_id,
+          stage_id,
+          status,
+          submitted_at,
+          sdgs_form_submitted_at,
+          programming_form_submitted_at
+        `)
+        .order('user_id', { ascending: true })
+        .order('stage_id', { ascending: true })
+
+      if (error) throw error
+
+      const userIds = [...new Set(data?.map(d => d.user_id) || [])]
+      const { data: users } = await supabase
+        .from('users_profile')
+        .select('id, nickname, email')
+        .in('id', userIds)
+
+      const merged = (data || []).map(row => {
+        const user = users?.find(u => u.id === row.user_id)
+        return {
+          ...row,
+          user_nickname: user?.nickname || '名無し',
+          user_email: user?.email || ''
+        }
+      }) as PendingApproval[]
+
+      setAllProgress(merged)
+    } catch (e) {
+      console.error('進捗一覧取得エラー:', e)
+      setAllProgress([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">アクセス権限がありません</h1>
-          <p className="text-gray-600 mb-6">このページは管理者のみアクセス可能です。</p>
-          <button
-            onClick={() => router.push('/admin')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            管理画面に戻る
-          </button>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+    if (activeTab === 'overview') fetchAllProgress()
+  }, [activeTab])
+
+  // 承認処理
+  const callApproveApi = async (userId: string, stageId: number) => {
+    const supabase = createBrowserSupabaseClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/minecraft-sdgs/approve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, stageId })
+    })
+    const json = await res.json()
+    if (!res.ok || !json?.success) throw new Error(json?.error || 'approve_failed')
+    return json
+  }
+
+  const callRejectApi = async (userId: string, stageId: number, reason: string) => {
+    const supabase = createBrowserSupabaseClient()
+    const { data: { session} } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/minecraft-sdgs/reject', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, stageId, reason })
+    })
+    const json = await res.json()
+    if (!res.ok || !json?.success) throw new Error(json?.error || 'reject_failed')
+    return json
+  }
+
+  const handleApprove = async (approval: PendingApproval) => {
+    if (processingId) return
+    
+    if (!confirm(`${approval.user_nickname}さんのステージ${approval.stage_id}を承認しますか？`)) {
+      return
+    }
+    
+    setProcessingId(approval.id)
+    
+    try {
+      await callApproveApi(approval.user_id, approval.stage_id)
+      alert('承認しました')
+      await Promise.all([
+        fetchPendingApprovals(),
+        activeTab === 'overview' ? fetchAllProgress() : Promise.resolve()
+      ])
+    } catch (error) {
+      console.error('承認エラー:', error)
+      alert('承認処理に失敗しました')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  // 却下モーダルを開く
+  const openRejectModal = (approval: PendingApproval) => {
+    setSelectedApproval(approval)
+    setRejectionReason('')
+    setRejectModalOpen(true)
+  }
+
+  // 却下処理
+  const handleReject = async () => {
+    if (!selectedApproval || !rejectionReason.trim()) {
+      alert('却下理由を入力してください')
+      return
+    }
+    
+    if (processingId) return
+    
+    setProcessingId(selectedApproval.id)
+    
+    try {
+      await callRejectApi(selectedApproval.user_id, selectedApproval.stage_id, rejectionReason)
+      alert('却下しました')
+      setRejectModalOpen(false)
+      setSelectedApproval(null)
+      setRejectionReason('')
+      await Promise.all([
+        fetchPendingApprovals(),
+        activeTab === 'overview' ? fetchAllProgress() : Promise.resolve()
+      ])
+    } catch (error) {
+      console.error('却下エラー:', error)
+      alert('却下処理に失敗しました')
+    } finally {
+      setProcessingId(null)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/admin')}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  <Layers size={32} className="text-purple-600" />
-                  マイクラSDGs管理
-                </h1>
-                <p className="text-gray-600 mt-1">ユーザー × ステージの進行状況を一覧</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">マイクラSDGs 管理</h1>
+          <p className="text-gray-600">全ユーザーの進捗確認と承認作業を行います</p>
+          <div className="mt-4 flex gap-2">
             <button
-              onClick={() => loadData()}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
             >
-              <RefreshCw size={16} />
-              更新
+              <ShieldCheck className="inline w-4 h-4 mr-1" /> 承認待ち
             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* フィルター */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Filter size={20} className="text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">フィルター:</span>
-            </div>
-            <input
-              value={userQuery}
-              onChange={(e) => setUserQuery(e.target.value)}
-              placeholder="ユーザー名/メール検索"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent w-60"
-            />
-            <select
-              value={stageFilter || ''}
-              onChange={(e) => setStageFilter(e.target.value ? parseInt(e.target.value) : null)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="">全ステージ</option>
-              {Array.from({ length: 19 }, (_, i) => i + 1).map(s => (
-                <option key={s} value={s}>ステージ {s}</option>
-              ))}
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">全ステータス</option>
-              <option value="current">進行中</option>
-              <option value="sdgs_video_watched">SDGs動画視聴</option>
-              <option value="sdgs_work_completed">SDGsワーク完了</option>
-              <option value="programming_video_watched">マイクラ動画視聴</option>
-              <option value="programming_work_completed">マイクラワーク完了</option>
-              <option value="completed">完了</option>
-            </select>
             <button
-              onClick={() => { setUserQuery(''); setStageFilter(null); setStatusFilter('all') }}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
             >
-              クリア
+              <List className="inline w-4 h-4 mr-1" /> 進捗一覧
             </button>
           </div>
         </div>
 
-        {/* エラー */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-700">{error}</p>
+        {loading ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <Clock className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
+            <p className="text-gray-600">読み込み中...</p>
           </div>
-        )}
-
-        {/* 一覧テーブル */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">進行状況一覧 ({filteredRows.length}件)</h3>
+        ) : activeTab === 'pending' ? (
+          pendingApprovals.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600 text-lg">承認待ちのステージはありません</p>
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ユーザー</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステージ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">提出日時</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">完了日時</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終更新</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    ユーザー
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    ステージ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    申請日時
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    回答状況
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    操作
+                  </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredRows.map(r => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{r.user.nickname || 'ユーザー名なし'}</div>
-                        <div className="text-sm text-gray-500">{r.user.email || '-'}</div>
+              <tbody className="divide-y divide-gray-200">
+                {pendingApprovals.map((approval) => (
+                  <tr key={approval.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {approval.user_nickname}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {approval.user_email}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ステージ {r.stage_id} — {r.stageTitle}
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-bold text-blue-600">
+                        ステージ {approval.stage_id}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{r.status}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(r.sdgs_form_submitted_at || r.programming_form_submitted_at)}
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">
+                        {new Date(approval.submitted_at).toLocaleString('ja-JP')}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(r.completed_at)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(r.updated_at)}</td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs">
+                          {approval.sdgs_form_submitted_at ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-gray-300" />
+                          )}
+                          <span className="text-gray-600">SDGsワーク</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          {approval.programming_form_submitted_at ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-gray-300" />
+                          )}
+                          <span className="text-gray-600">マイクラワーク</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleApprove(approval)}
+                        disabled={processingId === approval.id}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        {processingId === approval.id ? (
+                          <>
+                            <Clock className="w-4 h-4 animate-spin" />
+                            処理中
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            承認
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(approval)}
+                        disabled={processingId === approval.id}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        却下
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          )
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ユーザー</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ステージ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">状態</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {allProgress.map(row => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-3">
+                      <div className="text-sm font-medium text-gray-900">{row.user_nickname}</div>
+                      <div className="text-sm text-gray-500">{row.user_email}</div>
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className="text-sm font-semibold text-blue-600">ステージ {row.stage_id}</span>
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : row.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right space-x-2">
+                      {row.status === 'pending_approval' ? (
+                        <>
+                          <button
+                            onClick={() => handleApprove(row)}
+                            disabled={processingId === row.id}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            <CheckCircle className="w-4 h-4" /> 承認
+                          </button>
+                          <button
+                            onClick={() => openRejectModal(row)}
+                            disabled={processingId === row.id}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            <XCircle className="w-4 h-4" /> 却下
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-400">承認操作対象外</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-            {filteredRows.length === 0 && !loading && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📭</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">データがありません</h3>
-                <p className="text-gray-500">選択した条件に該当するデータが見つかりませんでした。</p>
-              </div>
-            )}
+      {/* 却下モーダル */}
+      {rejectModalOpen && selectedApproval && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              ステージ{selectedApproval.stage_id}を却下
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {selectedApproval.user_nickname}さんのステージを却下します。<br />
+              却下理由を入力してください（ユーザーに通知されます）
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="却下理由を入力..."
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 min-h-[100px] focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setRejectModalOpen(false)
+                  setSelectedApproval(null)
+                  setRejectionReason('')
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={!rejectionReason.trim() || processingId === selectedApproval.id}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {processingId === selectedApproval.id ? '処理中...' : '却下する'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
-
-

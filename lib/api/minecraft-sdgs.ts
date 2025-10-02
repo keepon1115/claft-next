@@ -21,6 +21,13 @@ export interface MinecraftSdgsProgressRow {
   programming_form_response: string | null
   completed_at: string | null
   feedback_message: string | null
+  submitted_at: string | null
+  approved_at: string | null
+  approved_by: string | null
+  rejected_at: string | null
+  rejected_by: string | null
+  rejection_reason: string | null
+  baseline_stage: number
   created_at: string
   updated_at: string
 }
@@ -54,6 +61,7 @@ export interface MinecraftSdgsStatsRow {
   programming_videos_watched: number
   programming_works_completed: number
   total_time_spent_minutes: number
+  baseline_stage: number
   first_stage_started_at: string | null
   last_stage_completed_at: string | null
   last_activity_at: string
@@ -224,12 +232,24 @@ export async function markProgrammingWorkCompleted(
 }
 
 /**
- * ステージ完了
+ * ステージ完了申請（承認待ち）
+ */
+export async function submitStageForApproval(userId: string, stageId: number): Promise<MinecraftSdgsProgressRow> {
+  return upsertStageProgress(userId, stageId, {
+    status: 'pending_approval',
+    submitted_at: new Date().toISOString()
+  })
+}
+
+/**
+ * ステージ完了（承認不要の場合）
  */
 export async function markStageCompleted(userId: string, stageId: number): Promise<MinecraftSdgsProgressRow> {
   return upsertStageProgress(userId, stageId, {
     status: 'completed',
-    completed_at: new Date().toISOString()
+    completed_at: new Date().toISOString(),
+    approved_at: new Date().toISOString(),
+    approved_by: null // システム自動承認
   })
 }
 
@@ -298,6 +318,54 @@ export async function unlockNextStage(userId: string, currentStageId: number): P
 }
 
 // =====================================================
+// 承認フロー関連API
+// =====================================================
+
+/**
+ * 承認待ちステージ一覧を取得（管理者用）
+ */
+export async function fetchPendingApprovals(): Promise<MinecraftSdgsProgressRow[]> {
+  const supabase = createBrowserSupabaseClient()
+  
+  return await safeSupabaseQuery(() => 
+    supabase
+      .from('minecraft_sdgs_progress')
+      .select('*')
+      .eq('status', 'pending_approval')
+      .order('submitted_at', { ascending: true })
+  )
+}
+
+/**
+ * ユーザーの基準ステージを取得
+ */
+export async function fetchUserBaselineStage(userId: string): Promise<number> {
+  const supabase = createBrowserSupabaseClient()
+  
+  try {
+    const stats = await safeSupabaseQuery(() => 
+      supabase
+        .from('minecraft_sdgs_stats')
+        .select('baseline_stage')
+        .eq('user_id', userId)
+        .single()
+    )
+    return stats?.baseline_stage || 0
+  } catch (error) {
+    console.warn('基準ステージ取得エラー:', error)
+    return 0
+  }
+}
+
+/**
+ * ステージが承認必要かどうかを判定
+ */
+export async function shouldRequireApproval(userId: string, stageId: number): Promise<boolean> {
+  const baselineStage = await fetchUserBaselineStage(userId)
+  return stageId > baselineStage
+}
+
+// =====================================================
 // デモモード用データ生成
 // =====================================================
 
@@ -318,6 +386,7 @@ export function generateDemoStats(): MinecraftSdgsStatsRow {
     programming_videos_watched: 0,
     programming_works_completed: 0,
     total_time_spent_minutes: 0,
+    baseline_stage: 0,
     first_stage_started_at: null,
     last_stage_completed_at: null,
     last_activity_at: new Date().toISOString(),

@@ -88,20 +88,20 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <a
-                  href="https://forms.gle/B9t8HCuePtpzUBvd8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                Yo98 仕事ってどんなイメージ？？
-                </a>
-                <a
                   href="https://forms.gle/5CwhSrvtuZGSuP2J9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
                 Yo99 外国で暮らすってどんな感じ？
+                </a>
+                <a
+                  href="https://forms.gle/Z3v2mgPEzwm4xzbv8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                Y0100 好きなスポーツはなんですか？
                 </a>
               </div>
 
@@ -197,7 +197,7 @@ export default function YononakaPage() {
                 <h2 className="text-2xl font-bold text-amber-900">Yononaka Story</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <a href="https://youtu.be/j04B7zlQRQs" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20 relative overflow-hidden">
                   <span className="relative z-10">
                     🎬 笑顔を届ける舞台の立役者
@@ -206,6 +206,10 @@ export default function YononakaPage() {
                 
                 <a href="https://youtu.be/UM_BFsKWTrs" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-br from-green-400 to-cyan-400 text-amber-900 font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20">
                 　🎬 癒しの魔法と薬剤師
+                </a>
+                
+                <a href="https://youtu.be/pMceoLYo24k" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-br from-blue-400 to-indigo-400 text-white font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex items-center justify-center text-center min-h-20">
+                  🎬 永遠のおりがみ小僧
                 </a>
               </div>
             </section>

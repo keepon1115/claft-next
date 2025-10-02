@@ -53,6 +53,12 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
       return
     }
     
+    // 承認待ちの場合は特別なステップを表示
+    if (stage.status === 'pending_approval') {
+      setCurrentStep('message')
+      return
+    }
+    
     switch (stage.status) {
       case 'current':
       case 'locked':
@@ -210,18 +216,36 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
             {currentStep === 'message' ? (
               <div className="minecraft-message-content">
                 <div className="text-center p-6">
-                  <Trophy className="w-16 h-16 text-minecraft-gold mx-auto mb-4" />
-                  <h4 className="text-xl font-bold text-minecraft-brown mb-2">ステージクリア！</h4>
-                  <p className="text-minecraft-brown-light mb-4">{stage.message}</p>
-                  {stage.status !== 'completed' && (
-                    <button
-                      data-testid="complete-button"
-                      onClick={() => handleStepComplete('completed')}
-                      disabled={isLoading}
-                      className="minecraft-action-button primary"
-                    >
-                      {isLoading ? (<><Clock className="w-4 h-4 animate-spin" />処理中...</>) : (<><Trophy className="w-4 h-4" />完了する</>)}
-                    </button>
+                  {stage.status === 'pending_approval' ? (
+                    <>
+                      <Clock className="w-16 h-16 text-minecraft-gold mx-auto mb-4 animate-pulse" />
+                      <h4 className="text-xl font-bold text-minecraft-brown mb-2">承認待ち</h4>
+                      <p className="text-minecraft-brown-light mb-4">
+                        管理者による承認をお待ちください。<br />
+                        承認されると次のステージに進めるようになります。
+                      </p>
+                      <div className="bg-minecraft-dirt/10 rounded-lg p-4 text-sm text-minecraft-brown-light">
+                        <p className="font-medium mb-2">📝 確認中の内容</p>
+                        <p>✓ SDGsワーク回答</p>
+                        <p>✓ マイクラワーク回答</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="w-16 h-16 text-minecraft-gold mx-auto mb-4" />
+                      <h4 className="text-xl font-bold text-minecraft-brown mb-2">ステージクリア！</h4>
+                      <p className="text-minecraft-brown-light mb-4">{stage.message}</p>
+                      {stage.status !== 'completed' && (
+                        <button
+                          data-testid="complete-button"
+                          onClick={() => handleStepComplete('completed')}
+                          disabled={isLoading}
+                          className="minecraft-action-button primary"
+                        >
+                          {isLoading ? (<><Clock className="w-4 h-4 animate-spin" />処理中...</>) : (<><Trophy className="w-4 h-4" />完了する</>)}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
