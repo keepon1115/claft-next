@@ -20,6 +20,7 @@ export interface ProfileData {
   catchphrase: string
   message: string
   avatarUrl?: string
+  favoriteNowImageUrl?: string
   profileCompletion: number
 }
 
@@ -77,6 +78,7 @@ const defaultProfileData: ProfileData = {
   catchphrase: '',
   message: '',
   avatarUrl: '',
+  favoriteNowImageUrl: '',
   profileCompletion: 85,
 }
 
@@ -290,6 +292,7 @@ export const useUserStore = create<UserState>()(
                 catchphrase: profileData.catchphrase || defaultProfileData.catchphrase,
                 message: profileData.message || defaultProfileData.message,
                 avatarUrl: profileData.avatar_url || defaultProfileData.avatarUrl,
+                favoriteNowImageUrl: (profileData as any).favorite_now_image_url || defaultProfileData.favoriteNowImageUrl,
                 profileCompletion: profileData.profile_completion || 0,
               } : { ...defaultProfileData }
 
@@ -492,6 +495,7 @@ export const useUserStore = create<UserState>()(
                   catchphrase: profileData.catchphrase || get().profileData.catchphrase,
                   message: profileData.message || get().profileData.message,
                   avatarUrl: profileData.avatar_url || get().profileData.avatarUrl,
+                  favoriteNowImageUrl: (profileData as any).favorite_now_image_url || get().profileData.favoriteNowImageUrl,
                   profileCompletion: profileData.profile_completion || get().calculateProfileCompletion(),
                 }
 

@@ -101,7 +101,7 @@ export default function YononakaPage() {
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                Y0100 好きなスポーツはなんですか？
+                Yo100 好きなスポーツはなんですか？
                 </a>
               </div>
 

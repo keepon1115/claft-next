@@ -25,6 +25,9 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [favNowFile, setFavNowFile] = useState<File | null>(null)
+  const [favNowPreview, setFavNowPreview] = useState<string | null>(null)
+  const [uploadingFavNow, setUploadingFavNow] = useState(false)
 
   // 認証チェック
   useEffect(() => {
@@ -170,6 +173,50 @@ export default function ProfilePage() {
     }
   }
 
+  // 「今ハマっていること」画像選択
+  const handleFavNowSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ファイルサイズが大きすぎます。5MB以下の画像を選択してください。')
+      return
+    }
+    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+      alert('対応していない画像形式です。JPEG、PNG、WebP形式の画像を選択してください。')
+      return
+    }
+    setFavNowFile(file)
+    setLocalChanges(true)
+    const reader = new FileReader()
+    reader.onload = (e) => setFavNowPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  // 「今ハマっていること」画像アップロード
+  const uploadFavoriteNowImage = async (): Promise<string | null> => {
+    if (!favNowFile || !user?.id) return null
+    setUploadingFavNow(true)
+    try {
+      const ext = favNowFile.name.split('.').pop()
+      const fileName = `favorite-now-${Date.now()}.${ext}`
+      const filePath = `${user.id}/${fileName}`
+      const { data, error } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, favNowFile, { cacheControl: '3600', upsert: true })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath)
+      return publicUrl
+    } catch (e) {
+      console.error('❌ 今ハマっていること 画像アップロードエラー:', e)
+      alert('「今ハマっていること」画像のアップロードに失敗しました')
+      return null
+    } finally {
+      setUploadingFavNow(false)
+    }
+  }
+
   // Supabaseに保存
   const handleSaveProfile = async () => {
     if (!user?.id) return
@@ -177,6 +224,7 @@ export default function ProfilePage() {
     setSaveStatus('saving')
     try {
       let avatarUrl = localProfileData.avatarUrl
+      let favoriteNowImageUrl = localProfileData.favoriteNowImageUrl
 
       // アバター画像がアップロードされている場合は先にアップロード
       if (avatarFile) {
@@ -194,8 +242,21 @@ export default function ProfilePage() {
         }
       }
 
+      if (favNowFile) {
+        try {
+          const url = await uploadFavoriteNowImage()
+          if (url) {
+            favoriteNowImageUrl = url
+            setLocalProfileData(prev => ({ ...prev, favoriteNowImageUrl: url }))
+          }
+        } catch (e) {
+          setSaveStatus('error')
+          return
+        }
+      }
+
       // userStoreを更新
-      const updatedProfileData = { ...localProfileData, avatarUrl }
+      const updatedProfileData = { ...localProfileData, avatarUrl, favoriteNowImageUrl }
       const result = await updateProfile(updatedProfileData)
       
       if (result.success) {
@@ -215,6 +276,7 @@ export default function ProfilePage() {
             catchphrase: localProfileData.catchphrase,
             message: localProfileData.message,
             avatar_url: avatarUrl,
+            favorite_now_image_url: favoriteNowImageUrl,
             updated_at: new Date().toISOString()
           })
 
@@ -224,6 +286,8 @@ export default function ProfilePage() {
         setLocalChanges(false)
         setAvatarFile(null)
         setAvatarPreview(null)
+        setFavNowFile(null)
+        setFavNowPreview(null)
         
         // プロフィールをリフレッシュして最新状態に同期
         await refreshProfile(user.id)
@@ -614,6 +678,55 @@ export default function ProfilePage() {
               {/* スキル・特性タブ */}
               {activeTab === 'skills' && (
                 <div className="form-section">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <i className="fas fa-photo-video"></i>
+                      今ハマっていること・見てほしいモノなど（画像）
+                    </label>
+                    <div className="avatar-upload-area">
+                      <div className="avatar-preview" style={{ borderRadius: 12 }}>
+                        {favNowPreview || localProfileData.favoriteNowImageUrl ? (
+                          <img
+                            src={favNowPreview || (localProfileData.favoriteNowImageUrl as string)}
+                            alt="今ハマっていること"
+                            className="avatar-preview-image"
+                            style={{ borderRadius: 12 }}
+                          />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            <i className="fas fa-image"></i>
+                            <span>画像を選択</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="avatar-upload-controls">
+                        <input
+                          type="file"
+                          id="favnow-upload"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleFavNowSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="favnow-upload" className="avatar-upload-btn">
+                          <i className="fas fa-upload"></i>
+                          画像を選択
+                        </label>
+                        {favNowFile && (
+                          <div className="upload-status">
+                            <i className="fas fa-check-circle text-green-500"></i>
+                            {favNowFile.name}
+                          </div>
+                        )}
+                        {uploadingFavNow && (
+                          <div className="upload-progress">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            アップロード中...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-hint">💡 JPEG、PNG、WebP形式、5MB以下の画像をアップロードできます</div>
+                  </div>
                   <div className="form-group">
                     <label className="form-label">
                       <i className="fas fa-star"></i>
@@ -1471,6 +1584,13 @@ export default function ProfilePage() {
         .tab-button.active {
           background: var(--blue);
           color: white;
+        }
+        /* アクティブ時に子要素も白で表示（アイコン等の可読性向上） */
+        .tab-button.active *,
+        .tab-button.active i,
+        .tab-button.active svg {
+          color: #fff !important;
+          fill: #fff !important;
         }
 
         .tab-button:hover::before {

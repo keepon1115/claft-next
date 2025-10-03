@@ -107,6 +107,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
     companion: '',
     catchphrase: '',
     message: '',
+    favoriteNowImageUrl: '',
     profileCompletion: 85
   };
 
@@ -228,6 +229,24 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
             </div>
             <div className="comment-text">{displayData.message}</div>
           </div>
+
+          {/* 今ハマっていること・見てほしいモノなど（画像） */}
+          {displayData.favoriteNowImageUrl && (
+            <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span>📸</span>
+                <span className="font-semibold text-gray-800">今ハマっていること・見てほしいモノなど</span>
+              </div>
+              <div className="rounded-lg overflow-hidden">
+                <img
+                  src={displayData.favoriteNowImageUrl}
+                  alt="今ハマっていること・見てほしいモノなど"
+                  className="w-full h-auto object-cover"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* 編集ボタン - 認証ガード付き */}
           <button onClick={handleEditClick} className="edit-profile-btn">

@@ -20,6 +20,7 @@ interface UserProfileData {
   catchphrase?: string
   message?: string
   avatar_url?: string
+  favorite_now_image_url?: string
   profile_completion?: number
   created_at?: string
   // 統計データ
@@ -73,6 +74,19 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
         console.warn('統計データ取得エラー:', statsError)
       }
 
+      // フォールバック: クエスト完了ステージ数を quest_progress から集計
+      let completedStagesFallback = 0
+      try {
+        const { count } = await supabase
+          .from('quest_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', targetUserId)
+          .in('status', ['completed', 'approved'])
+        completedStagesFallback = count || 0
+      } catch (e) {
+        console.warn('quest_progress 集計に失敗:', e)
+      }
+
       // データを結合
       const combinedData: UserProfileData = {
         id: targetUserId,
@@ -87,9 +101,10 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
         catchphrase: profileData?.catchphrase || '',
         message: profileData?.message || '',
         avatar_url: profileData?.avatar_url || '',
+        favorite_now_image_url: (profileData as any)?.favorite_now_image_url || '',
         profile_completion: profileData?.profile_completion || 0,
         created_at: profileData?.created_at,
-        quest_clear_count: statsData?.quest_clear_count || 0,
+        quest_clear_count: (statsData?.quest_clear_count ?? completedStagesFallback) || 0,
         total_exp: statsData?.total_exp || 0,
         last_login_date: statsData?.last_login_date,
         login_count: statsData?.login_count || 0
@@ -141,9 +156,25 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
 
   if (!isOpen) return null
 
-  // レベル計算
-  const level = userData ? Math.floor((userData.total_exp || 0) / 100) + 1 : 1
-  const currentLevelExp = userData ? (userData.total_exp || 0) % 100 : 0
+  // レベル計算: ステージ6完了でLv.2、それ以外はLv.1
+  const completedStages = userData?.quest_clear_count || 0
+  const level = completedStages >= 6 ? 2 : 1
+  const currentLevelExp = 0
+
+  // 総経験値（表示用）
+  // ルール: ログイン数×5 + クリア数×10 + レベルアップ(100) + プロフ完成100%で20(1回)
+  const calcTotalExp = (loginCount: number, clearCount: number, profileCompletion: number, lvl: number) => {
+    const base = (loginCount * 5) + (clearCount * 10)
+    const levelBonus = lvl > 1 ? 100 : 0
+    const profileBonus = profileCompletion >= 100 ? 20 : 0
+    return base + levelBonus + profileBonus
+  }
+  const displayTotalExp = calcTotalExp(
+    userData?.login_count || 0,
+    completedStages,
+    userData?.profile_completion || 0,
+    level
+  )
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
@@ -221,6 +252,36 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
                   {userData.catchphrase && (
                     <p className="text-gray-600 italic">「{userData.catchphrase}」</p>
                   )}
+                  {/* バッジ表示エリア */}
+                  <div className="flex items-center gap-2 mt-2">
+                    {/* ログイン系 */}
+                    {(() => {
+                      const login = userData.login_count || 0
+                      const tier = login >= 50 ? 'gold' : login >= 10 ? 'silver' : login > 0 ? 'bronze' : null
+                      const title = login >= 50 ? 'ログイン50回' : login >= 10 ? 'ログイン10回' : login > 0 ? '初回ログイン' : ''
+                      return tier ? (
+                        <span className={`achievement-badge ${tier}`} title={title}>🏆</span>
+                      ) : null
+                    })()}
+                    {/* プロフィール系 */}
+                    {(() => {
+                      const completion = userData.profile_completion || 0
+                      const tier = completion >= 100 ? 'gold' : (userData.nickname ? 'silver' : null)
+                      const title = completion >= 100 ? 'プロフィール100%' : userData.nickname ? 'プロフィール参加' : ''
+                      return tier ? (
+                        <span className={`achievement-badge ${tier}`} title={title}>⭐</span>
+                      ) : null
+                    })()}
+                    {/* クエスト系 */}
+                    {(() => {
+                      const clears = userData.quest_clear_count || 0
+                      const tier = clears >= 12 ? 'gold' : clears >= 6 ? 'silver' : clears >= 1 ? 'bronze' : null
+                      const title = clears >= 12 ? 'くれなずむ空クリア' : clears >= 6 ? 'はじまりの空クリア' : clears >= 1 ? 'クエスト参加' : ''
+                      return tier ? (
+                        <span className={`achievement-badge ${tier}`} title={title}>🎯</span>
+                      ) : null
+                    })()}
+                  </div>
                 </div>
               </div>
 
@@ -231,12 +292,12 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
                   <div className="text-sm text-blue-500">レベル</div>
                 </div>
                 <div className="bg-green-50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{userData.total_exp || 0}</div>
+                  <div className="text-2xl font-bold text-green-600">{displayTotalExp}</div>
                   <div className="text-sm text-green-500">総経験値</div>
                 </div>
                 <div className="bg-purple-50 rounded-xl p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600">{userData.quest_clear_count || 0}</div>
-                  <div className="text-sm text-purple-500">クリア数</div>
+                  <div className="text-sm text-purple-500">クエスト完了</div>
                 </div>
                 <div className="bg-orange-50 rounded-xl p-4 text-center">
                   <div className="text-2xl font-bold text-orange-600">{userData.login_count || 0}</div>
@@ -327,6 +388,22 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
                     <span className="font-semibold text-purple-800">ひとこと</span>
                   </div>
                   <p className="text-purple-700 text-lg leading-relaxed">{userData.message}</p>
+                </div>
+              )}
+
+              {/* 今ハマっていること・見てほしいモノなど（画像） */}
+              {userData.favorite_now_image_url && (
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">📸</span>
+                    <span className="font-semibold text-gray-800">今ハマっていること・見てほしいモノなど</span>
+                  </div>
+                  <img
+                    src={userData.favorite_now_image_url}
+                    alt="今ハマっていること・見てほしいモノなど"
+                    className="w-full h-auto rounded-lg object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                  />
                 </div>
               )}
 
