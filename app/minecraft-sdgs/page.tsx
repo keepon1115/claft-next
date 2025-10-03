@@ -43,6 +43,12 @@ export default function MinecraftSdgsPage() {
     ? { currentStage: statistics.currentStage || 1, completedStages: statistics.completedStages, totalStages: statistics.totalStages, sdgsGoalsCompleted: statistics.sdgsGoalsCompleted }
     : demoStatistics
 
+  // まずはデモモードで即座に初期化（ファーストペイント短縮）
+  useEffect(() => {
+    initialize()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // 認証完了後にデータロード（ログイン後の再初期化も許可）
   useEffect(() => {
     if (authInitialized) {
@@ -77,6 +83,21 @@ export default function MinecraftSdgsPage() {
     }
   }, [])
   // ─────────────────────────────────────────────────────────────────────
+
+  // 画面復帰時に最新化（ログイン後や別タブ復帰時の取りこぼし防止）
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        initialize(user?.id)
+      }
+    }
+    window.addEventListener('focus', onVisible)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.removeEventListener('focus', onVisible)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [initialize, user?.id])
 
   const handleStageClick = (stageId: number) => {
     if (!isAuthenticated) {

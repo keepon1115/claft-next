@@ -101,6 +101,23 @@ interface MinecraftSdgsState {
 
 const TOTAL_STAGES = 19
 
+// バックエンドから取得したURLがプレースホルダーや無効値の場合は既定値を優先
+const preferValidUrl = (primary?: string | null, fallback?: string) => {
+  const url = (primary || '').trim()
+  if (!url || url === '#') return fallback
+  // サンプル/ダミー/プレースホルダー検知
+  const lower = url.toLowerCase()
+  if (
+    lower.includes('/sample') ||
+    lower.includes('example.com') ||
+    lower.includes('youtu.be/sample') ||
+    lower.includes('forms.gle/sample')
+  ) {
+    return fallback
+  }
+  return url
+}
+
 const defaultStageDetails: Record<number, MinecraftStageProgress> = {
   1: {
     stageId: 1,
@@ -111,9 +128,11 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     sdgsWorkUrl: 'https://youtu.be/fryzvmt_cN8',
     sdgsFormUrl: 'https://forms.gle/DXPLF6bZB3Wo26pVA',
     sdgsSupportPrintUrl: 'https://www.canva.com/design/DAGxDTjOMo8/irXI-r2wI1O2cIPO74cd2Q/edit?utm_content=DAGxDTjOMo8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
-    programmingWorkUrl: 'https://youtu.be/fryzvmt_cN8',
+    sdgsStageDownloadUrl: 'https://xgf.nu/kAD21',
+    programmingWorkUrl: '#',
     programmingFormUrl: 'https://forms.gle/3aqJuMPhjtL9bkAe7',
     programmingSupportPrintUrl: 'https://www.canva.com/design/DAGyoEbJUe0/JXH-kgcYUifhlFI1-EnTJg/edit?utm_content=DAGyoEbJUe0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
+    programmingApDojoUrl: 'https://xgf.nu/GoTLp',
     fallbackIcon: '🌍',
     sdgsGoal: 0 // ウェディングケーキモデル
   },
@@ -123,12 +142,14 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     title: 'SDGsって何だろう？',
     description: '〜ウェディングケーキモデルで全体像を理解しよう(後編)〜',
     message: 'SDGsの構造を深く理解しよう！',
-    sdgsWorkUrl: 'https://youtu.be/fryzvmt_cN8',
-    sdgsFormUrl: 'https://forms.gle/DXPLF6bZB3Wo26pVA',
-    sdgsSupportPrintUrl: 'https://example.com/stage-2-sdgs-support',
-    programmingWorkUrl: 'https://youtu.be/fryzvmt_cN8',
-    programmingFormUrl: 'https://forms.gle/3aqJuMPhjtL9bkAe7',
-    programmingSupportPrintUrl: 'https://example.com/stage-2-programming-support',
+    sdgsWorkUrl: 'https://youtu.be/vrEMf56073o',
+    sdgsFormUrl: 'https://forms.gle/yobqKfqvoibkC3uo6',
+    sdgsSupportPrintUrl: 'https://www.canva.com/design/DAG0pYix2mY/iRse8u3leIzoQNrUc9zF_g/view?utm_content=DAG0pYix2mY&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfc482fdcb8',
+    sdgsStageDownloadUrl: 'https://xgf.nu/bVjdM',
+    programmingWorkUrl: '#',
+    programmingFormUrl: 'https://forms.gle/eqmX7bMhg6QEhDY2A',
+    programmingSupportPrintUrl: 'https://www.canva.com/design/DAGzvTLo6Cc/SzKAkmfzxzoXM0q20tZAGg/view?utm_content=DAGzvTLo6Cc&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h90c8dd05f5',
+    programmingApDojoUrl: 'https://xgf.nu/N4ZgC',
     fallbackIcon: '🎂',
     sdgsGoal: 0 // ウェディングケーキモデル
   },
@@ -649,14 +670,15 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
           })
 
           try {
-            // ステージ定義を取得
-            const stages = await fetchMinecraftSdgsStages()
-            
-            // ユーザー進捗を取得
-            const progressData = await fetchUserMinecraftSdgsProgress(currentUserId)
+            // 並列取得で高速化
+            const [stages, progressData, initialStats] = await Promise.all([
+              fetchMinecraftSdgsStages(),
+              fetchUserMinecraftSdgsProgress(currentUserId),
+              fetchUserMinecraftSdgsStats(currentUserId)
+            ])
             
             // ユーザー統計を取得（存在しない場合は初期化）
-            let statsData = await fetchUserMinecraftSdgsStats(currentUserId)
+            let statsData = initialStats
             if (!statsData) {
               statsData = await initializeUserStats(currentUserId)
             }
@@ -681,14 +703,22 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
                 description: stage.description || defaults.description,
                 message: stage.message || defaults.message,
                 // ステージ1は常にローカル定義を優先（指定URLの保証）
-                sdgsWorkUrl: stage.id === 1 ? defaults.sdgsWorkUrl : (stage.sdgs_work_video_url || defaults.sdgsWorkUrl),
-                sdgsFormUrl: stage.id === 1 ? defaults.sdgsFormUrl : (stage.sdgs_form_url || defaults.sdgsFormUrl),
-                sdgsSupportPrintUrl: (stage as any).sdgs_support_print_url || defaults.sdgsSupportPrintUrl,
-                sdgsStageDownloadUrl: (stage as any).sdgs_stage_download_url || defaults.sdgsStageDownloadUrl,
-                programmingWorkUrl: stage.id === 1 ? defaults.programmingWorkUrl : (stage.programming_work_video_url || defaults.programmingWorkUrl),
-                programmingFormUrl: stage.id === 1 ? defaults.programmingFormUrl : (stage.programming_form_url || defaults.programmingFormUrl),
-                programmingSupportPrintUrl: (stage as any).programming_support_print_url || defaults.programmingSupportPrintUrl,
-                programmingApDojoUrl: (stage as any).programming_ap_dojo_url || defaults.programmingApDojoUrl,
+              sdgsWorkUrl: stage.id === 1
+                ? defaults.sdgsWorkUrl
+                : preferValidUrl(stage.sdgs_work_video_url, defaults.sdgsWorkUrl),
+              sdgsFormUrl: stage.id === 1
+                ? defaults.sdgsFormUrl
+                : preferValidUrl(stage.sdgs_form_url, defaults.sdgsFormUrl),
+              sdgsSupportPrintUrl: preferValidUrl((stage as any).sdgs_support_print_url, defaults.sdgsSupportPrintUrl),
+              sdgsStageDownloadUrl: preferValidUrl((stage as any).sdgs_stage_download_url, defaults.sdgsStageDownloadUrl),
+              programmingWorkUrl: stage.id === 1
+                ? defaults.programmingWorkUrl
+                : preferValidUrl(stage.programming_work_video_url, defaults.programmingWorkUrl),
+              programmingFormUrl: stage.id === 1
+                ? defaults.programmingFormUrl
+                : preferValidUrl(stage.programming_form_url, defaults.programmingFormUrl),
+              programmingSupportPrintUrl: preferValidUrl((stage as any).programming_support_print_url, defaults.programmingSupportPrintUrl),
+              programmingApDojoUrl: preferValidUrl((stage as any).programming_ap_dojo_url, defaults.programmingApDojoUrl),
                 iconUrl: stage.icon_url || defaults.iconUrl,
                 fallbackIcon: stage.fallback_icon || defaults.fallbackIcon,
                 sdgsGoal: stage.sdgs_goal || defaults.sdgsGoal,

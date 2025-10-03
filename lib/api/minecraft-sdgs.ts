@@ -40,8 +40,12 @@ export interface MinecraftSdgsStageRow {
   sdgs_goal: number | null
   sdgs_work_video_url: string | null
   sdgs_form_url: string | null
+  sdgs_support_print_url?: string | null
+  sdgs_stage_download_url?: string | null
   programming_work_video_url: string | null
   programming_form_url: string | null
+  programming_support_print_url?: string | null
+  programming_ap_dojo_url?: string | null
   icon_url: string | null
   fallback_icon: string
   is_published: boolean
@@ -349,7 +353,7 @@ export async function fetchUserBaselineStage(userId: string): Promise<number> {
         .select('baseline_stage')
         .eq('user_id', userId)
         .single()
-    )
+    ) as { baseline_stage: number } | null
     return stats?.baseline_stage || 0
   } catch (error) {
     console.warn('基準ステージ取得エラー:', error)
