@@ -177,6 +177,61 @@ export type Database = {
         }
         Relationships: []
       }
+      hirameki_posts: {
+        Row: {
+          id: string
+          post_date: string
+          content: string
+          implemented: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_date?: string
+          content: string
+          implemented?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_date?: string
+          content?: string
+          implemented?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      hirameki_reactions: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          type: 'heart' | 'good'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string
+          type?: 'heart' | 'good'
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hirameki_reactions_post_id_fkey",
+            columns: ["post_id"],
+            referencedRelation: "hirameki_posts",
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notifications: {
         Row: {
           id: string

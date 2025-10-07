@@ -104,6 +104,28 @@
   --badge-orange: #FF7A00;
 }
 
+/* 強制ダーク（classベース）: next-themes が .dark を付与 */
+.dark {
+  --background: #0f1115;
+  --foreground: #e6e7e9;
+  --cream-bg: #111318;
+  --white: #1a1d23;
+  --black: #ffffff;
+  --text-dark: #e6e7e9;
+  --text-light: #b7bcc5;
+  --text-muted: #9aa1ad;
+  --gray-50: #16181e;
+  --gray-100: #1d2026;
+  --gray-200: #242833;
+  --gray-300: #2e3440;
+  --gray-400: #3b4252;
+  --gray-500: #4c566a;
+  --gray-600: #6b7280;
+  --gray-700: #94a3b8;
+  --gray-800: #cbd5e1;
+  --gray-900: #e2e8f0;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -144,6 +166,25 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* 代表ユーティリティのセーフ反転（既存 UI を壊さない最小限の上書き） */
+.dark .bg-white { background-color: var(--white) !important; }
+.dark .text-gray-900, .dark .text-gray-800 { color: var(--text-dark) !important; }
+.dark .text-gray-700, .dark .text-gray-600 { color: var(--text-light) !important; }
+.dark .text-slate-900, .dark .text-slate-800 { color: var(--text-dark) !important; }
+.dark .text-slate-700, .dark .text-slate-600 { color: var(--text-light) !important; }
+.dark .text-black { color: var(--text-dark) !important; }
+.dark .bg-gray-50, .dark .bg-gray-100 { background-color: var(--gray-100) !important; }
+.dark .border-gray-200, .dark .border-gray-300 { border-color: var(--gray-300) !important; }
+.dark .divide-gray-200 { --tw-divide-opacity: 1; border-color: var(--gray-300) !important; }
+.dark .shadow, .dark .shadow-sm, .dark .shadow-md, .dark .shadow-lg { box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important; }
+.dark .card { background: var(--white); color: var(--text-dark); }
+.dark .modal-backdrop { background: rgba(0,0,0,0.6) !important; }
+
+/* 透過ホワイトの置換（用途が多い箇所のみ） */
+.dark .bg-white\/90 { background-color: rgba(26, 29, 35, 0.90) !important; }
+.dark .bg-white\/20 { background-color: rgba(26, 29, 35, 0.20) !important; }
+.dark .bg-white\/10 { background-color: rgba(26, 29, 35, 0.10) !important; }
 
 /* 見出しのリセット */
 h1, h2, h3, h4, h5, h6 {

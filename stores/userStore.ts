@@ -232,13 +232,17 @@ export const useUserStore = create<UserState>()(
             }
             
             // 直近のキャッシュが新鮮なら、スピナーを出さずにバックグラウンド更新
-            const { lastSyncTime, extendedStats, isInitialized } = get()
+            const { lastSyncTime, extendedStats, isInitialized, profileData } = get()
             const sameUser = extendedStats?.userId === userId
             const lastSyncMs = lastSyncTime ? Date.parse(lastSyncTime) : 0
             const isFresh = lastSyncMs && (Date.now() - lastSyncMs) < 3 * 60 * 1000 // 3分
 
-            if (isInitialized && sameUser && isFresh) {
+            // 既にキャッシュがある場合はスピナーを出さずにバックグラウンド更新
+            const hasCachedProfile = !!extendedStats || (profileData && profileData.nickname !== defaultProfileData.nickname)
+
+            if ((isInitialized && sameUser) || hasCachedProfile) {
               // 既存表示を維持しつつ、最新化だけ行う
+              set((state) => { state.isInitialized = true; state.isLoading = false })
               get().refreshProfile(userId)
               return
             }
@@ -253,18 +257,29 @@ export const useUserStore = create<UserState>()(
 
               const supabase = createBrowserSupabaseClient()
 
-              // プロフィールと統計を並列取得
+              // タイムアウト付きでプロフィールと統計を並列取得（UX向上）
+              const withTimeout = <T,>(p: Promise<T>, ms = 4000) => {
+                return Promise.race([
+                  p,
+                  new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+                ]) as Promise<T>
+              }
+
               const [profileResult, statsResult] = await Promise.all([
-                supabase
-                  .from('users_profile')
-                  .select('*')
-                  .eq('id', userId)
-                  .maybeSingle(),
-                supabase
-                  .from('user_stats')
-                  .select('*')
-                  .eq('user_id', userId)
-                  .maybeSingle()
+                withTimeout(
+                  supabase
+                    .from('users_profile')
+                    .select('id,nickname,character_type,skills,weakness,favorite_place,energy_charge,companion,catchphrase,message,avatar_url,favorite_now_image_url,profile_completion')
+                    .eq('id', userId)
+                    .maybeSingle()
+                ),
+                withTimeout(
+                  supabase
+                    .from('user_stats')
+                    .select('user_id,login_count,last_login_date,total_exp,quest_clear_count,created_at,updated_at')
+                    .eq('user_id', userId)
+                    .maybeSingle()
+                )
               ])
 
               const profileError = (profileResult as any).error
@@ -473,7 +488,7 @@ export const useUserStore = create<UserState>()(
               // 最新のプロフィールデータを取得
               const { data: profileData, error: profileError } = await supabase
                 .from('users_profile')
-                .select('*')
+                .select('id,nickname,character_type,skills,weakness,favorite_place,energy_charge,companion,catchphrase,message,avatar_url,favorite_now_image_url,profile_completion')
                 .eq('id', userId)
                 .maybeSingle()
 

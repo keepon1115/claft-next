@@ -181,6 +181,23 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 <span className="text-base">アントレプレナー</span>
               </Link>
             </li>
+
+            {/* ひらめきポスト（アントレプレナーの次） */}
+            <li>
+              <Link 
+                href="/hirameki-post" 
+                className="
+                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
+                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-yellow-400
+                "
+                onClick={onClose}
+              >
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
+                <span className="text-base">ひらめきポスト</span>
+              </Link>
+            </li>
             
             {isAuthenticated && isAdmin && (
               <>
@@ -218,9 +235,9 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                   <Link 
                     href="/admin/users" 
                     className="
-                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
-                      transition-all duration-300 ease-in-out font-medium
-                      hover:bg白/10 hover:text-white hover:pl-[35px]
+                  flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
                       focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                     "
                     onClick={onClose}
@@ -257,6 +274,19 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
                     <span className="text-base">システム設定</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/admin/hirameki-posts" 
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      hover:text-white hover:bg-white/10 transition-colors duration-150
+                    "
+                    onClick={onClose}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
+                    <span className="text-base">ひらめき管理</span>
                   </Link>
                 </li>
               </>
