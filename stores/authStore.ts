@@ -4,6 +4,10 @@ import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery, SupabaseError } from '@/lib/supabase/client'
+import { useUserStore } from '@/stores/userStore'
+import { useQuestStore } from '@/stores/questStore'
+import { useMinecraftSdgsStore } from '@/stores/minecraftSdgsStore'
+import { useTutorialStore } from '@/stores/tutorialStore'
 import type { UserProfile, UserStats } from '@/types'
 import type { User as AuthUser } from '@supabase/supabase-js'
 
@@ -351,16 +355,100 @@ export const useAuthStore = create<AuthState>()(
                   state.error = '開発モード: Supabase設定なしで動作中'
                 })
 
+                // 即時リセット（モック時も実施）
+                try { useAuthStore.persist?.clearStorage?.() } catch {}
+                try { useUserStore.persist?.clearStorage?.() } catch {}
+                try { useQuestStore.persist?.clearStorage?.() } catch {}
+                try { useMinecraftSdgsStore.persist?.clearStorage?.() } catch {}
+                try { localStorage.removeItem('sdgs:return') } catch {}
+
+                // 他ストアのメモリ状態もニュートラルに戻す
+                try { useQuestStore.getState().setDemoMode() } catch {}
+                try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
+                try {
+                  useUserStore.setState((state) => ({
+                    profileData: {
+                      nickname: 'CLAFT冒険者',
+                      character: '',
+                      skills: [''],
+                      weakness: '',
+                      favoritePlace: '',
+                      energyCharge: '',
+                      companion: '',
+                      catchphrase: '',
+                      message: '',
+                      avatarUrl: '',
+                      favoriteNowImageUrl: '',
+                      profileCompletion: 0
+                    },
+                    extendedStats: null,
+                    achievements: state.achievements.map(a => ({ ...a, isUnlocked: false, unlockedAt: undefined })),
+                    recentActivities: [],
+                    isLoading: false,
+                    isSaving: false,
+                    error: null,
+                    lastSyncTime: null,
+                    isInitialized: false
+                  }))
+                } catch {}
+
                 return { success: true }
               }
 
               // 実際のSupabaseログアウト
               const supabase = createBrowserSupabaseClient()
-              const { error } = await supabase.auth.signOut()
+              const { error } = await supabase.auth.signOut({ scope: 'global' as any })
               
               if (error) {
                 throw new Error(`ログアウトエラー: ${error.message}`)
               }
+
+              // 即時にローカル状態・永続データをクリア（共有端末対策）
+              set((state) => {
+                state.user = null
+                state.profile = null
+                state.stats = null
+                state.isAdmin = false
+                state.error = null
+              })
+
+              try { useAuthStore.persist?.clearStorage?.() } catch {}
+              try { useUserStore.persist?.clearStorage?.() } catch {}
+              try { useQuestStore.persist?.clearStorage?.() } catch {}
+              try { useMinecraftSdgsStore.persist?.clearStorage?.() } catch {}
+              try { useTutorialStore.persist?.clearStorage?.() } catch {}
+              try { useTutorialStore.persist?.clearStorage?.() } catch {}
+              try { localStorage.removeItem('sdgs:return') } catch {}
+
+              // 他ストアのメモリ状態を即座に中立化
+              try { useQuestStore.getState().setDemoMode() } catch {}
+              try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
+              try {
+                useUserStore.setState((state) => ({
+                  profileData: {
+                    nickname: 'CLAFT冒険者',
+                    character: '',
+                    skills: [''],
+                    weakness: '',
+                    favoritePlace: '',
+                    energyCharge: '',
+                    companion: '',
+                    catchphrase: '',
+                    message: '',
+                    avatarUrl: '',
+                    favoriteNowImageUrl: '',
+                    profileCompletion: 0
+                  },
+                  extendedStats: null,
+                  achievements: state.achievements.map(a => ({ ...a, isUnlocked: false, unlockedAt: undefined })),
+                  recentActivities: [],
+                  isLoading: false,
+                  isSaving: false,
+                  error: null,
+                  lastSyncTime: null,
+                  isInitialized: false
+                }))
+              } catch {}
 
               return { success: true }
 

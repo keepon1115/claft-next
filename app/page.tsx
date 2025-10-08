@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ProfileCard from '@/components/home/ProfileCard'
 import CraftStory from '@/components/home/CraftStory'
 import JibunCraft from '@/components/home/JibunCraft'
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { LockedContent } from '@/components/common/LockedContent'
 import { useQuestStore } from '@/stores/questStore'
 import HowToModal from '@/components/home/HowToModal'
+import TutorialGuide from '@/components/home/TutorialGuide'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
@@ -70,6 +71,10 @@ export default function Home() {
 
   const displayName = profile?.nickname || (user as any)?.user_metadata?.name || user?.email || 'クラフター'
   const [howToOpen, setHowToOpen] = useState(false)
+  // 右上クイックアクション参照
+  const howToRef = useRef<HTMLDivElement>(null)
+  const calendarRef = useRef<HTMLAnchorElement>(null)
+  const adventurersRef = useRef<HTMLAnchorElement>(null)
 
   return (
     <>
@@ -128,9 +133,11 @@ export default function Home() {
               )}
             {/* 追加: クイックリンク */}
             <div className="quick-actions">
-              <button className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
-              <a className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
-              <a className="quick-btn" href="/yononaka#adventurers">冒険者</a>
+              <div ref={howToRef} className="inline-block">
+                <button className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
+              </div>
+              <a ref={calendarRef} className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
+              <a ref={adventurersRef} className="quick-btn" href="/yononaka#adventurers">冒険者</a>
             </div>
             </div>
           </div>
@@ -168,6 +175,15 @@ export default function Home() {
 
       {/* 歩き方モーダル */}
       <HowToModal isOpen={howToOpen} onClose={() => setHowToOpen(false)} />
+
+      {/* チュートリアルガイド */}
+      <TutorialGuide 
+        howToRef={howToRef}
+        calendarRef={calendarRef}
+        adventurersRef={adventurersRef}
+        openSidebar={() => setSidebarOpen(true)}
+        closeSidebar={() => setSidebarOpen(false)}
+      />
     </>
   )
 }
