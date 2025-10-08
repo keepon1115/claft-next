@@ -13,6 +13,7 @@ import { LockedContent } from '@/components/common/LockedContent'
 import { useQuestStore } from '@/stores/questStore'
 import HowToModal from '@/components/home/HowToModal'
 import TutorialGuide from '@/components/home/TutorialGuide'
+import ProfileNudge from '@/components/home/ProfileNudge'
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
@@ -72,9 +73,10 @@ export default function Home() {
   const displayName = profile?.nickname || (user as any)?.user_metadata?.name || user?.email || 'クラフター'
   const [howToOpen, setHowToOpen] = useState(false)
   // 右上クイックアクション参照
-  const howToRef = useRef<HTMLDivElement>(null)
+  const howToRef = useRef<HTMLButtonElement>(null)
   const calendarRef = useRef<HTMLAnchorElement>(null)
   const adventurersRef = useRef<HTMLAnchorElement>(null)
+  const [sidebarGlow, setSidebarGlow] = useState(false)
 
   return (
     <>
@@ -92,6 +94,7 @@ export default function Home() {
         <Sidebar 
           isOpen={sidebarOpen} 
           onClose={closeSidebar}
+          className={sidebarGlow ? 'outline outline-4 outline-yellow-300 shadow-[0_0_0_4px_rgba(250,204,21,0.5)]' : ''}
         />
         
         {/* ヘッダー */}
@@ -133,9 +136,7 @@ export default function Home() {
               )}
             {/* 追加: クイックリンク */}
             <div className="quick-actions">
-              <div ref={howToRef} className="inline-block">
-                <button className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
-              </div>
+              <button ref={howToRef} className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
               <a ref={calendarRef} className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
               <a ref={adventurersRef} className="quick-btn" href="/yononaka#adventurers">冒険者</a>
             </div>
@@ -183,7 +184,15 @@ export default function Home() {
         adventurersRef={adventurersRef}
         openSidebar={() => setSidebarOpen(true)}
         closeSidebar={() => setSidebarOpen(false)}
+        highlightSidebar={() => { setSidebarOpen(true); setSidebarGlow(true); setTimeout(() => setSidebarGlow(false), 1800) }}
+        onComplete={() => {
+          const ev = new CustomEvent('claft:confetti')
+          window.dispatchEvent(ev)
+        }}
       />
+
+      {/* プロフィール促し（completion<50で毎ログイン表示） */}
+      <ProfileNudge />
     </>
   )
 }

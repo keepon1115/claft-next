@@ -6,35 +6,41 @@ import { useAuth } from '@/hooks/useAuth'
 
 interface TutorialGuideProps {
   // 右上ボタン群の要素参照（歩き方/カレンダー/冒険者）
-  howToRef?: React.RefObject<HTMLDivElement>
+  howToRef?: React.RefObject<HTMLButtonElement>
   calendarRef?: React.RefObject<HTMLAnchorElement>
   adventurersRef?: React.RefObject<HTMLAnchorElement>
-  // サイドメニュー制御
-  openSidebar?: () => void
-  closeSidebar?: () => void
+  onComplete?: () => void
 }
 
-export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, openSidebar, closeSidebar }: TutorialGuideProps) {
-  const { user, profile } = useAuth()
-  const { active, step, start, next, goTo, skipAndComplete, complete, stop, completedAt, version, completedByUserId } = useTutorialStore()
+export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, onComplete }: TutorialGuideProps) {
+  const { user, profile, isInitialized } = useAuth()
+  const {
+    active,
+    step,
+    start,
+    next,
+    goTo,
+    skipAndComplete,
+    complete,
+    stop,
+    completedAt,
+    version,
+    completedByUserId,
+    welcomeSeenByUserId,
+    markWelcomeSeen
+  } = useTutorialStore()
 
-  // 新規登録/初回ログイン時に自動起動（完了済み・バージョン違いでなければ）
+  // 自動起動（初回ログイン時のみ）。以降は自動起動しない
   useEffect(() => {
-    if (!user) return
-    // 別ユーザーであれば再起動、同ユーザーで完了済みなら起動しない
-    if (!completedAt || completedByUserId !== user.id || version !== ONBOARDING_VERSION) {
+    if (!user || !isInitialized) return
+    const seenWelcome = !!welcomeSeenByUserId && welcomeSeenByUserId === user.id
+    const isCompletedForUser = !!completedAt && completedByUserId === user.id
+    if (isCompletedForUser) return
+    if (!active && !seenWelcome) {
       start(user.id)
+      goTo(0)
     }
-  }, [user?.id, completedAt, completedByUserId, version])
-
-  // プロフィール完了（デフォルトの「冒険者」以外）で即終了
-  useEffect(() => {
-    if (!profile) return
-    const nickname = profile.nickname
-    if (nickname && nickname !== '冒険者') {
-      if (active) complete(user?.id)
-    }
-  }, [profile?.nickname, active])
+  }, [user?.id, isInitialized, active, welcomeSeenByUserId, completedAt, completedByUserId])
 
   // オーバーレイのスクロール固定
   useEffect(() => {
@@ -47,12 +53,12 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
 
   if (!active) return null
 
-  // ハイライト対象取得
+  // ハイライト対象取得（0:ウェルカム, 1:歩き方, 2:カレンダー, 3:冒険者, 4:終了）
   const getTargetRect = () => {
     let el: HTMLElement | null = null
-    if (step === 2 && howToRef?.current) el = howToRef.current
-    if (step === 3 && calendarRef?.current) el = calendarRef.current
-    if (step === 4 && adventurersRef?.current) el = adventurersRef.current
+    if (step === 1 && howToRef?.current) el = howToRef.current
+    if (step === 2 && calendarRef?.current) el = calendarRef.current
+    if (step === 3 && adventurersRef?.current) el = adventurersRef.current
     if (!el) return null
     const r = el.getBoundingClientRect()
     return { top: r.top + window.scrollY, left: r.left + window.scrollX, width: r.width, height: r.height }
@@ -64,38 +70,32 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
     switch (step) {
       case 0:
         return (
-          <Panel title="ようこそ！" body="1〜2分で終わるチュートリアル。いつでもスキップできるよ✌️">
-            <CTA onPrimary={() => goTo(1)} primary="はじめる" onSecondary={() => skipAndComplete(user?.id)} secondary="あとで" />
+          <Panel title="ようこそ！" body="1〜2分で終わるチュートリアル。">
+            <CTA onPrimary={() => { markWelcomeSeen(user?.id); goTo(1) }} primary="はじめる" />
           </Panel>
         )
       case 1:
         return (
-          <Panel title="プロフィールを整えよう 😊" body="表示名やアイコンを設定すると、体験がもっと良くなるよ！">
-            <CTA onPrimary={() => skipAndComplete(user?.id)} primary="あとで" onSecondary={() => skipAndComplete(user?.id)} secondary="スキップ" />
+          <Panel title="歩き方（学び方）📖" body="学びの進め方はここから確認できるよ">
+            <CTA onPrimary={() => { howToRef?.current?.click() }} primary="開く" />
           </Panel>
         )
       case 2:
         return (
-          <Panel title="歩き方（学び方）📖" body="学びの進め方はここから確認できるよ">
-            <CTA onPrimary={() => { (howToRef?.current as any)?.click?.(); next() }} primary="開く" onSecondary={next} secondary="スキップ" />
+          <Panel title="カレンダー 📅" body="イベントの予定はここでチェック！">
+            <CTA onPrimary={() => { calendarRef?.current?.click() }} primary="開く" />
           </Panel>
         )
       case 3:
         return (
-          <Panel title="カレンダー 📅" body="イベントの予定はここでチェック！">
-            <CTA onPrimary={() => { calendarRef?.current?.click(); next() }} primary="開く" onSecondary={next} secondary="スキップ" />
+          <Panel title="冒険者 🧑‍🤝‍🧑" body="仲間のプロフィールや活動を見てインスピレーションを得よう">
+            <CTA onPrimary={() => { adventurersRef?.current?.click() }} primary="開く" />
           </Panel>
         )
       case 4:
         return (
-          <Panel title="冒険者 🧑‍🤝‍🧑" body="仲間のプロフィールや活動を見てインスピレーションを得よう">
-            <CTA onPrimary={() => { adventurersRef?.current?.click(); next() }} primary="開く" onSecondary={next} secondary="スキップ" />
-          </Panel>
-        )
-      case 5:
-        return (
-          <Panel title="サイドメニュー" body="いろんなページに行けるよ。今は軽く場所だけ覚えよう！">
-            <CTA onPrimary={() => { openSidebar?.(); complete(user?.id) }} primary="はじめる" onSecondary={() => skipAndComplete(user?.id)} secondary="スキップ" />
+          <Panel title="準備OK！" body="それでは冒険をはじめよう！">
+            <CTA onPrimary={() => { complete(user?.id); onComplete?.() }} primary="はじめる" />
           </Panel>
         )
       default:
@@ -105,8 +105,8 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
 
   return (
     <div className="fixed inset-0 z-[10000]">
-      {/* 背景マスク */}
-      <div className="absolute inset-0 bg-black/50" onClick={skipAndComplete} />
+      {/* 背景マスク（クリックでは閉じない） */}
+      <div className="absolute inset-0 bg-black/50" />
 
       {/* ハイライト枠 */}
       {rect && (
@@ -119,6 +119,25 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
       {/* ポップ */}
       <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-[min(560px,94vw)]">
         <StepContent />
+        {/* 矢印ナビゲーション */}
+        <div className="mt-3 flex items-center justify-between">
+          <button
+            onClick={() => goTo(Math.max(0, step - 1))}
+            disabled={step <= 0}
+            className="px-3 py-2 rounded-lg bg-white/80 hover:bg-white text-slate-700 disabled:opacity-40"
+            aria-label="prev"
+          >
+            ←
+          </button>
+          <button
+            onClick={() => goTo(Math.min(4, step + 1))}
+            disabled={step >= 4}
+            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40"
+            aria-label="next"
+          >
+            →
+          </button>
+        </div>
       </div>
     </div>
   )

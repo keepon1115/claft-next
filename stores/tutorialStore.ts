@@ -9,6 +9,7 @@ interface TutorialState {
   step: number
   completedAt: string | null
   completedByUserId: string | null
+  welcomeSeenByUserId: string | null
   version: number
 
   // アクション
@@ -18,6 +19,7 @@ interface TutorialState {
   skipAndComplete: (userId?: string | null) => void
   complete: (userId?: string | null) => void
   stop: () => void
+  markWelcomeSeen: (userId?: string | null) => void
 }
 
 export const ONBOARDING_VERSION = 1
@@ -31,6 +33,7 @@ export const useTutorialStore = create<TutorialState>()(
           step: 0,
           completedAt: null,
           completedByUserId: null,
+          welcomeSeenByUserId: null,
           version: ONBOARDING_VERSION,
 
           start: (userId?: string | null) => {
@@ -77,6 +80,12 @@ export const useTutorialStore = create<TutorialState>()(
           stop: () => {
             set((state) => {
               state.active = false
+            })
+          },
+
+          markWelcomeSeen: (userId?: string | null) => {
+            set((state) => {
+              state.welcomeSeenByUserId = userId || null
             })
           }
         }),
