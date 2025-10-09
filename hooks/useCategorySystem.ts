@@ -23,8 +23,8 @@ interface UseCategorySystemProps {
   userMainQuestProgress: number
   /** 認証状態 */
   isAuthenticated: boolean
-  /** 表示中のエリア（1-6/7-12）: 省略時は1-6 */
-  area?: '1-6' | '7-12'
+  /** 表示中のエリア（1-6/7-12/jibun）: 省略時は1-6 */
+  area?: '1-6' | '7-12' | 'jibun'
 }
 
 interface UseCategorySystemReturn {

@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 // 承認フロー撤廃に伴い、承認系アクションのインポートを削除
 import { Map, Trophy, Clock, CheckCircle, XCircle, ChevronLeft, RefreshCw, Users, TrendingUp, Filter, MessageSquare, Send, X } from 'lucide-react'
+import ApprovalTable from '@/components/admin/ApprovalTable'
+import { useCallback } from 'react'
 
 // =====================================================
 // 型定義
@@ -85,6 +87,10 @@ export default function QuestsPage() {
   const [sendingFeedback, setSendingFeedback] = useState(false)
   
   const supabase = createBrowserSupabaseClient()
+  const handleApprovalChange = useCallback(() => {
+    // 承認変更後に統計とリストを更新
+    loadQuestData()
+  }, [])
 
   // 管理者権限チェック（初期化完了を待つ）
   useEffect(() => {
@@ -472,6 +478,23 @@ export default function QuestsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 承認待ち（ステージ12を既定で表示） */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Clock className="text-orange-600" /> 承認待ち（クエスト）
+            </h2>
+            <div className="text-sm text-gray-500">
+              ステージ12の承認が必要です（必要に応じてステージを切り替え）
+            </div>
+          </div>
+          <ApprovalTable
+            pageSize={10}
+            filters={{ stageFilter: 12 }}
+            onApprovalChange={handleApprovalChange}
+          />
+        </div>
+
         {/* 統計カード */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">

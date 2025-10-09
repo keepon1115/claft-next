@@ -7,9 +7,11 @@ import confetti from 'canvas-confetti'
 interface UnlockAnimationProps {
   isOpen: boolean
   onClose: () => void
+  /** 解放対象のエリア（7-12 または ジブンクラフト） */
+  targetArea?: '7-12' | 'jibun'
 }
 
-export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProps) {
+export default function UnlockAnimation({ isOpen, onClose, targetArea }: UnlockAnimationProps) {
   const [step, setStep] = useState(0)
 
   useEffect(() => {
@@ -95,7 +97,9 @@ export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProp
                   className="mb-8"
                 >
                   <div className="text-8xl mb-4">🎉</div>
-                  <h2 className="text-4xl font-bold mb-2">はじまりの空完全制覇！</h2>
+                  <h2 className="text-4xl font-bold mb-2">
+                    {targetArea === 'jibun' ? 'くれなずむ空完全制覇！' : 'はじまりの空完全制覇！'}
+                  </h2>
                   <p className="text-xl text-blue-300">すべてのステージをクリアしました</p>
                 </motion.div>
               )}
@@ -161,11 +165,13 @@ export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProp
                       ease: "easeInOut"
                     }}
                   >
-                    <div className="text-8xl mb-4">🌇</div>
+                    <div className="text-8xl mb-4">{targetArea === 'jibun' ? '🌙' : '🌇'}</div>
                   </motion.div>
                   <h2 className="text-4xl font-bold mb-2 text-green-300">新たなエリアを発見！</h2>
-                  <h3 className="text-2xl text-green-200">「くれなずむ空」</h3>
-                  <p className="text-lg text-gray-300 mt-4">より困難な挑戦があなたを待っています</p>
+                  <h3 className="text-2xl text-green-2 00">{targetArea === 'jibun' ? '「ジブンクラフト」' : '「くれなずむ空」'}</h3>
+                  <p className="text-lg text-gray-300 mt-4">
+                    {targetArea === 'jibun' ? 'ここからは自分を磨く冒険が始まります' : 'より困難な挑戦があなたを待っています'}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -188,7 +194,7 @@ export default function UnlockAnimation({ isOpen, onClose }: UnlockAnimationProp
                     onClick={onClose}
                     className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors"
                   >
-                    くれなずむ空に進む
+                    {targetArea === 'jibun' ? 'ジブンクラフトに進む' : 'くれなずむ空に進む'}
                   </button>
                 </motion.div>
               )}

@@ -182,7 +182,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
               </Link>
             </li>
 
-            {/* ひらめきポスト（アントレプレナーの次） */}
+            {/* ひらめきポスト/Q＆A（アントレプレナーの次） */}
             <li>
               <Link 
                 href="/hirameki-post" 
@@ -195,7 +195,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 onClick={onClose}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
-                <span className="text-base">ひらめきポスト</span>
+                <span className="text-base">ひらめきポスト/Q＆A</span>
               </Link>
             </li>
             

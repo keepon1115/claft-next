@@ -164,7 +164,7 @@ export async function approveQuest(userId: string, stageId: number) {
     const { userId: adminUserId, supabase } = await checkAdminPermission()
     
     // 入力値検証
-    if (!userId || !stageId || stageId < 1 || stageId > 6) {
+    if (!userId || !stageId || stageId < 1 || stageId > 12) {
       throw new Error('無効なパラメータです')
     }
     
@@ -280,6 +280,40 @@ export async function approveQuest(userId: string, stageId: number) {
         
         updates.push(unlockStage7)
       }
+    } else if (stageId >= 7 && stageId < 12) {
+      // 7-11: 通常の次ステージ解放（7→8 ... 11→12）
+      const nextStageId = stageId + 1
+      const { data: existingNext, error: checkError } = await supabase
+        .from('quest_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('stage_id', nextStageId)
+        .maybeSingle()
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+      if (!existingNext) {
+        const insertNextStage = supabase
+          .from('quest_progress')
+          .insert({
+            user_id: userId,
+            stage_id: nextStageId,
+            status: 'current',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        updates.push(insertNextStage)
+      } else if (existingNext.status === 'locked') {
+        const unlockNextStage = supabase
+          .from('quest_progress')
+          .update({ status: 'current', updated_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('stage_id', nextStageId)
+        updates.push(unlockNextStage)
+      }
+    } else if (stageId === 12) {
+      // 12承認：次の数値ステージはなし。ジブンクラフト解放はクライアントのcheckAreaUnlockで処理
+      // ここでは特別なDB処理は不要（完了更新は既にupdatesに含まれている）
     }
     
     // 並列実行でパフォーマンス向上
@@ -304,7 +338,7 @@ export async function approveQuest(userId: string, stageId: number) {
     return {
       success: true,
       message: `ステージ${stageId}を承認しました`,
-      nextStageUnlocked: stageId <= 6
+      nextStageUnlocked: stageId <= 11
     }
     
   } catch (error) {

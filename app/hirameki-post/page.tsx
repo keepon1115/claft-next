@@ -119,7 +119,7 @@ export default function HiramekiPostPage() {
         <section className="relative isolate overflow-hidden">
           <div className="mx-auto max-w-5xl px-6 pt-24 pb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFF5D6] border-2 border-[#FFD66B] text-[#7A5B00] font-extrabold text-xs">
-              💡 ひらめきポスト
+              💡 ひらめきポスト/Q＆A
             </div>
             <h1 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight text-[#2b2b2b]">
               あなたの声が、次のCLAFTをつくる！

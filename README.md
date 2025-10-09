@@ -4,15 +4,27 @@ CLAFTは学習を冒険に変える、革新的な教育プラットフォーム
 
 ## 🚀 クイックスタート
 
-```bash
-# 依存関係のインストール
-npm install
+前提:
+- Node.js 18.18+ もしくは 20+（Next.js 15 対応）
+- npm (推奨)
 
-# 開発サーバー起動
+1) 依存関係インストール
+```bash
+npm install
+```
+
+2) 環境変数を設定（`.env.local`）
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+3) 開発サーバー起動
+```bash
 npm run dev
 ```
 
-アプリケーションは http://localhost:3000 で起動します。
+アプリケーションは `http://localhost:3000` で起動します。
 
 ## 📁 プロジェクト構成（現状）
 
@@ -39,20 +51,20 @@ claft-next/
 │  ├── minecraft-sdgs/(DynamicStageModal.tsx, LoginPromptModal.tsx, MinecraftAnimations.tsx, MinecraftMap.tsx,
 │  │                   MinecraftStageModal.tsx, MinecraftStageNode.tsx, WorldDataModal.tsx)
 │  ├── profile/AccountSettings.tsx
-│  └── quest/(CategoryBlock.tsx, CategoryModal.tsx, DynamicStageModal.tsx, LoginPromptModal.tsx,
-│            QuestMap.tsx, StageModal.tsx, StageNode.tsx, UnlockAnimation.tsx)
-├── data/quests/(1-6/*.ts, 7-12/*.ts)
+│  └── quest/(QuestMap.tsx, StageModal.tsx, UnlockAnimation.tsx, 他)
+├── data/
+│  ├── quests/(1-6/*.ts, 7-12/*.ts)
+│  └── media/items.ts
 ├── hooks/(useAdventurerList.ts, useAuth.ts, useCategorySystem.ts, useMediaQuery.ts, usePWA.ts, useRealtimeUpdates.ts, useToast.ts, useUserGoals.ts)
 ├── lib/
 │  ├── api/(minecraft-sdgs.ts, quests.ts)
 │  ├── supabase/(client.ts, hooks.ts)
 │  └── utils/(imageUtils.ts, performance.ts, seo.ts)
 ├── stores/(authStore.ts, minecraftSdgsStore.ts, questStore.ts, userStore.ts, quest/*.ts)
-├── types/(category.ts, database.ts, index.ts, quest.ts, user.ts)
+├── types/(category.ts, database.ts, index.ts, media.ts, quest.ts, user.ts)
 ├── docs/(各種ガイド, examples/*.md, PROJECT_STRUCTURE.md)
 ├── public/(images/*.png, manifest.json, robots.txt, sw.js, workbox-*.js, アイコン類)
-├── reference/（削除済）
-├── scripts/(health-check.js, performance-audit.js)
+├── scripts/(health-check.js, init-user-stats.js, performance-audit.js)
 ├── next.config.ts, tsconfig.json, tailwind.config.js, postcss.config.mjs, eslint.config.mjs
 ├── package.json, package-lock.json, next-env.d.ts
 └── README.md
@@ -79,6 +91,7 @@ claft-next/
 - **🔐 認証システム**: Supabaseベースのセキュアな認証
 - **📱 PWA対応**: オフライン対応とアプリライクな体験
 - **⚡ パフォーマンス最適化**: 動的インポートとコード分割
+- **🎞️ メディアライブラリ**: 学習素材の検索・閲覧・再生（拡張中）
 
 ## 🛠️ 開発コマンド
 
@@ -95,12 +108,26 @@ npm run build
 # プロダクション起動
 npm run start
 
-# 型チェック
-npm run type-check
-
-# Linting
+# Lint
 npm run lint
+
+# 初期ユーザ統計の作成（必要時）
+npm run init:user-stats
+
+# バンドル分析（ビルドサイズ可視化）
+npm run analyze            # 環境変数 ANALYZE=true で build 実行
+npm run bundle-analyzer    # @next/bundle-analyzer の起動
+
+# パフォーマンス計測（Lighthouse）
+npm run lighthouse         # 既存サーバに対して実行
+npm run perf:dev           # dev 起動後に自動計測
+npm run perf:build         # build/start 後に自動計測
+
+# ヘルスチェック（簡易）
+node scripts/health-check.js
 ```
+
+注: `perf:dev` と `perf:build` は bash の `sleep` を使用します。Windows の場合は Git Bash 等で実行するか、手動で `npm run dev` / `npm run build && npm run start` を起動後に `npm run lighthouse` を実行してください。
 
 ## 📚 ドキュメント
 
@@ -109,6 +136,13 @@ npm run lint
 - [パフォーマンス最適化](./docs/Performance-Optimization-Guide.md) - 最適化手法
 - [PWA設定](./docs/PWA-Setup.md) - PWA機能の設定
 - [SEO実装](./docs/SEO-Implementation-Guide.md) - SEO対策
+-
+- 管理者向け: [Admin 機能運用ガイド](./docs/Admin-Operations-Manual.md), [Admin ユーザガイド](./docs/Admin-User-Manual.md)
+- 画像最適化: [Image Optimization Guide](./docs/Image-Optimization-Guide.md)
+- 動的 import 最適化: [Dynamic Import Bundle Optimization](./docs/Dynamic-Import-Bundle-Optimization.md)
+- アバターアップロード: [セットアップ](./docs/Avatar-Upload-Setup.md), [トラブルシュート](./docs/Avatar-Upload-Troubleshooting.md)
+- 本番移行: [Production Migration Guide](./docs/Production-Migration-Guide.md)
+- 障害対応: [Emergency Recovery Guide](./docs/Emergency-Recovery-Guide.md)
 
 ## 🔄 バックアップ・同期設定
 
@@ -142,7 +176,7 @@ next.config.ts   # Next.js設定（PWA含む）
 3. 自動デプロイが開始されます
 
 ### 環境変数
-以下の環境変数を設定してください：
+`.env.local` に以下を設定してください：
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key

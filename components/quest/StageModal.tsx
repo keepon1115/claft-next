@@ -6,6 +6,7 @@ import { useQuestStore } from '@/stores/questStore'
 import { useAuth } from '@/hooks/useAuth'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { X, Video, FileText, Lock, CheckCircle, AlertTriangle, ArrowRight, Info, Flame, MessageSquare } from 'lucide-react'
+import { useNotifications, createNotificationHelpers } from '@/components/common/NotificationSystem'
 
 // =====================================================
 // StageModal型定義
@@ -39,7 +40,9 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
   const [showCelebration, setShowCelebration] = useState(false)
   
   const { user, isAuthenticated } = useAuth()
-  const { stageDetails, userProgress, completeStageWithConfirmation } = useQuestStore()
+  const { stageDetails, userProgress, completeStageWithConfirmation, submitStage } = useQuestStore()
+  const { addNotification } = useNotifications()
+  const notify = createNotificationHelpers(addNotification)
 
   // モーダル外クリック検出
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
@@ -158,8 +161,32 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
 
   // ステージ完了処理（確認ポップアップ付き）
   const handleCompleteWithConfirmation = async () => {
+    // 初期化や認証が未準備ならブロック
+    if (!user?.id) {
+      notify.error('エラー', '認証が未完了です。数秒後に再度お試しください。')
+      return
+    }
+    if (!userProgress || !stageDetails[stageId]) {
+      notify.info('初期化中...', 'データ同期後にお試しください。')
+      return
+    }
+    // ステージ12は完了報告→承認待ち（pending_approval）にする
+    if (stageId === 12) {
+      const ok = window.confirm('ステージ12の完了を報告します。管理者の承認後にジブンクラフトが解放されます。送信してよろしいですか？')
+      if (!ok) return
+      const res = await submitStage(12)
+      if (res.success) {
+        notify.info('完了報告を送信しました', '承認までしばらくお待ちください。')
+        onClose()
+      } else {
+        notify.error('エラー', res.error || '送信に失敗しました')
+      }
+      return
+    }
+
     const result = await completeStageWithConfirmation(stageId)
     if (result.success) {
+      notify.success('クエストをクリア！', `ステージ${stageId}をクリアしました。`)
       // 祝福演出を表示
       setShowCelebration(true)
       // 3秒後にモーダルを閉じる
@@ -169,7 +196,11 @@ export function StageModal({ stageId, onClose, isOpen }: StageModalProps) {
       }, 3000)
     } else if (!result.cancelled) {
       // エラーが発生した場合（キャンセル以外）
-      alert(`エラー: ${result.error}`)
+      notify.error('エラー', result.error || '完了処理に失敗しました')
+      try {
+        // 失敗時は状態をサーバーと同期
+        await (await import('@/stores/questStore')).useQuestStore.getState().syncWithSupabase()
+      } catch {}
     }
   }
 

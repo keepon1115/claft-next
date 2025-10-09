@@ -11,6 +11,7 @@ import { AuthButton } from '@/components/auth/AuthButton'
 import { useAuth } from '@/hooks/useAuth'
 import { LockedContent } from '@/components/common/LockedContent'
 import { useQuestStore } from '@/stores/questStore'
+import { useMinecraftSdgsStore } from '@/stores/minecraftSdgsStore'
 import HowToModal from '@/components/home/HowToModal'
 import TutorialGuide from '@/components/home/TutorialGuide'
 import ProfileNudge from '@/components/home/ProfileNudge'
@@ -20,11 +21,17 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isAdmin, isAuthenticated, profile, user, stats } = useAuth()
   const { statistics, initialize } = useQuestStore()
+  const { initialize: initializeMinecraftSdgs } = useMinecraftSdgsStore()
 
   useEffect(() => {
     // ユーザーIDに基づいてクエスト情報を初期化（未ログイン時はデモモード）
     initialize(user?.id)
   }, [user?.id, initialize])
+
+  useEffect(() => {
+    // ユーザーIDに基づいてマイクラSDGs情報を初期化（未ログイン時はデモモード）
+    initializeMinecraftSdgs(user?.id)
+  }, [user?.id, initializeMinecraftSdgs])
 
   // プロフィール完成度を判定するロジック
   // ニックネームがデフォルトの「冒険者」から変更されていれば参加とみなす
@@ -182,9 +189,6 @@ export default function Home() {
         howToRef={howToRef}
         calendarRef={calendarRef}
         adventurersRef={adventurersRef}
-        openSidebar={() => setSidebarOpen(true)}
-        closeSidebar={() => setSidebarOpen(false)}
-        highlightSidebar={() => { setSidebarOpen(true); setSidebarGlow(true); setTimeout(() => setSidebarGlow(false), 1800) }}
         onComplete={() => {
           const ev = new CustomEvent('claft:confetti')
           window.dispatchEvent(ev)

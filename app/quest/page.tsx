@@ -39,6 +39,7 @@ export default function QuestPage() {
     currentArea,
     areas,
     showUnlockAnimation,
+    unlockTargetArea,
     initialize,
     switchArea,
     checkAreaUnlock,
@@ -71,13 +72,16 @@ export default function QuestPage() {
   }
 
   // 表示用の統計（ログイン状態とエリアに応じて調整）
+  // ジブンクラフトはメインクエスト全体の進捗でカテゴリ解放を判断するため、completedStagesはグローバル値を使用
   const displayStatistics = isAuthenticated ? {
     ...statistics,
     totalStages: currentAreaStages.length,
-    completedStages: currentAreaStages.filter(stageId => {
-      const stage = Object.values(stageDetails).find(s => s.stageId === stageId)
-      return stage?.status === 'completed'
-    }).length
+    completedStages: (currentArea === 'jibun')
+      ? statistics.completedStages
+      : currentAreaStages.filter(stageId => {
+          const stage = Object.values(stageDetails).find(s => s.stageId === stageId)
+          return stage?.status === 'completed'
+        }).length
   } : demoStatistics
 
   // 認証完了後にデータロード
@@ -85,6 +89,23 @@ export default function QuestPage() {
     // 認証が初期化済みの場合のみクエストストアを初期化
     if (authInitialized) {
       initialize(user?.id)
+    }
+  }, [authInitialized, user?.id, initialize])
+
+  // ページ復帰（戻る/タブ復帰）時の再初期化（bfcache対策含む）
+  useEffect(() => {
+    const reinit = () => {
+      if (authInitialized) {
+        initialize(user?.id)
+      }
+    }
+    window.addEventListener('pageshow', reinit)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reinit()
+    })
+    return () => {
+      window.removeEventListener('pageshow', reinit)
+      document.removeEventListener('visibilitychange', reinit as any)
     }
   }, [authInitialized, user?.id, initialize])
 
@@ -196,7 +217,7 @@ export default function QuestPage() {
                   disabled={!areaInfo.isUnlocked}
                 >
                   <span className="area-icon">
-                    {areaInfo.theme === 'sky' ? '🌤️' : '🌇'}
+                    {areaInfo.theme === 'sky' ? '🌤️' : areaInfo.theme === 'twilight' ? '🌇' : '🌙'}
                   </span>
                   <span className="area-name">{areaInfo.name}</span>
                   {!areaInfo.isUnlocked && <Lock size={14} className="lock-icon" />}
@@ -273,14 +294,17 @@ export default function QuestPage() {
         />
       )}
 
-      {/* エリア解放アニメーション */}
-      <UnlockAnimation
-        isOpen={showUnlockAnimation}
-        onClose={() => {
-          dismissUnlockAnimation()
-          switchArea('7-12')
-        }}
-      />
+      {/* エリア解放アニメーション（ステージ6→7-12解放時のみ表示） */}
+      {showUnlockAnimation && unlockTargetArea === '7-12' && (
+        <UnlockAnimation
+          isOpen={showUnlockAnimation}
+          targetArea={'7-12'}
+          onClose={() => {
+            dismissUnlockAnimation()
+            switchArea('7-12' as any)
+          }}
+        />
+      )}
 
       {/* ピクセルアート風スタイル */}
       <style jsx>{`

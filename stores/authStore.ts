@@ -113,6 +113,10 @@ export const useAuthStore = create<AuthState>()(
                       state.isAdmin = false
                       state.error = null
                     })
+
+              // クエスト/SDGsストアのメモリ状態を完全初期化
+              try { useQuestStore.getState().setDemoMode() } catch {}
+              try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
                   }
                 } catch (error) {
                   console.error('認証状態変更エラー:', error)
@@ -397,10 +401,32 @@ export const useAuthStore = create<AuthState>()(
 
               // 実際のSupabaseログアウト
               const supabase = createBrowserSupabaseClient()
-              const { error } = await supabase.auth.signOut({ scope: 'global' as any })
-              
-              if (error) {
-                throw new Error(`ログアウトエラー: ${error.message}`)
+              let signOutError: any = null
+              try {
+                const { error } = await supabase.auth.signOut({ scope: 'global' as any })
+                signOutError = error
+              } catch (e) {
+                signOutError = e
+              }
+
+              // グローバルサインアウトがセッション不整合等で失敗する場合はローカルにフォールバック
+              if (signOutError) {
+                const message = (signOutError as any)?.message || ''
+                const status = (signOutError as any)?.status
+                const shouldFallbackToLocal =
+                  status === 401 || status === 403 ||
+                  message.includes('session') ||
+                  message.includes('refresh') ||
+                  message.includes('not allowed')
+
+                if (shouldFallbackToLocal) {
+                  try {
+                    await supabase.auth.signOut({ scope: 'local' as any })
+                  } catch {}
+                } else {
+                  // それ以外のエラーはログとして保持（ローカル状態は後続でクリア）
+                  console.warn('Supabase signOut failed:', signOutError)
+                }
               }
 
               // 即時にローカル状態・永続データをクリア（共有端末対策）

@@ -43,8 +43,8 @@ export interface QuestStatistics {
   lastCompletedStage: number | null
 }
 
-export type QuestTheme = 'sky' | 'twilight'
-export type QuestArea = '1-6' | '7-12'
+export type QuestTheme = 'sky' | 'twilight' | 'moon'
+export type QuestArea = '1-6' | '7-12' | 'jibun'
 
 export interface QuestAreaInfo {
   area: QuestArea
@@ -70,6 +70,7 @@ interface QuestState {
   currentArea: QuestArea
   areas: Record<QuestArea, QuestAreaInfo>
   showUnlockAnimation: boolean
+  unlockTargetArea: QuestArea | null
 
   // アクション
   initialize: (userId?: string) => Promise<void>
@@ -288,6 +289,13 @@ const defaultAreas: Record<QuestArea, QuestAreaInfo> = {
     name: 'くれなずむ空',
     stages: [7, 8, 9, 10, 11, 12],
     isUnlocked: false
+  },
+  'jibun': {
+    area: 'jibun',
+    theme: 'moon',
+    name: 'ジブンクラフト',
+    stages: [],
+    isUnlocked: false
   }
 }
 
@@ -350,6 +358,7 @@ export const useQuestStore = create<QuestState>()(
           currentArea: '1-6' as QuestArea,
           areas: { ...defaultAreas },
           showUnlockAnimation: false,
+          unlockTargetArea: null,
 
           // =====================================================
           // 初期化
@@ -364,7 +373,15 @@ export const useQuestStore = create<QuestState>()(
           set((state) => {
             state.isLoading = true
             state.error = null
-            state.currentUserId = userId || null
+              // areasなどの解放状態を毎回既定値に戻す（ユーザー跨ぎの漏れ防止）
+              state.userProgress = { ...defaultUserProgress }
+              state.stageDetails = { ...defaultStageDetails }
+              state.statistics = { ...defaultStatistics }
+              state.currentArea = '1-6'
+              state.areas = { ...defaultAreas }
+              state.showUnlockAnimation = false
+              state.unlockTargetArea = null
+              state.currentUserId = userId || null
           })
 
             try {
@@ -401,7 +418,7 @@ export const useQuestStore = create<QuestState>()(
                     }
                   })
 
-                  // 次にアクセス可能なステージを計算
+              // 次にアクセス可能なステージを計算
                   const completedStages = questProgress.filter(item => 
                     mapSupabaseStatusToStageStatus(item.status) === 'completed'
                   ).length
@@ -459,6 +476,27 @@ export const useQuestStore = create<QuestState>()(
                 }
               }
 
+              // 初期表示エリアの自動選択
+              try {
+                const { areas: currentAreas, userProgress: up } = get()
+                const jibunUnlocked = currentAreas['jibun']?.isUnlocked
+                const hasStarted7to12 = [7,8,9,10,11,12].some((id) => up[id] && up[id] !== 'locked')
+
+                set((state) => {
+                  if (jibunUnlocked) {
+                    state.currentArea = 'jibun'
+                  } else if (hasStarted7to12 || currentAreas['7-12']?.isUnlocked) {
+                    state.currentArea = '7-12'
+                  } else {
+                    state.currentArea = '1-6'
+                  }
+                })
+              } catch (e) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('default area select warning:', e)
+                }
+              }
+
             } catch (error) {
               // 開発モードでは警告レベルで表示
               if (process.env.NODE_ENV === 'development') {
@@ -482,7 +520,24 @@ export const useQuestStore = create<QuestState>()(
           // ステージ進捗更新（楽観的更新）
           // =====================================================
           updateStageProgress: async (stageId: number, status: StageStatus, optimistic = true) => {
-            const { currentUserId } = get()
+            let { currentUserId } = get()
+
+            // ユーザーIDが未設定の場合はSupabaseから取得を試みる
+            if (!currentUserId) {
+              try {
+                const supabase = createBrowserSupabaseClient()
+                const { data, error } = await supabase.auth.getUser()
+                if (!error && data?.user?.id) {
+                  currentUserId = data.user.id
+                  set((state) => { state.currentUserId = currentUserId })
+                }
+              } catch {}
+            }
+
+            // ユーザーIDが無い場合は保存を行わずエラーを返す（見た目だけ成功を防止）
+            if (!currentUserId) {
+              return { success: false, error: 'ログイン情報が無効です。ページを再読み込みしてからお試しください。' }
+            }
 
             // 楽観的更新
             if (optimistic) {
@@ -494,11 +549,6 @@ export const useQuestStore = create<QuestState>()(
                 }
                 state.statistics = get().calculateStatistics()
               })
-            }
-
-            if (!currentUserId) {
-              // デモモードでは楽観的更新のみ
-              return { success: true }
             }
 
             set((state) => {
@@ -522,7 +572,11 @@ export const useQuestStore = create<QuestState>()(
 
               await supabase
                 .from('quest_progress')
-                .upsert(progressData)
+                .upsert(progressData, {
+                  onConflict: 'user_id,stage_id'
+                })
+                .select()
+                .single()
 
               set((state) => {
                 state.lastSyncTime = now
@@ -617,20 +671,11 @@ export const useQuestStore = create<QuestState>()(
               const supabase = createBrowserSupabaseClient()
               const now = new Date().toISOString()
 
-              // 楽観的更新
-              set((state) => {
-                state.userProgress[stageId] = 'completed'
-                state.stageDetails[stageId].status = 'completed'
-                
-                // 次のステージをアンロック
-                const nextStageId = stageId + 1
-                if (nextStageId <= TOTAL_STAGES) {
-                  state.userProgress[nextStageId] = 'current'
-                  state.stageDetails[nextStageId].status = 'current'
-                }
-              })
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('[QuestComplete] start upsert', { stageId, userId: currentUserId })
+              }
 
-              // データベース更新（即座完了）
+              // データベース更新（即座完了）: 先にDB、成功後に状態反映
               const progressData = {
                 user_id: currentUserId,
                 stage_id: stageId,
@@ -642,7 +687,11 @@ export const useQuestStore = create<QuestState>()(
 
               const { error } = await supabase
                 .from('quest_progress')
-                .upsert(progressData)
+                .upsert(progressData, {
+                  onConflict: 'user_id,stage_id'
+                })
+                .select()
+                .single()
 
               if (error) {
                 throw error
@@ -660,8 +709,28 @@ export const useQuestStore = create<QuestState>()(
 
                 await supabase
                   .from('quest_progress')
-                  .upsert(nextStageData)
+                  .upsert(nextStageData, {
+                    onConflict: 'user_id,stage_id'
+                  })
+                  .select()
+                  .single()
               }
+
+              // DB成功後にローカル状態を反映
+              set((state) => {
+                state.userProgress[stageId] = 'completed'
+                if (state.stageDetails[stageId]) {
+                  state.stageDetails[stageId].status = 'completed'
+                  state.stageDetails[stageId].lastUpdated = now
+                }
+                if (nextStageId <= TOTAL_STAGES) {
+                  state.userProgress[nextStageId] = 'current'
+                  if (state.stageDetails[nextStageId]) {
+                    state.stageDetails[nextStageId].status = 'current'
+                    state.stageDetails[nextStageId].lastUpdated = now
+                  }
+                }
+              })
 
               // ステージ6完了時は新エリア解放チェック（即時フローでも発火）
               if (stageId === 6) {
@@ -679,14 +748,18 @@ export const useQuestStore = create<QuestState>()(
                 state.lastSyncTime = now
               })
 
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('[QuestComplete] success', { stageId, userId: currentUserId })
+              }
+
               return { success: true }
 
             } catch (error) {
               console.error('即座完了エラー:', error)
               const errorMessage = error instanceof Error ? error.message : 'ステージ完了に失敗しました'
 
-              // 楽観的更新を元に戻す
-              await get().syncWithSupabase()
+              // 状態をサーバーと同期（UIを正す）
+              try { await get().syncWithSupabase() } catch {}
 
               set((state) => {
                 state.error = errorMessage
@@ -975,10 +1048,11 @@ export const useQuestStore = create<QuestState>()(
               state.areas['7-12'].isUnlocked = true
             })
 
+            // ステージ6解放時は、初回のみアニメーション表示（7-12 用）
             if (!areas['7-12'].isUnlocked && !started7Plus) {
-              // 初回解放タイミングのみポップ表示し、7をcurrentにする
               set((state) => {
                 state.showUnlockAnimation = true
+                state.unlockTargetArea = '7-12'
                 if (state.userProgress[7] === 'locked') {
                   state.userProgress[7] = 'current'
                   state.stageDetails[7] = {
@@ -992,6 +1066,23 @@ export const useQuestStore = create<QuestState>()(
 
             // すでに7以降に着手済みならポップは出さない
             set((state) => { state.showUnlockAnimation = false })
+
+            // ステージ12が承認済みならジブンクラフトを解放
+            const stage12Completed = userProgress[12] === 'completed'
+            if (stage12Completed) {
+              const wasUnlocked = areas['jibun']?.isUnlocked
+              set((state) => {
+                state.areas['jibun'].isUnlocked = true
+              })
+              // ステージ12（ジブン）解放時はアニメーションを表示しない
+              if (!wasUnlocked) {
+                set((state) => {
+                  state.showUnlockAnimation = false
+                  state.unlockTargetArea = null
+                })
+                return true
+              }
+            }
             return false
           },
 
@@ -1004,6 +1095,7 @@ export const useQuestStore = create<QuestState>()(
           dismissUnlockAnimation: () => {
             set((state) => {
               state.showUnlockAnimation = false
+              state.unlockTargetArea = null
             })
           },
 

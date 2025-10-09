@@ -198,20 +198,27 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
     }
   })()
 
-  const isCategoryUnlocked = userMainQuestProgress >= category.unlock_required_stage
+  // 1-6: 未ログイン時はカテゴリ自体をロック表示（グレーの説明枠）
+  //      ログイン後はカテゴリ表示（①/講師は閲覧可、②③は下で常時ロック）
+  // 7-12: 従来どおり、規定の解放条件に従う
+  const isCategoryUnlocked = area === '1-6' 
+    ? isAuthenticated 
+    : (userMainQuestProgress >= category.unlock_required_stage)
 
   const primaryLesson = category.lessons.find(l => l.kind === CategoryLessonKind.PRIMARY) || null
   const regularLessons = category.lessons
     .filter(l => l.kind === CategoryLessonKind.LESSON)
     .sort((a, b) => a.order - b.order)
 
-  // ①/講師：ログインユーザーなら可（未ログインはログイン誘導）
-  const isPrimaryAccessible = true
+  // ①/講師：1-6 は未ログインでも閲覧可能（モーダル内でログイン導線あり）
+  //       7-12 は従来どおりログイン前提
+  const isPrimaryAccessible = area === '1-6' ? true : isAuthenticated
 
   // ②：エリアにより解放条件が異なる
   // 1-6: 常時ロック / 7-12: ステージ6クリアで解放（グローバル進捗 or エリア解放フラグ）
   const is7to12Unlocked = questStore.areas['7-12']?.isUnlocked || questStore.userProgress[6] === 'completed'
-  const areSecondaryLessonsUnlocked = isAuthenticated && area === '7-12' && is7to12Unlocked
+  // 下段レッスン: 1-6 は常時ロック（体験版仕様）/ 7-12 はログイン済みかつ解放済みで閲覧可
+  const areSecondaryLessonsUnlocked = area === '7-12' && isAuthenticated && is7to12Unlocked
 
   // 7-12用: カテゴリIDのマッピング
   const categoryIdFor7to12 = useMemo(() => {

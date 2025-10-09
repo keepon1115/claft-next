@@ -3,6 +3,8 @@
 import React, { useEffect, useRef } from 'react'
 import { useTutorialStore, ONBOARDING_VERSION } from '@/stores/tutorialStore'
 import { useAuth } from '@/hooks/useAuth'
+import { useQuestStore } from '@/stores/questStore'
+import { useMinecraftSdgsStore } from '@/stores/minecraftSdgsStore'
 
 interface TutorialGuideProps {
   // 右上ボタン群の要素参照（歩き方/カレンダー/冒険者）
@@ -14,6 +16,8 @@ interface TutorialGuideProps {
 
 export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, onComplete }: TutorialGuideProps) {
   const { user, profile, isInitialized } = useAuth()
+  const { isInitialized: questInitialized, userProgress: questProgress } = useQuestStore()
+  const { isInitialized: mcInitialized, userProgress: mcProgress } = useMinecraftSdgsStore()
   const {
     active,
     step,
@@ -33,14 +37,25 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
   // 自動起動（初回ログイン時のみ）。以降は自動起動しない
   useEffect(() => {
     if (!user || !isInitialized) return
+    // 追加入力: クエスト/マイクラの初期化前は判定保留
+    if (!questInitialized || !mcInitialized) return
+    // プロフィール完成度が未ロード(undefined/null)の間は判定を保留
+    const completionRaw = (profile as any)?.profile_completion
+    if (completionRaw === undefined || completionRaw === null) return
+    const profileCompletion = Number(completionRaw)
     const seenWelcome = !!welcomeSeenByUserId && welcomeSeenByUserId === user.id
     const isCompletedForUser = !!completedAt && completedByUserId === user.id
     if (isCompletedForUser) return
-    if (!active && !seenWelcome) {
+    // 仕様: プロフィール<50% かつ クエスト1未クリア かつ マイクラ1未クリア のみ表示
+    const quest1Completed = questProgress?.[1] === 'completed'
+    const mc1Completed = mcProgress?.[1] === 'completed'
+    const shouldShow = profileCompletion < 50 && !quest1Completed && !mc1Completed
+
+    if (!active && !seenWelcome && shouldShow) {
       start(user.id)
       goTo(0)
     }
-  }, [user?.id, isInitialized, active, welcomeSeenByUserId, completedAt, completedByUserId])
+  }, [user?.id, isInitialized, questInitialized, mcInitialized, questProgress, mcProgress, (profile as any)?.profile_completion, active, welcomeSeenByUserId, completedAt, completedByUserId])
 
   // オーバーレイのスクロール固定
   useEffect(() => {
@@ -88,7 +103,7 @@ export default function TutorialGuide({ howToRef, calendarRef, adventurersRef, o
         )
       case 3:
         return (
-          <Panel title="冒険者 🧑‍🤝‍🧑" body="仲間のプロフィールや活動を見てインスピレーションを得よう">
+          <Panel title="冒険者 🧑‍🤝‍🧑" body="仲間のプロフィールや活動を見てみよう">
             <CTA onPrimary={() => { adventurersRef?.current?.click() }} primary="開く" />
           </Panel>
         )

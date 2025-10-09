@@ -6,6 +6,7 @@ import { Map, Compass, Star, Trophy, Zap } from 'lucide-react'
 import StageNode from './StageNode'
 import CategoryBlock from './CategoryBlock'
 import CategoryModal from './CategoryModal'
+import JibunMediaLibrary from '@/components/quest/JibunMediaLibrary'
 import { useCategorySystem } from '@/hooks/useCategorySystem'
 import { useAuth } from '@/hooks/useAuth'
 import type { StageProgress } from '@/stores/questStore'
@@ -18,8 +19,8 @@ interface QuestMapProps {
     totalStages: number
   }
   onStageClick: (stageId: number) => void
-  theme?: 'sky' | 'twilight'
-  area?: '1-6' | '7-12'
+  theme?: 'sky' | 'twilight' | 'moon'
+  area?: '1-6' | '7-12' | 'jibun'
 }
 
 export default function QuestMap({ stages, statistics, onStageClick, theme = 'sky', area = '1-6' }: QuestMapProps) {
@@ -105,8 +106,8 @@ export default function QuestMap({ stages, statistics, onStageClick, theme = 'sk
     createSkyObjects()
   }, [theme])
 
-  // 描画対象ステージIDの配列をエリアで切替
-  const stageIds = area === '7-12' ? [7,8,9,10,11,12] : [1,2,3,4,5,6]
+  // 描画対象ステージIDの配列をエリアで切替（ジブンクラフトは数値ステージなし）
+  const stageIds = area === '7-12' ? [7,8,9,10,11,12] : area === '1-6' ? [1,2,3,4,5,6] : []
 
   return (
     <>
@@ -196,40 +197,48 @@ export default function QuestMap({ stages, statistics, onStageClick, theme = 'sk
             })}
           </div>
 
+          {/* ジブンクラフト: メディアライブラリ（ファセット検索） */}
+          {area === 'jibun' && (
+            <div className="jibun-media-wrapper">
+              <JibunMediaLibrary />
+            </div>
+          )}
+
         </div>
 
-                {/* カテゴリーブロック */}
-        <div className="category-blocks">
-          {demoCategories.map((category) => {
-            // カテゴリIDに基づく動的クラス名
-            const getCategoryClass = (categoryId: string) => {
-              switch (categoryId) {
-                case 'money-economics':
-                  return 'category-block--money'
-                case 'presentation-communication':
-                  return 'category-block--presentation'
-                case 'ai-it-skills':
-                  return 'category-block--ai'
-                case 'sdgs-environment':
-                  return 'category-block--sdgs'
-                default:
-                  return ''
+        {/* 1-6 / 7-12 のカテゴリーブロック */}
+        {(area === '1-6' || area === '7-12') && (
+          <div className="category-blocks">
+            {demoCategories.map((category) => {
+              const getCategoryClass = (categoryId: string) => {
+                switch (categoryId) {
+                  case 'money-economics':
+                    return 'category-block--money'
+                  case 'presentation-communication':
+                    return 'category-block--presentation'
+                  case 'ai-it-skills':
+                    return 'category-block--ai'
+                  case 'sdgs-environment':
+                    return 'category-block--sdgs'
+                  default:
+                    return ''
+                }
               }
-            }
 
-            return (
-              <CategoryBlock
-                key={category.id}
-                category={category}
-                userMainQuestProgress={statistics.completedStages}
-                userCategoryProgress={demoProgress.filter(p => p.category_id === category.id)}
-                onOpenModal={openModal}
-                className={`mb-8 ${getCategoryClass(category.id)}`}
-                area={area}
-              />
-            )
-          })}
-        </div>
+              return (
+                <CategoryBlock
+                  key={category.id}
+                  category={category}
+                  userMainQuestProgress={statistics.completedStages}
+                  userCategoryProgress={demoProgress.filter(p => p.category_id === category.id)}
+                  onOpenModal={openModal}
+                  className={`mb-8 ${getCategoryClass(category.id)}`}
+                  area={area}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* カテゴリモーダル */}
