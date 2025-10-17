@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import React, { useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth'
 import { listMessages, markMessageRead } from '@/lib/api/messages'
 import type { MessageRecord } from '@/types/message'

@@ -151,7 +151,8 @@ node scripts/health-check.js
 node_modules/     # 依存関係（59,000+ファイル）
 .next/           # Next.jsビルドキャッシュ
 .git/            # Gitデータ
-workbox-*.js     # PWA ビルド成果物（public/ 配下）
+public/sw.js     # PWA 生成物（next-pwaにより再生成）
+public/workbox-*.js # PWA 生成物（next-pwaにより再生成）
 ```
 
 ### バックアップ対象（重要なソースコード）
