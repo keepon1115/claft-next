@@ -1,8 +1,13 @@
 import MessagesClient from './MessagesClient'
+import { Suspense } from 'react'
 
 export default function MessagesPage() {
-    // App Routerではサーバー側でラップしてCSRコンポーネントを描画する
-    return <MessagesClient />
+    // App Routerでは useSearchParams を使うクライアントを Suspense でラップする必要がある
+    return (
+        <Suspense fallback={null}>
+            <MessagesClient />
+        </Suspense>
+    )
 }
 
 
