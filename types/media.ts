@@ -2,6 +2,9 @@
 
 export type MediaProvider = 'youtube' | 'vimeo' | 'file'
 
+export type Genre = 'お金・経済' | 'プレゼン・発表' | 'AI・ITスキル' | 'SDGs・環境' | '脳・心理'
+export type Power = 'ひらく' | 'えがく' | 'つなぐ' | 'なりきる' | 'まきこむ'
+
 export interface MediaItem {
 	/** 一意なID */
 	id: string
@@ -13,6 +16,8 @@ export interface MediaItem {
 	tags: string[]
 	/** 再生URL（YouTube等） */
 	url: string
+	/** クエストURL（Googleフォーム等、任意） */
+	questUrl?: string
 	/** プロバイダ種別 */
 	provider: MediaProvider
 	/** 秒数（任意） */

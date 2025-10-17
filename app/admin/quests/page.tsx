@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 // 承認フロー撤廃に伴い、承認系アクションのインポートを削除
-import { Map, Trophy, Clock, CheckCircle, XCircle, ChevronLeft, RefreshCw, Users, TrendingUp, Filter, MessageSquare, Send, X } from 'lucide-react'
-import ApprovalTable from '@/components/admin/ApprovalTable'
+import { Map as MapIcon, Trophy, Clock, CheckCircle, XCircle, ChevronLeft, RefreshCw, Users, TrendingUp, Filter, MessageSquare, Send, X } from 'lucide-react'
+// 承認フロー撤廃のため ApprovalTable は未使用
 import { useCallback } from 'react'
+import type { MessageRecord } from '@/types/message'
 
 // =====================================================
 // 型定義
@@ -85,6 +86,12 @@ export default function QuestsPage() {
     message: ''
   })
   const [sendingFeedback, setSendingFeedback] = useState(false)
+  // ===== メディア・フィードバック用追加状態 =====
+  const [activeTab, setActiveTab] = useState<'quest' | 'media'>('quest')
+  const [mediaProgress, setMediaProgress] = useState<any[]>([])
+  const [mediaMsg, setMediaMsg] = useState<{ userId: string; contextId: string; title: string; body: string }>({ userId: '', contextId: '', title: '', body: '' })
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const [recentMessages, setRecentMessages] = useState<MessageRecord[]>([] as any)
   
   const supabase = createBrowserSupabaseClient()
   const handleApprovalChange = useCallback(() => {
@@ -238,6 +245,19 @@ export default function QuestsPage() {
     }
   }
 
+  const loadRecentMessages = async () => {
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      setRecentMessages((data || []) as any)
+    } catch (e) {
+      // noop
+    }
+  }
+
   // 統計データ計算
   const calculateStats = async () => {
     try {
@@ -295,8 +315,101 @@ export default function QuestsPage() {
   useEffect(() => {
     if (isAdmin) {
       loadQuestData()
+      loadRecentMessages()
+      loadMediaProgress()
     }
   }, [isAdmin, selectedStage, selectedStatus])
+
+  const loadMediaProgress = async () => {
+    try {
+      // 1) コンテンツ進捗（video/form/complete）を取得
+      const { data: cp, error: cpError } = await supabase
+        .from('content_progress')
+        .select('user_id, context_type, context_id, step_id, done_at')
+        .eq('context_type', 'media')
+        .order('done_at', { ascending: false })
+        .limit(1000)
+      if (cpError) throw cpError
+
+      // group by user_id + context_id
+      type MediaGroup = { user_id: string; context_id: string; video?: string; form?: string; complete?: string }
+      const keyOf = (r: any) => `${r.user_id}|${r.context_id}`
+      const groups: Map<string, MediaGroup> = new Map()
+      ;(cp || []).forEach((row: any) => {
+        const k = keyOf(row)
+        if (!groups.has(k)) groups.set(k, { user_id: row.user_id, context_id: row.context_id })
+        const g = groups.get(k)!
+        if (row.step_id === 'video' && !g.video) g.video = row.done_at
+        if (row.step_id === 'form' && !g.form) g.form = row.done_at
+        if (row.step_id === 'complete' && !g.complete) g.complete = row.done_at
+      })
+
+      const grouped: MediaGroup[] = Array.from(groups.values())
+
+      // 2) 対象のメッセージを取得（最新）
+      const userIds = Array.from(new Set(grouped.map(g => g.user_id)))
+      const contextIds = Array.from(new Set(grouped.map(g => g.context_id)))
+      let messages: any[] = []
+      if (userIds.length && contextIds.length) {
+        const { data: msgData } = await supabase
+          .from('messages')
+          .select('user_id, context_id, title, body, created_at, status')
+          .eq('context_type', 'media')
+          .in('user_id', userIds)
+          .in('context_id', contextIds)
+        messages = msgData || []
+      }
+
+      // 最新メッセージ時刻を辞書化
+      const latestMsgMap: Map<string, string> = new Map()
+      messages.forEach((m: any) => {
+        const k = `${m.user_id}|${m.context_id}`
+        const prev = latestMsgMap.get(k)
+        if (!prev || (new Date(m.created_at as string).getTime() > new Date(prev).getTime())) {
+          latestMsgMap.set(k, m.created_at)
+        }
+      })
+
+      // 3) ユーザー情報
+      let profiles: any[] = []
+      if (userIds.length) {
+        const { data: p } = await supabase
+          .from('users_profile')
+          .select('id, nickname, email')
+          .in('id', userIds)
+        profiles = p || []
+      }
+
+      // 4) ステータス算出
+      const merged = grouped.map((g: MediaGroup) => {
+        const latestMessageAt = latestMsgMap.get(`${g.user_id}|${g.context_id}`)
+        let status: 'feedback_pending' | 'feedback_sent' | 'current' = 'current'
+        if (g.complete) {
+          if (latestMessageAt && new Date(latestMessageAt).getTime() >= new Date(g.complete as string).getTime()) {
+            status = 'feedback_sent'
+          } else {
+            status = 'feedback_pending'
+          }
+        } else if (g.form) {
+          status = 'current'
+        }
+        return {
+          user_id: g.user_id,
+          context_id: g.context_id,
+          step_complete_at: g.complete || null,
+          last_message_at: latestMessageAt || null,
+          status,
+          latest_step: g.complete ? 'complete' : (g.form ? 'form' : 'video'),
+          user: (profiles as any[]).find(u => u.id === g.user_id) || { nickname: null, email: 'unknown@example.com' }
+        }
+      })
+
+      setMediaProgress(merged)
+    } catch (e) {
+      console.warn('loadMediaProgress warn:', e)
+      setMediaProgress([])
+    }
+  }
 
   // フィードバック送信
   const handleSendFeedback = async () => {
@@ -458,7 +571,7 @@ export default function QuestsPage() {
               </button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  <Map size={32} className="text-purple-600" />
+                <MapIcon size={32} className="text-purple-600" />
                   クエスト管理
                 </h1>
                 <p className="text-gray-600 mt-1">クエスト完了状況とフィードバック管理</p>
@@ -478,29 +591,14 @@ export default function QuestsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* 承認待ち（ステージ12を既定で表示） */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Clock className="text-orange-600" /> 承認待ち（クエスト）
-            </h2>
-            <div className="text-sm text-gray-500">
-              ステージ12の承認が必要です（必要に応じてステージを切り替え）
-            </div>
-          </div>
-          <ApprovalTable
-            pageSize={10}
-            filters={{ stageFilter: 12 }}
-            onApprovalChange={handleApprovalChange}
-          />
-        </div>
+        {/* 承認待ちカードは撤廃 */}
 
         {/* 統計カード */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Map size={24} className="text-blue-600" />
+                <MapIcon size={24} className="text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">総完了数</p>
@@ -627,15 +725,22 @@ export default function QuestsPage() {
 
         {/* ステージ6承認待ちセクションは撤廃 */}
 
+        {/* タブ切替 */}
+        <div className="flex items-center gap-2 mb-4">
+          <button onClick={() => setActiveTab('quest')} className={`px-3 py-1 rounded ${activeTab==='quest'?'bg-purple-600 text-white':'bg-gray-100'}`}>クエスト</button>
+          <button onClick={() => setActiveTab('media')} className={`px-3 py-1 rounded ${activeTab==='media'?'bg-purple-600 text-white':'bg-gray-100'}`}>セクション/ジブン</button>
+        </div>
+
         {/* クエスト進捗テーブル */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">
-              クエスト一覧 ({questProgress.length}件)
+              {activeTab==='quest' ? `クエスト一覧 (${questProgress.length}件)` : `セクション進捗 (${mediaProgress.length}件)`}
             </h3>
           </div>
 
           <div className="overflow-x-auto">
+            {activeTab==='quest' ? (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -701,7 +806,42 @@ export default function QuestsPage() {
                 ))}
               </tbody>
             </table>
-            
+            ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ユーザー</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コンテキスト</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステップ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">完了日時</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mediaProgress.map((row, idx) => (
+                  <tr key={`${row.user_id}-${row.context_id}-${row.step_id}-${idx}`} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{row.user?.nickname || 'ユーザー名なし'}</div>
+                      <div className="text-sm text-gray-500">{row.user?.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.context_id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{row.latest_step}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {row.status === 'feedback_pending' ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">FB待ち</span>
+                      ) : row.status === 'feedback_sent' ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">FB済み</span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">進行中</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(row.step_complete_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            )}
+
             {questProgress.length === 0 && !loading && (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📭</div>
@@ -711,6 +851,108 @@ export default function QuestsPage() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ===================== メディア・フィードバック ===================== */}
+        <div className="bg-white rounded-lg shadow p-6 mt-10 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">メディア・フィードバック（セクション/ジブン動画）</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              className="border px-3 py-2 rounded"
+              placeholder="宛先ユーザーID"
+              value={mediaMsg.userId}
+              onChange={(e) => setMediaMsg(prev => ({ ...prev, userId: e.target.value }))}
+            />
+            <input
+              className="border px-3 py-2 rounded"
+              placeholder="context（例 mediaItem:aiit-001）"
+              value={mediaMsg.contextId}
+              onChange={(e) => setMediaMsg(prev => ({ ...prev, contextId: e.target.value }))}
+            />
+            <input
+              className="border px-3 py-2 rounded md:col-span-2"
+              placeholder="タイトル"
+              value={mediaMsg.title}
+              onChange={(e) => setMediaMsg(prev => ({ ...prev, title: e.target.value }))}
+            />
+            <textarea
+              className="border px-3 py-2 rounded md:col-span-2 h-28"
+              placeholder="本文"
+              value={mediaMsg.body}
+              onChange={(e) => setMediaMsg(prev => ({ ...prev, body: e.target.value }))}
+            />
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              className="px-4 py-2 bg-purple-600 text-white rounded disabled:opacity-50"
+              disabled={!user || !mediaMsg.userId || !mediaMsg.contextId || !mediaMsg.title || !mediaMsg.body}
+              onClick={async () => {
+                try {
+                  if (!user) return
+                  const { error } = await supabase
+                    .from('messages')
+                    .insert({
+                      user_id: mediaMsg.userId,
+                      context_type: 'media',
+                      context_id: mediaMsg.contextId,
+                      title: mediaMsg.title,
+                      body: mediaMsg.body,
+                      status: 'unread',
+                      sent_by: user.id
+                    })
+                  if (error) throw error
+                  await supabase.from('notifications').insert({
+                    user_id: mediaMsg.userId,
+                    type: 'message',
+                    title: '新しいメッセージが届きました',
+                    message: mediaMsg.title,
+                    data: { context: mediaMsg.contextId }
+                  }).catch(() => {})
+                  alert('送信しました')
+                  setMediaMsg({ userId: '', contextId: '', title: '', body: '' })
+                  loadRecentMessages()
+                } catch (e) {
+                  console.error(e)
+                  alert('送信に失敗しました')
+                }
+              }}
+            >送信</button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">直近のメッセージ</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日時</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ユーザー</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コンテキスト</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">タイトル</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状態</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {recentMessages.map((m) => (
+                  <tr key={m.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(m.created_at).toLocaleString('ja-JP')}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{(m.user_id || '').slice(0,8)}…</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{m.context_type}:{m.context_id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{m.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{m.status === 'unread' ? '未読' : '既読'}</td>
+                  </tr>
+                ))}
+                {recentMessages.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">メッセージはありません</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

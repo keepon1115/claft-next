@@ -6,6 +6,7 @@ import { X, Video, Flame, MessageSquare, Play, User, Lock, LogIn } from 'lucide-
 import { CategoryModalOptions, CategoryLesson, InstructorInfo } from '@/types/category'
 import { useAuth } from '@/hooks/useAuth'
 import OptimizedImage from '@/components/common/OptimizedImage'
+import StepFlow, { StepDef } from '@/components/common/StepFlow'
 
 /* ======================= LoginPrompt ======================= */
 
@@ -157,91 +158,19 @@ const CategoryLessonModalContent: React.FC<CategoryLessonModalContentProps> = ({
   categoryTitle,
   onCompleteLesson,
 }) => {
-  const [showSubmitGuide, setShowSubmitGuide] = useState(false)
+  // StepFlow のステップを動的生成
+  const videoUrl = lesson.video_url || (lesson.youtube_id ? `https://www.youtube.com/watch?v=${lesson.youtube_id}` : undefined)
+  const steps: StepDef[] = [
+    { id: 'video', type: 'video', title: `${categoryTitle} ${lesson.order}: ${lesson.title}`, linkUrl: videoUrl, ctaLabel: '動画を開く', doneLabel: '視聴完了' },
+    ...(lesson.form_url ? [{ id: 'form', type: 'form', title: 'クエストに挑む', linkUrl: lesson.form_url, ctaLabel: 'フォームへ', doneLabel: '提出した' } as StepDef] : []),
+    { id: 'complete', type: 'complete', title: 'ステージクリア', doneLabel: 'クリア！' }
+  ]
 
-  const handleVideoClick = () => {
-    if (lesson.video_url) window.open(lesson.video_url, '_blank', 'noopener,noreferrer')
-    else if (lesson.youtube_id) window.open(`https://www.youtube.com/watch?v=${lesson.youtube_id}`, '_blank', 'noopener,noreferrer')
-  }
-
-  const handleFormClick = () => {
-    if (lesson.form_url) {
-      setShowSubmitGuide(true)
-      window.open(lesson.form_url, '_blank', 'noopener,noreferrer')
-    } else {
-      alert('クエスト機能は準備中です')
-    }
-  }
-
-  const handleCompleteClick = () => { onCompleteLesson?.() }
-
-  const handleMessageClick = () => { alert('メッセージ機能は準備中です') }
+  const unitKey = `categoryLesson:${lesson.id}`
 
   return (
     <div className="category-lesson-modal">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-black text-gray-800 mb-2">
-          {categoryTitle} {lesson.order}: {lesson.title}
-        </h2>
-        {lesson.description && <p className="text-lg text-gray-600">{lesson.description}</p>}
-      </div>
-
-
-
-      {showSubmitGuide && (
-        <div className="submit-guide mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <MessageSquare className="text-green-600" size={20} />
-            <h3 className="text-lg font-bold text-green-800">✅ 次のステップ</h3>
-          </div>
-          <p className="text-green-700 mb-4">
-            フォームを送信したら、このページに戻って<br />
-            <strong>「学習完了を報告」ボタン</strong>を押してください！
-          </p>
-        </div>
-      )}
-
-      <div className="action-buttons mb-6">
-        {(lesson.video_url || lesson.youtube_id) && (
-          <button onClick={handleVideoClick} className="btn btn--video">
-            <Video size={24} />
-            動画を見る
-          </button>
-        )}
-        <button onClick={handleFormClick} className="btn btn--quest">
-          <Flame size={24} />
-          クエストに挑む
-        </button>
-        <button onClick={handleMessageClick} className="btn btn--message">
-          <MessageSquare size={24} />
-          メッセージ確認
-        </button>
-      </div>
-
-      {onCompleteLesson && (
-        <div className="flex justify-center mb-6">
-          <button onClick={handleCompleteClick} className="btn btn--complete">
-            学習完了を報告
-          </button>
-        </div>
-      )}
-
-      <style jsx>{`
-        .category-lesson-modal { width:100%; }
-        .lesson-message { background:#fef3c7; border:2px solid #fbbf24; border-radius:12px; padding:24px; }
-        .submit-guide { background:#ecfdf5; border:2px solid #10b981; border-radius:12px; padding:20px; animation:pulse 2s infinite; }
-        .action-buttons { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
-        .btn{ display:flex; align-items:center; justify-content:center; gap:8px; padding:16px 24px; border:none; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; transition:.3s; border:2px solid transparent; }
-        .btn--video { background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%); color:#fff; box-shadow:0 4px 12px rgba(59,130,246,.3); }
-        .btn--video:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(59,130,246,.4); }
-        .btn--quest { background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; box-shadow:0 4px 12px rgba(16,185,129,.3); }
-        .btn--quest:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(16,185,129,.4); }
-        .btn--message { background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%); color:#fff; box-shadow:0 4px 12px rgba(139,92,246,.3); }
-        .btn--message:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,.4); }
-        .btn--complete { background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%); color:#fff; padding:16px 32px; font-size:1.125rem; box-shadow:0 4px 12px rgba(245,158,11,.3); }
-        .btn--complete:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(245,158,11,.4); }
-        @media (max-width:768px){ .action-buttons{ grid-template-columns:1fr; } .btn{ padding:14px 20px; font-size:.875rem; } }
-      `}</style>
+      <StepFlow unitKey={unitKey} steps={steps} />
     </div>
   )
 }

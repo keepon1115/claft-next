@@ -5,7 +5,7 @@ import MediaSearchBar from '@/components/quest/MediaSearchBar'
 import MediaTagFilters from '@/components/quest/MediaTagFilters'
 import MediaGrid from '@/components/quest/MediaGrid'
 import MediaPlayerModal from '@/components/quest/MediaPlayerModal'
-import { mediaItems } from '@/data/media/items'
+import { mediaItems } from '@/data/media/library'
 import { ALL_TAGS } from '@/components/quest/mediaTags'
 import type { MediaItem } from '@/types/media'
 

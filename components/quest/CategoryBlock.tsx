@@ -154,12 +154,12 @@ const LessonTile: React.FC<LessonTileProps> = ({ order, lesson, isUnlocked, onCl
   )
 }
 
-/* ============= ロックタイル（2枚目の固定表示） ============= */
-const LockedTile: React.FC = () => (
-  <button className="tile tile--lesson tile--locked" disabled aria-disabled title="メインクエスト6をクリアすると開放">
+/* ============= ロックタイル（解放条件を表示） ============= */
+const LockedTile: React.FC<{ requiredStage: number }> = ({ requiredStage }) => (
+  <button className="tile tile--lesson tile--locked" disabled aria-disabled title={`メインクエスト${requiredStage}をクリアすると開放`}>
     <div className="lesson-lock-content">
       <span className="lesson-lock-icon">🔒</span>
-      メインクエスト6をクリアすると開放
+      メインクエスト{requiredStage}をクリアすると開放
     </div>
   </button>
 )
@@ -305,6 +305,14 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
     }
   }, [category.id])
 
+  // 7-12用: 下段左に表示する「動画2」（primaryと重複しない先頭）
+  const secondaryVideoItem = useMemo(() => {
+    if (!videoItems?.length) return null
+    const primarySourceId = primaryLesson?.youtube_id
+    const firstNonPrimary = videoItems.find(v => (v.source === 'youtube' ? v.sourceId : undefined) !== primarySourceId)
+    return firstNonPrimary || null
+  }, [videoItems, primaryLesson])
+
   if (!isCategoryUnlocked) {
     return (
       <div className={`category-block category-block--locked ${className}`}>
@@ -352,32 +360,43 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
         </div>
 
         {area === '7-12' && areSecondaryLessonsUnlocked ? (
-          <div className="category-grid--video">
-            {videosLoading && (
+          <div className="category-grid--two">
+            {videosLoading ? (
               <div className="video-loading">読み込み中...</div>
+            ) : (
+              <>
+                {/* 下段左: primaryと同一を除外した先頭。なければロック(12) */}
+                {secondaryVideoItem ? (
+                  (() => {
+                    const v = secondaryVideoItem
+                    const lesson = convertToLesson(v, 0)
+                    return (
+                      <button
+                        key={lesson.id}
+                        className="tile tile--lesson"
+                        onClick={() => handleOpenLessonModal(lesson)}
+                      >
+                        <div className="tile__badge tile__badge--small"><span className="badge__number">{lesson.order}</span></div>
+                        <div className="tile__media">
+                          <OptimizedImage
+                            src={v.thumbnailUrl}
+                            alt={lesson.title}
+                            width={300}
+                            height={169}
+                            className="tile__img"
+                            fallbackSrc="/images/quest/default-thumbnail.png"
+                          />
+                        </div>
+                      </button>
+                    )
+                  })()
+                ) : (
+                  <LockedTile requiredStage={12} />
+                )}
+                {/* 下段右: 常にロック(12) */}
+                <LockedTile requiredStage={12} />
+              </>
             )}
-            {!videosLoading && videoItems.map((v, idx) => {
-              const lesson = convertToLesson(v, idx)
-              return (
-                <button
-                  key={lesson.id}
-                  className="tile tile--lesson"
-                  onClick={() => handleOpenLessonModal(lesson)}
-                >
-                  <div className="tile__badge tile__badge--small"><span className="badge__number">{lesson.order}</span></div>
-                  <div className="tile__media">
-                    <OptimizedImage
-                      src={v.thumbnailUrl}
-                      alt={lesson.title}
-                      width={300}
-                      height={169}
-                      className="tile__img"
-                      fallbackSrc="/images/quest/default-thumbnail.png"
-                    />
-                  </div>
-                </button>
-              )
-            })}
           </div>
         ) : (
           /* 1-6 もしくは未解放時は従来表示 */
@@ -389,7 +408,8 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
               isUnlocked={areSecondaryLessonsUnlocked && !!secondLesson}
               onClick={secondLesson ? () => handleOpenLessonModal(secondLesson) : undefined}
             />
-            <LockedTile />
+            {/* 右は12で固定ロック */}
+            <LockedTile requiredStage={12} />
           </div>
         )}
       </div>

@@ -29,7 +29,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
-import ApprovalTable from '@/components/admin/ApprovalTable'
+// 承認フロー撤廃により ApprovalTable は未使用
 import FilterSection from '@/components/admin/FilterSection'
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
@@ -278,32 +278,7 @@ function UserGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
           </section>
 
-          {/* クエスト承認作業 */}
-          <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <CheckCircle className="text-green-600" />
-              クエスト承認作業
-            </h3>
-            <div className="bg-green-50 p-4 rounded-lg space-y-3">
-              <div>
-                <h4 className="font-medium text-gray-800">1. 承認待ちクエストの確認</h4>
-                <p className="text-sm text-gray-600">「クエスト承認」タブで承認待ちのクエストを一覧表示します。</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-800">2. 個別承認・却下</h4>
-                <p className="text-sm text-gray-600">各クエストの「承認」または「却下」ボタンでアクションを実行します。</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-800">3. 一括処理</h4>
-                <p className="text-sm text-gray-600">チェックボックスで複数選択後、「一括承認」で効率的に処理できます。</p>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded border-l-4 border-yellow-400">
-                <p className="text-sm text-yellow-800">
-                  <strong>重要:</strong> ステージ6クリアで自動的に「くれなずむ空」（ステージ7-12）が開放されます。
-                </p>
-              </div>
-            </div>
-          </section>
+          {/* クエスト承認作業セクションは撤廃 */}
 
           {/* フィルター機能 */}
           <section>
