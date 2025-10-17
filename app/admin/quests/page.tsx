@@ -8,6 +8,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { Map as MapIcon, Trophy, Clock, CheckCircle, XCircle, ChevronLeft, RefreshCw, Users, TrendingUp, Filter, MessageSquare, Send, X } from 'lucide-react'
 // 承認フロー撤廃のため ApprovalTable は未使用
 import { useCallback } from 'react'
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates'
 import type { MessageRecord } from '@/types/message'
 
 // =====================================================
@@ -98,6 +99,18 @@ export default function QuestsPage() {
     // 承認変更後に統計とリストを更新
     loadQuestData()
   }, [])
+
+  // Realtime: セクション/ジブンも含めて自動更新
+  useRealtimeUpdates({
+    onDataUpdate: () => {
+      if (!isAdmin) return
+      if (activeTab === 'quest') {
+        loadQuestData()
+      } else {
+        loadMediaProgress()
+      }
+    }
+  })
 
   // 管理者権限チェック（初期化完了を待つ）
   useEffect(() => {

@@ -134,6 +134,30 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
         },
         handleRealtimeUpdate
       )
+      // セクション/ジブンの進捗（content_progress）
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'content_progress'
+        },
+        () => {
+          if (onDataUpdateRef.current) onDataUpdateRef.current()
+        }
+      )
+      // セクション/ジブンのメッセージ
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          if (onDataUpdateRef.current) onDataUpdateRef.current()
+        }
+      )
       .subscribe((status) => {
         setIsConnected(status === 'SUBSCRIBED')
         
