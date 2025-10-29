@@ -15,6 +15,7 @@ import { Sidebar } from '@/components/common/Sidebar'
 import { AuthButton } from '@/components/auth/AuthButton'
 import { ModalLoadingFallback } from '@/components/common/DynamicLoader'
 import UnlockAnimation from '@/components/quest/UnlockAnimation'
+import BackgroundAnimations from '@/components/common/BackgroundAnimations'
 
 // ==========================================
 // 動的インポートコンポーネント
@@ -43,7 +44,8 @@ export default function QuestPage() {
     initialize,
     switchArea,
     checkAreaUnlock,
-    dismissUnlockAnimation
+    dismissUnlockAnimation,
+    getNextAvailableStage
   } = useQuestStore()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -52,6 +54,7 @@ export default function QuestPage() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [promptStageId, setPromptStageId] = useState<number>(1)
+  const [showVideoPop, setShowVideoPop] = useState(false)
 
   // 現在のエリアのステージのみを表示
   const currentAreaStages = areas[currentArea].stages
@@ -175,6 +178,7 @@ export default function QuestPage() {
   // メインレンダリング
   return (
     <>
+      <BackgroundAnimations />
       <main className="min-h-screen quest-page">
         {/* ハンバーガーメニュー */}
         <HamburgerMenu 
@@ -249,11 +253,57 @@ export default function QuestPage() {
           />
         </div>
 
-        {/* 次の冒険ボタン（認証済みユーザーのみ） */}
+        {/* 次の冒険ボタン or 吹き出しCTA（認証済みユーザーのみ） */}
         {isAuthenticated && (
-          <button className="quest-button">
-            {currentTheme === 'sky' ? '🔥 次の冒険へ進む！' : '🌇 次の冒険へ進む！'}
-          </button>
+          (() => {
+            const nextStageId = getNextAvailableStage()
+            if (nextStageId) {
+              return (
+                <button
+                  className="quest-button"
+                  onClick={() => {
+                    setSelectedStageId(nextStageId)
+                    setIsModalOpen(true)
+                  }}
+                  aria-label="次の冒険へ進む"
+                >
+                  {currentTheme === 'sky' ? '🔥 次の冒険へ進む！' : '🌇 次の冒険へ進む！'}
+                </button>
+              )
+            }
+            return (
+              <div className="quest-bubble-wrapper" role="region" aria-label="次のコンテンツ案内">
+                <button
+                  className="quest-bubble"
+                  onClick={() => setShowVideoPop((v) => !v)}
+                  aria-haspopup="dialog"
+                  aria-expanded={showVideoPop}
+                  aria-controls="next-videos-pop"
+                >
+                  💬 どんな冒険をする？
+                </button>
+                {showVideoPop && (
+                  <div id="next-videos-pop" className="quest-pop" role="dialog" aria-modal="false">
+                    <div className="quest-pop-header">29日更新のクエスト動画</div>
+                    <ul className="quest-pop-list">
+                      <li>
+                        <span className="title">【発表・プレゼン】2-1 わかりにくい話とは</span>
+                        <span className="badge">NEW</span>
+                      </li>
+                      <li>
+                        <span className="title">【発表・プレゼン】2-2 わかりやすい話とは</span>
+                        <span className="badge">NEW</span>
+                      </li>
+                      <li>
+                        <span className="title">【マネーリテラシー】②お金が足らないときには、どうするの？</span>
+                        <span className="badge">NEW</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )
+          })()
         )}
 
         {/* 未認証ユーザー向けの登録促進ボタン */}
@@ -480,6 +530,61 @@ export default function QuestPage() {
           z-index: 900;
         }
 
+        /* 吹き出しCTA */
+        .quest-bubble-wrapper {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 950;
+        }
+        .quest-bubble {
+          background: #ffffff;
+          color: #333;
+          border: 4px solid #222;
+          padding: 14px 18px;
+          font-weight: 800;
+          border-radius: 16px;
+          box-shadow: 0 0 0 2px #666, 6px 6px 0 rgba(0,0,0,0.3);
+          position: relative;
+          cursor: pointer;
+        }
+        .quest-bubble::after {
+          content: '';
+          position: absolute;
+          bottom: -16px;
+          right: 24px;
+          width: 0;
+          height: 0;
+          border-left: 12px solid transparent;
+          border-right: 12px solid transparent;
+          border-top: 16px solid #ffffff;
+          filter: drop-shadow(0 2px 0 #222) drop-shadow(2px 2px 0 rgba(0,0,0,0.25));
+        }
+        .quest-pop {
+          position: absolute;
+          bottom: 70px;
+          right: 0;
+          width: 320px;
+          background: #fff;
+          border: 3px solid #333;
+          box-shadow: 0 0 0 2px #666, 6px 6px 0 rgba(0,0,0,0.3);
+          border-radius: 8px;
+          overflow: hidden;
+          animation: pop-in .15s ease-out;
+        }
+        .quest-pop-header {
+          background: #FFEB3B;
+          border-bottom: 2px solid #C6A700;
+          padding: 10px 12px;
+          font-weight: 900;
+          color: #4E342E;
+        }
+        .quest-pop-list { list-style: none; margin: 0; padding: 8px 10px; display: grid; gap: 8px; }
+        .quest-pop-list li { display: flex; align-items: center; gap: 8px; }
+        .quest-pop-list .title { flex: 1; font-weight: 700; color: #222; }
+        .quest-pop-list .badge { background: #EF4444; color: #fff; font-size: 12px; font-weight: 900; padding: 2px 6px; border-radius: 6px; letter-spacing: .5px; }
+        @keyframes pop-in { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         @keyframes pulse_button {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.02); }
@@ -514,7 +619,8 @@ export default function QuestPage() {
         @media (max-width: 767px) {
 
           .quest-button,
-          .quest-register-button {
+          .quest-register-button,
+          .quest-bubble-wrapper {
             padding: 12px 24px;
             font-size: 1rem;
             bottom: 20px;
@@ -523,6 +629,8 @@ export default function QuestPage() {
             transform: translateX(-50%);
             animation-name: pulse_button_centered;
           }
+
+          .quest-bubble-wrapper { width: auto; }
 
           .quest-button:hover,
           .quest-register-button:hover {

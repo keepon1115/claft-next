@@ -52,6 +52,30 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/h9kyWs_fcpc/hqdefault.jpg',
 		createdAt: '2024-01-01T00:00:00.000Z'
 	},
+	// 追加: 2-1 わかりにくい話とは
+	{
+		id: 'presentation-003',
+		title: '2-1 わかりにくい話とは',
+		description: 'プレゼンで伝わりにくくなる要因を学ぶ',
+		tags: ['series:section', 'topic:presentation', 'stage:jibuncraft'],
+		url: 'https://youtu.be/vZuRgzRho0Q',
+		questUrl: 'https://forms.gle/mf3w3tvjwWTrNMhg8',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/vZuRgzRho0Q/hqdefault.jpg',
+		createdAt: '2024-01-01T00:00:00.000Z'
+	},
+	// 追加: 2-2 わかりやすい話とは
+	{
+		id: 'presentation-004',
+		title: '2-2 わかりやすい話とは',
+		description: 'わかりやすく伝えるためのポイントを学ぶ',
+		tags: ['series:section', 'topic:presentation', 'stage:jibuncraft'],
+		url: 'https://youtu.be/DzMA1UDNQHo',
+		questUrl: 'https://forms.gle/1yf4yjxdQZVmGv3e8',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/DzMA1UDNQHo/hqdefault.jpg',
+		createdAt: '2024-01-01T00:00:00.000Z'
+	},
 
 	// AI・ITスキル
 	{

@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ProfileCard from '@/components/home/ProfileCard'
-import CraftStory from '@/components/home/CraftStory'
-import JibunCraft from '@/components/home/JibunCraft'
+import dynamic from 'next/dynamic'
 import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import BackgroundAnimations from '@/components/common/BackgroundAnimations'
@@ -15,6 +14,10 @@ import { useMinecraftSdgsStore } from '@/stores/minecraftSdgsStore'
 import HowToModal from '@/components/home/HowToModal'
 import TutorialGuide from '@/components/home/TutorialGuide'
 import ProfileNudge from '@/components/home/ProfileNudge'
+
+// 重めのコンポーネントはクライアント側で遅延ロード
+const DynamicCraftStory = dynamic(() => import('@/components/home/CraftStory'), { ssr: false })
+const DynamicJibunCraft = dynamic(() => import('@/components/home/JibunCraft'), { ssr: false })
 
 // app/page.tsx を一時的に最小構成に戻す
 export default function Home() {
@@ -106,26 +109,20 @@ export default function Home() {
         
         {/* ヘッダー */}
         <header className="header">
+          {/* 右上固定の認証ボタン（他ページと位置統一） */}
+          <div className="home-auth-section">
+            <AuthButton 
+              variant="compact"
+              size="md"
+              redirectTo="/"
+              defaultTab="login"
+              enableUserMenu={true}
+              showAdminLink={true}
+            />
+          </div>
+
           <div className="header-content">
-            <div className="player-info">
-              <div className="greeting-section">
-                <h1>こんにちは、{displayName}</h1>
-                <p>よっしゃ今日もキャリアをつくっていこう🚀</p>
-              </div>
-            </div>
-            
-            {/* ログインボタン（右上） */}
-            <div className="auth-section">
-              <AuthButton 
-                variant="compact"
-                size="md"
-                redirectTo="/"
-                defaultTab="login"
-                enableUserMenu={true}
-                showAdminLink={true}
-              />
-            </div>
-            
+            {/* 左上：サイドメニュー横にボタン群（バッジ + クイック） */}
             <div className="achievements">
               {/* 🏆 ログイン系（最大1つ） */}
               {loginBadge && (
@@ -141,17 +138,15 @@ export default function Home() {
               {questBadge && (
                 <div className={`achievement-badge ${questBadge.tier}`} title={questBadge.title}>🎯</div>
               )}
-            {/* 追加: クイックリンク */}
-            <div className="quick-actions">
-              <button ref={howToRef} className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
-              <a ref={calendarRef} className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
-              <a ref={adventurersRef} className="quick-btn" href="/yononaka#adventurers">冒険者</a>
-            </div>
+
+              {/* クイックリンク */}
+              <div className="quick-actions">
+                <button ref={howToRef} className="quick-btn" onClick={() => setHowToOpen(true)}>歩き方</button>
+                <a ref={calendarRef} className="quick-btn" href="https://keepon.work/claft-" target="_blank" rel="noopener noreferrer">カレンダー</a>
+                <a ref={adventurersRef} className="quick-btn" href="/yononaka#adventurers">冒険者</a>
+              </div>
             </div>
           </div>
-          
-          {/* 経験値バー（非表示化） */}
-          {/* 削除: デザイン要件により経験値バーは使用しない */}
         </header>
         
         {/* メインコンテンツ */}
@@ -167,7 +162,7 @@ export default function Home() {
                 <>このエリアはクエスト12をクリアすると開放されます</>
               }
             >
-              <CraftStory />
+              <DynamicCraftStory />
             </LockedContent>
             <LockedContent
               isLocked={!isAdmin && statistics.completedStages < 12}
@@ -175,7 +170,7 @@ export default function Home() {
                 <>このエリアはクエスト12をクリアすると開放されます</>
               }
             >
-              <JibunCraft />
+              <DynamicJibunCraft />
             </LockedContent>
           </div>
         </div>

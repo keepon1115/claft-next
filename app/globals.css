@@ -1731,7 +1731,7 @@ img.pixel {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
@@ -1752,10 +1752,19 @@ img.pixel {
   z-index: 100;
 }
 
+/* ホームページ用認証セクション（右上固定） */
+.home-auth-section {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
 /* モバイル対応 */
 @media (max-width: 768px) {
   .auth-section,
-  .quest-auth-section {
+  .quest-auth-section,
+  .home-auth-section {
     position: relative;
     top: auto;
     right: auto;
@@ -1764,7 +1773,7 @@ img.pixel {
   
   .header-content {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
 }
 
@@ -1776,7 +1785,7 @@ img.pixel {
 .header {
   background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
   color: white;
-  padding: 15px 30px 15px 70px; /* 左側にハンバーガーメニュー用のスペースを確保 */
+  padding: 10px 30px 10px 70px; /* 挨拶削除に伴い上下を詰める */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 90; /* ハンバーガーメニューより低く維持 */
@@ -1801,7 +1810,7 @@ img.pixel {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   position: relative;
   z-index: 1;

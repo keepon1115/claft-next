@@ -14,17 +14,18 @@ const videos: VideoItem[] = [
 		 tags: ['経済', 'お金', 'series:section'],
 		 formUrl: 'https://forms.gle/ZNAD2jkyMXycBj937'
 	},
-	// 2本目: 講師動画と同じ「CLAFTとは何か」
+	// 2本目: お金が足らないときには、どうするの？
 	{
-		 id: 'money-002-claft',
-		 title: 'CLAFTとは何か',
-		 thumbnailUrl: 'https://img.youtube.com/vi/2z9I_Y7fmyE/hqdefault.jpg',
+		 id: 'money-002',
+		 title: 'お金が足らないときには、どうするの？',
+		 thumbnailUrl: 'https://img.youtube.com/vi/CD0-66GBeXQ/hqdefault.jpg',
 		 source: 'youtube',
-		 sourceId: '2z9I_Y7fmyE',
-		 videoUrl: 'https://www.youtube.com/watch?v=2z9I_Y7fmyE',
+		 sourceId: 'CD0-66GBeXQ',
+		 videoUrl: 'https://youtu.be/CD0-66GBeXQ',
 		 categoryId: 'money',
 		 order: 2,
-		 tags: ['講師動画', 'series:section']
+		 tags: ['経済', 'お金', 'series:section'],
+		 formUrl: 'https://forms.gle/P3GCVxC8ypy8tzpCA'
 	},
 ]
 

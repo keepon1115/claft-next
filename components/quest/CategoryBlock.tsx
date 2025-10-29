@@ -25,35 +25,37 @@ const PrimaryTile: React.FC<PrimaryTileProps> = ({ lesson, isUnlocked, onClick }
   const [imageError, setImageError] = useState(false)
   const thumbnail = getLessonThumbnail(lesson)
   return (
-    <button
-      className={`tile tile--primary ${!isUnlocked ? 'tile--locked' : ''}`}
-      onClick={isUnlocked ? onClick : undefined}
-      disabled={!isUnlocked}
-      aria-label={`${lesson.title}${!isUnlocked ? '（ロック中）' : ''}`}
-    >
-      <div className="tile__media">
-        {!imageError ? (
-          <OptimizedImage
-            src={thumbnail.url}
-            alt={thumbnail.alt}
-            width={400}
-            height={225}
-            className="tile__img"
-            onError={() => setImageError(true)}
-            fallbackSrc="/images/quest/default-thumbnail.png"
-          />
-        ) : (
-          <div className="tile__img tile__img--fallback"><span className="text-4xl">📚</span></div>
-        )}
-        {!isUnlocked && (
-          <div className="tile__lock-overlay">
-            <Lock className="tile__lock-icon" size={32} />
-            <span className="tile__lock-text">ロック中</span>
-          </div>
-        )}
-      </div>
-
-    </button>
+    <div className="tile-wrapper">
+      <div className="tile__label">①</div>
+      <button
+        className={`tile tile--primary ${!isUnlocked ? 'tile--locked' : ''}`}
+        onClick={isUnlocked ? onClick : undefined}
+        disabled={!isUnlocked}
+        aria-label={`${lesson.title}${!isUnlocked ? '（ロック中）' : ''}`}
+      >
+        <div className="tile__media">
+          {!imageError ? (
+            <OptimizedImage
+              src={thumbnail.url}
+              alt={thumbnail.alt}
+              width={400}
+              height={225}
+              className="tile__img"
+              onError={() => setImageError(true)}
+              fallbackSrc="/images/quest/default-thumbnail.png"
+            />
+          ) : (
+            <div className="tile__img tile__img--fallback"><span className="text-4xl">📚</span></div>
+          )}
+          {!isUnlocked && (
+            <div className="tile__lock-overlay">
+              <Lock className="tile__lock-icon" size={32} />
+              <span className="tile__lock-text">ロック中</span>
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
   )
 }
 
@@ -76,33 +78,36 @@ const InstructorTile: React.FC<InstructorTileProps> = ({
     : { url: '/images/instructor/default-instructor.png', alt: `${categoryTitle} 講師紹介` }
 
   return (
-    <button
-      className={`tile tile--instructor ${!isUnlocked ? 'tile--locked' : ''}`}
-      onClick={isUnlocked ? onClick : undefined}
-      disabled={!isUnlocked}
-      aria-label={`${instructor?.name || '講師'}紹介${!isUnlocked ? '（ロック中）' : ''}`}
-    >
-      <div className="tile__media">
-        {!imageError ? (
-          <OptimizedImage
-            src={thumbnail.url}
-            alt={thumbnail.alt}
-            width={300}
-            height={169}
-            className="tile__img"
-            onError={() => setImageError(true)}
-            fallbackSrc="/images/instructor/default-instructor.png"
-          />
-        ) : (
-          <div className="tile__img tile__img--fallback"><span className="text-3xl">👨‍🏫</span></div>
-        )}
-        {!isUnlocked && (
-          <div className="tile__lock-overlay">
-            <Lock className="tile__lock-icon" size={24} />
-          </div>
-        )}
-      </div>
-    </button>
+    <div className="tile-wrapper">
+      <div className="tile__label">講師動画</div>
+      <button
+        className={`tile tile--instructor ${!isUnlocked ? 'tile--locked' : ''}`}
+        onClick={isUnlocked ? onClick : undefined}
+        disabled={!isUnlocked}
+        aria-label={`${instructor?.name || '講師'}紹介${!isUnlocked ? '（ロック中）' : ''}`}
+      >
+        <div className="tile__media">
+          {!imageError ? (
+            <OptimizedImage
+              src={thumbnail.url}
+              alt={thumbnail.alt}
+              width={300}
+              height={169}
+              className="tile__img"
+              onError={() => setImageError(true)}
+              fallbackSrc="/images/instructor/default-instructor.png"
+            />
+          ) : (
+            <div className="tile__img tile__img--fallback"><span className="text-3xl">👨‍🏫</span></div>
+          )}
+          {!isUnlocked && (
+            <div className="tile__lock-overlay">
+              <Lock className="tile__lock-icon" size={24} />
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
   )
 }
 
@@ -118,39 +123,42 @@ const LessonTile: React.FC<LessonTileProps> = ({ order, lesson, isUnlocked, onCl
   const locked = !isUnlocked || !lesson
 
   return (
-    <button
-      className={`tile tile--lesson ${locked ? 'tile--locked' : ''}`}
-      disabled={locked}
-      onClick={locked ? undefined : onClick}
-      aria-label={locked ? 'メインクエスト6をクリアすると開放' : `レッスン${order}`}
-      title={locked ? 'メインクエスト6をクリアすると開放' : ''}
-    >
-      {locked ? (
-        <div className="lesson-lock-content">
-          <span className="lesson-lock-icon">🔒</span>
-          メインクエスト6をクリアすると開放
-        </div>
-      ) : (
-        <>
-          <div className="tile__badge tile__badge--small"><span className="badge__number">{order}</span></div>
-          <div className="tile__media">
-            {!imageError ? (
-              <OptimizedImage
-                src={getLessonThumbnail(lesson).url}
-                alt={getLessonThumbnail(lesson).alt}
-                width={300}
-                height={169}
-                className="tile__img"
-                onError={() => setImageError(true)}
-                fallbackSrc="/images/quest/default-thumbnail.png"
-              />
-            ) : (
-              <div className="tile__img tile__img--fallback"><span className="text-2xl">📚</span></div>
-            )}
+    <div className="tile-wrapper">
+      <div className="tile__label">{order === 2 ? '②' : order === 3 ? '③' : `${order}`}</div>
+      <button
+        className={`tile tile--lesson ${locked ? 'tile--locked' : ''}`}
+        disabled={locked}
+        onClick={locked ? undefined : onClick}
+        aria-label={locked ? 'メインクエスト6をクリアすると開放' : `レッスン${order}`}
+        title={locked ? 'メインクエスト6をクリアすると開放' : ''}
+      >
+        {locked ? (
+          <div className="lesson-lock-content">
+            <span className="lesson-lock-icon">🔒</span>
+            メインクエスト6をクリアすると開放
           </div>
-        </>
-      )}
-    </button>
+        ) : (
+          <>
+            <div className="tile__badge tile__badge--small"><span className="badge__number">{order}</span></div>
+            <div className="tile__media">
+              {!imageError ? (
+                <OptimizedImage
+                  src={getLessonThumbnail(lesson).url}
+                  alt={getLessonThumbnail(lesson).alt}
+                  width={300}
+                  height={169}
+                  className="tile__img"
+                  onError={() => setImageError(true)}
+                  fallbackSrc="/images/quest/default-thumbnail.png"
+                />
+              ) : (
+                <div className="tile__img tile__img--fallback"><span className="text-2xl">📚</span></div>
+              )}
+            </div>
+          </>
+        )}
+      </button>
+    </div>
   )
 }
 
@@ -371,23 +379,25 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
                     const v = secondaryVideoItem
                     const lesson = convertToLesson(v, 0)
                     return (
-                      <button
-                        key={lesson.id}
-                        className="tile tile--lesson"
-                        onClick={() => handleOpenLessonModal(lesson)}
-                      >
-                        <div className="tile__badge tile__badge--small"><span className="badge__number">{lesson.order}</span></div>
-                        <div className="tile__media">
-                          <OptimizedImage
-                            src={v.thumbnailUrl}
-                            alt={lesson.title}
-                            width={300}
-                            height={169}
-                            className="tile__img"
-                            fallbackSrc="/images/quest/default-thumbnail.png"
-                          />
-                        </div>
-                      </button>
+                      <div className="tile-wrapper" key={lesson.id}>
+                        <div className="tile__label">②</div>
+                        <button
+                          className="tile tile--lesson"
+                          onClick={() => handleOpenLessonModal(lesson)}
+                        >
+                          <div className="tile__badge tile__badge--small"><span className="badge__number">{lesson.order}</span></div>
+                          <div className="tile__media">
+                            <OptimizedImage
+                              src={v.thumbnailUrl}
+                              alt={lesson.title}
+                              width={300}
+                              height={169}
+                              className="tile__img"
+                              fallbackSrc="/images/quest/default-thumbnail.png"
+                            />
+                          </div>
+                        </button>
+                      </div>
                     )
                   })()
                 ) : (
@@ -436,6 +446,14 @@ const CategoryBlock: React.FC<CategoryBlockProps> = ({
         .category-block :global(.tile){ position:relative; border-radius:12px; overflow:hidden; border:none; background:white; cursor:pointer; transition:.3s; box-shadow:0 2px 8px rgba(0,0,0,.1); width:100%; display:block; }
         .category-block :global(.tile:hover:not(.tile--locked)){ transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.15); }
         .category-block :global(.tile--locked){ background:#d1d5db; display:flex; align-items:center; justify-content:center; min-height:140px; cursor:not-allowed; }
+        .category-block :global(.tile-wrapper){ display:flex; flex-direction:column; align-items:center; }
+        .category-block :global(.tile-wrapper > .tile){ margin-top:10px; }
+        .category-block :global(.tile__label){
+          display:inline-flex; align-items:center; justify-content:center;
+          padding:4px 10px; border-radius:9999px; font-weight:800; font-size:.9rem;
+          color:var(--category-accent-color,#1f2937); background:rgba(255,255,255,.9);
+          border:2px solid var(--category-border-color,#6b7280);
+        }
         .category-block :global(.tile__media){ position:relative; padding-top:56.25%; }
         .category-block :global(.tile__img){ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
         .category-block :global(.tile__badge){ position:absolute; top:8px; left:8px; background:rgba(0,0,0,.6); color:#fff; font-weight:700; font-size:12px; padding:4px 6px; border-radius:8px; }

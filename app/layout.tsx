@@ -23,14 +23,6 @@ export const metadata: Metadata = {
   title: "CLAFT - Creative Learning And Future Technology",
   description: "自分らしく、クリエイティブに成長するプラットフォーム",
   manifest: '/manifest.json',
-  themeColor: '#673AB7',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover'
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -39,6 +31,15 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+};
+
+export const viewport = {
+  themeColor: '#673AB7',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

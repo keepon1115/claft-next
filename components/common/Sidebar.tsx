@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export interface SidebarProps {
   isOpen: boolean
@@ -11,6 +11,7 @@ export interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
+  const router = useRouter()
   const { isAuthenticated, isAdmin } = useAuth()
 
   // ESCキーでサイドバーを閉じる
@@ -71,132 +72,132 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
         <nav className="py-5">
           <ul className="list-none p-0 m-0">
             <li>
-              <Link 
-                href="/" 
+              <a 
+                href="/"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🏠</i>
                 <span className="text-base">ホーム</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/profile" 
+              <a 
+                href="/profile"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/profile'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">😊</i>
                 <span className="text-base">プロフィール</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/quest" 
+              <a 
+                href="/quest"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/quest'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🏋️‍♂️</i>
                 <span className="text-base">クエスト</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/minecraft-sdgs" 
+              <a 
+                href="/minecraft-sdgs"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-green-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/minecraft-sdgs'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🌱</i>
                 <span className="text-base">マイクラSDGs</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/yononaka" 
+              <a 
+                href="/yononaka"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/yononaka'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">😆</i>
                 <span className="text-base">Yononaka</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/mirai" 
+              <a 
+                href="/mirai"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/mirai'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🌍</i>
                 <span className="text-base">ミライクラフト</span>
-              </Link>
+              </a>
             </li>
             
             <li>
-              <Link 
-                href="/entrepreneur" 
+              <a 
+                href="/entrepreneur"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/entrepreneur'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">🤝</i>
                 <span className="text-base">アントレプレナー</span>
-              </Link>
+              </a>
             </li>
 
             {/* ひらめきポスト/Q＆A（アントレプレナーの次） */}
             <li>
-              <Link 
-                href="/hirameki-post" 
+              <a 
+                href="/hirameki-post"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                   focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-yellow-400
                 "
-                onClick={onClose}
+                onClick={(e) => { e.preventDefault(); router.push('/hirameki-post'); onClose(); }}
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
                 <span className="text-base">ひらめきポスト/Q＆A</span>
-              </Link>
+              </a>
             </li>
             
             {isAuthenticated && isAdmin && (
@@ -205,89 +206,90 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                   管理セクション
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/minecraft-sdgs" 
+                  <a 
+                    href="/admin/minecraft-sdgs"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline
                       hover:text-white hover:bg-white/10 transition-colors duration-150
                     "
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/minecraft-sdgs'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">🧱</i>
                     <span className="text-base">マイクラSDGs管理</span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin" 
+                  <a 
+                    href="/admin"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline
                       transition-all duration-300 ease-in-out font-medium
                       hover:bg-white/10 hover:text-white hover:pl-[35px]
                       focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                     "
-                    onClick={onClose}
+                    onClick={(e) => { e.preventDefault(); router.push('/admin'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">📊</i>
                     <span className="text-base">ダッシュボード</span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/users" 
+                  <a 
+                    href="/admin/users"
                     className="
                   flex items-center py-[12px] px-[25px] text-white/80 no-underline
                   transition-all duration-300 ease-in-out font-medium
                   hover:bg-white/10 hover:text-white hover:pl-[35px]
                       focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                     "
-                    onClick={onClose}
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/users'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">👥</i>
                     <span className="text-base">ユーザー管理</span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/quests" 
+                  <a 
+                    href="/admin/quests"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline
                       transition-all duration-300 ease-in-out font-medium
                       hover:bg-white/10 hover:text-white hover:pl-[35px]
                       focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                     "
-                    onClick={onClose}
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/quests'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">🗺️</i>
                     <span className="text-base">クエスト管理</span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/settings" 
+                  <a 
+                    href="/admin/settings"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline
                       transition-all duration-300 ease-in-out font-medium
                       hover:bg-white/10 hover:text-white hover:pl-[35px]
                       focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
                     "
-                    onClick={onClose}
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/settings'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">⚙️</i>
                     <span className="text-base">システム設定</span>
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/hirameki-posts" 
+                  <a 
+                    href="/admin/hirameki-posts"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline
                       hover:text-white hover:bg-white/10 transition-colors duration-150
                     "
-                    onClick={onClose}
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/hirameki-posts'); onClose(); }}
                   >
                     <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
                     <span className="text-base">ひらめき管理</span>
-                  </Link>
+                  </a>
                 </li>
               </>
             )}

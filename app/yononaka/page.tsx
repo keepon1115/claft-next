@@ -88,20 +88,20 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <a
-                  href="https://forms.gle/5CwhSrvtuZGSuP2J9"
+                  href="https://forms.gle/6qdR81fLCeRekV5eA"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                Yo99 外国で暮らすってどんな感じ？
+                Yo102 自分が作ったものを他者に伝えることって・・・？
                 </a>
                 <a
-                  href="https://forms.gle/Z3v2mgPEzwm4xzbv8"
+                  href="https://forms.gle/mT9NFMhZuKgHmszx8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                Yo100 好きなスポーツはなんですか？
+                Yo103 秋といえば？
                 </a>
               </div>
 
