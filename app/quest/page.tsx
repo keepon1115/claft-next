@@ -284,18 +284,18 @@ export default function QuestPage() {
                 </button>
                 {showVideoPop && (
                   <div id="next-videos-pop" className="quest-pop" role="dialog" aria-modal="false">
-                    <div className="quest-pop-header">29日更新のクエスト動画</div>
+                    <div className="quest-pop-header">最新のクエスト動画</div>
                     <ul className="quest-pop-list">
                       <li>
-                        <span className="title">【発表・プレゼン】2-1 わかりにくい話とは</span>
+                        <span className="title">世界が集まる、万博の魅力!!①</span>
                         <span className="badge">NEW</span>
                       </li>
                       <li>
-                        <span className="title">【発表・プレゼン】2-2 わかりやすい話とは</span>
+                        <span className="title">世界が集まる、万博の魅力!!②</span>
                         <span className="badge">NEW</span>
                       </li>
                       <li>
-                        <span className="title">【マネーリテラシー】②お金が足らないときには、どうするの？</span>
+                        <span className="title">【発表・プレゼン】2-3 「イマイチな話」から「いい話」にするには</span>
                         <span className="badge">NEW</span>
                       </li>
                     </ul>

@@ -51,6 +51,36 @@ export const mediaItems: MediaItem[] = [
 		provider: 'youtube',
 		createdAt: '2024-02-08T00:00:00.000Z'
 	},
+	{
+		id: 'expo-1',
+		title: '世界が集まる、万博の魅力!!①',
+		description: '世界各国が集まる万博の魅力を探る第1弾',
+		tags: ['世界・歴史'],
+		url: 'https://youtu.be/sgRsEC9a51A',
+		questUrl: 'https://forms.gle/No8sjLsMf9QJHaQ57',
+		provider: 'youtube',
+		createdAt: '2024-11-09T00:00:00.000Z'
+	},
+	{
+		id: 'expo-2',
+		title: '世界が集まる、万博の魅力!!②',
+		description: '世界各国が集まる万博の魅力を探る第2弾',
+		tags: ['世界・歴史'],
+		url: 'https://youtu.be/ztMm_bpH6M4',
+		questUrl: 'https://forms.gle/G4ennhX2sZHKea2u9',
+		provider: 'youtube',
+		createdAt: '2024-11-09T01:00:00.000Z'
+	},
+	{
+		id: 'presentation-1',
+		title: '【発表・プレゼン】2-3 「イマイチな話」から「いい話」にするには',
+		description: 'イマイチな話をいい話に変える発表・プレゼンテーションのコツ',
+		tags: ['プレゼン・発表'],
+		url: 'https://youtu.be/Ymheoc_0Xno',
+		questUrl: 'https://forms.gle/NpQ7E867zw7Z74ed6',
+		provider: 'youtube',
+		createdAt: '2024-11-09T02:00:00.000Z'
+	},
 ]
 
 

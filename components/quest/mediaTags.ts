@@ -4,6 +4,7 @@ export const DOMAIN_TAGS = [
 	'AI・ITスキル',
 	'SDGs・環境',
 	'脳・心理',
+	'世界・歴史',
 ]
 
 export const SKILL_TAGS = [

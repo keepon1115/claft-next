@@ -125,28 +125,28 @@ export default function YononakaPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch flex-grow">
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">CLAFTミーティング</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">知ってる？宇宙の謎</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 10月5日(日) 20時~21時</p>
+                    <p>📅 11月11日(火) 20時~21時</p>
                   </div>
-                  <a href="https://us02web.zoom.us/j/82137245892?pwd=ix0AqWKrcQ759hGfn5b2zgjC7qjEwm.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://us02web.zoom.us/j/88570050998?pwd=tj4q3N4JcGnLRalN0d4wjJonGeD5Wb.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     ZOOMに入る
                   </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">世界が集結、万博の魅力！</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">プレイクラフトミーティング</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 10月14日(火) 20時~21時</p>
+                    <p>📅 11月中旬</p>
                   </div>
-                  <a href="https://us02web.zoom.us/j/85330585563?pwd=UVUGAqqCz3OmQAdPbEF840axleQOKk.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    ZOOMに入る
+                  <a href="#" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    日時未定
                   </a>
                 </div>
               </div>
 
-              <a href="https://forms.gle/syCwTNqCbH5ZXs9f7" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <span className="relative z-10">10月の参加申し込みはこちら</span>
+              <a href="https://forms.gle/qMtiFWPD39aKH83D9" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <span className="relative z-10">11月の参加申し込みはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
             </section>
