@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   const response = new NextResponse()
-  const supabase = createRouteHandlerSupabaseClient(request, response)
+  let supabase = createRouteHandlerSupabaseClient(request, response)
+  
+  // Service Role用クライアント（RLSバイパス）
+  let serviceRoleSupabase: any = null
 
   try {
     const body = await request.json()
@@ -35,7 +38,6 @@ export async function POST(request: NextRequest) {
         const { data: userRes } = await tokenClient.auth.getUser()
         authedUserId = userRes?.user?.id
         if (authedUserId) {
-          // @ts-ignore
           supabase = tokenClient as any
         }
       }
@@ -56,14 +58,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 })
     }
 
+    // 管理者確認後、Service Role Clientを作成（RLSバイパス）
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    if (supabaseUrl && serviceRoleKey) {
+      console.log('🔑 Service Role Keyを使用してRLSをバイパス')
+      serviceRoleSupabase = createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      // 以降のDB操作はService Role Clientを使用
+      supabase = serviceRoleSupabase
+    } else {
+      console.warn('⚠️ Service Role Keyが設定されていません。RLSポリシーに依存します。')
+    }
+
     // 対象確認
-    const { data: progress } = await supabase
+    const { data: progress, error: fetchError } = await supabase
       .from('minecraft_sdgs_progress')
       .select('*')
       .eq('user_id', userId)
       .eq('stage_id', stageId)
       .eq('status', 'pending_approval')
       .single()
+
+    if (fetchError) {
+      console.error('進捗取得エラー:', fetchError)
+      return NextResponse.json({ 
+        error: 'fetch_failed', 
+        details: fetchError.message 
+      }, { status: 500 })
+    }
 
     if (!progress) {
       return NextResponse.json({ error: 'not_pending' }, { status: 404 })
@@ -83,10 +111,14 @@ export async function POST(request: NextRequest) {
       .eq('stage_id', stageId)
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      console.error('却下更新エラー:', updateError)
+      return NextResponse.json({ 
+        error: 'update_failed', 
+        details: updateError.message 
+      }, { status: 500 })
     }
 
-    await supabase
+    const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
         user_id: userId,
@@ -96,6 +128,12 @@ export async function POST(request: NextRequest) {
         data: { stage_id: stageId, reason },
       })
 
+    if (notificationError) {
+      console.error('通知作成エラー:', notificationError)
+      // 通知の失敗は致命的ではないので、却下は成功として扱う
+    }
+
+    console.log(`❌ ステージ${stageId}却下完了 (userId: ${userId}, reason: ${reason})`)
     return NextResponse.json({ success: true })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'internal_error' }, { status: 500 })

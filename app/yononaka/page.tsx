@@ -59,7 +59,7 @@ export default function YononakaPage() {
           {/* タイトルバナー */}
           <div className="max-w-4xl mx-auto mb-12">
             <div className="bg-white border-4 border-amber-600 rounded-3xl p-12 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-white/30 to-transparent animate-shimmer"></div>
+              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-white/30 to-transparent animate-pulse"></div>
               <div className="relative z-10 text-center">
                 <h1 className="text-5xl font-black text-amber-900 mb-4">
                   Yononaka
@@ -77,7 +77,7 @@ export default function YononakaPage() {
             {/* ちょこっとYononaka */}
             <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px] flex flex-col">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-lg animate-float">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                   <span className="text-2xl">☺</span>
                 </div>
                 <h2 className="text-2xl font-bold text-amber-900">ちょこっとYononaka</h2>
@@ -88,20 +88,20 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <a
-                  href="https://forms.gle/6qdR81fLCeRekV5eA"
+                  href="https://forms.gle/Sujpn4T5auNQwmPe8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                Yo102 自分が作ったものを他者に伝えることって・・・？
+                【Yo103】あなたが一番好きな季節は？
                 </a>
                 <a
-                  href="https://forms.gle/mT9NFMhZuKgHmszx8"
+                  href="https://forms.gle/PgrkekVwFRS7zC8k7"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                Yo103 秋といえば？
+                【Yo104】時間を忘れるくらい夢中になれること
                 </a>
               </div>
 
@@ -114,7 +114,7 @@ export default function YononakaPage() {
             {/* Yononakaワーク */}
             <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px]">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-float" style={{animationDelay: '0.5s'}}>
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-pulse">
                   <span className="text-2xl">🌍</span>
                 </div>
                 <h2 className="text-2xl font-bold text-amber-900">Yononakaワーク</h2>
@@ -125,19 +125,19 @@ export default function YononakaPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch flex-grow">
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">知ってる？宇宙の謎</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">時間の正体</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 11月11日(火) 20時~21時</p>
+                    <p>📅 12月4日(木) 20時~21時</p>
                   </div>
-                  <a href="https://us02web.zoom.us/j/88570050998?pwd=tj4q3N4JcGnLRalN0d4wjJonGeD5Wb.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://us02web.zoom.us/j/81885057215?pwd=YisSmG0PJgb9JaS8lhKHcC7biYjDF3.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     ZOOMに入る
                   </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">プレイクラフトミーティング</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">ミライクラフトミーティング</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 11月中旬</p>
+                    <p>📅 12月中旬</p>
                   </div>
                   <a href="#" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     日時未定
@@ -145,8 +145,8 @@ export default function YononakaPage() {
                 </div>
               </div>
 
-              <a href="https://forms.gle/qMtiFWPD39aKH83D9" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <span className="relative z-10">11月の参加申し込みはこちら</span>
+              <a href="https://forms.gle/HdTici5TDgqfihFTA" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <span className="relative z-10">12月の参加申し込みはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
             </section>
@@ -154,7 +154,7 @@ export default function YononakaPage() {
             {/* 振り返り動画セクション */}
             <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg animate-float" style={{animationDelay: '1s'}}>
+                <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg animate-spin">
                   <span className="text-2xl">🎬</span>
                 </div>
                 <h2 className="text-2xl font-bold text-amber-900">ワークの振り返り</h2>
@@ -191,7 +191,7 @@ export default function YononakaPage() {
             {/* ストーリーボタン */}
             <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center shadow-lg animate-float" style={{animationDelay: '1.5s'}}>
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                   <span className="text-2xl">📚</span>
                 </div>
                 <h2 className="text-2xl font-bold text-amber-900">Yononaka Story</h2>
@@ -301,26 +301,6 @@ export default function YononakaPage() {
         onClose={closeModal}
       />
 
-      {/* カスタムアニメーション */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-      `}</style>
     </>
   )
 } 

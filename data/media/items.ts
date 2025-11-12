@@ -73,7 +73,7 @@ export const mediaItems: MediaItem[] = [
 	},
 	{
 		id: 'presentation-1',
-		title: '【発表・プレゼン】2-3 「イマイチな話」から「いい話」にするには',
+		title: '2-3 「イマイチな話」から「いい話」にするには',
 		description: 'イマイチな話をいい話に変える発表・プレゼンテーションのコツ',
 		tags: ['プレゼン・発表'],
 		url: 'https://youtu.be/Ymheoc_0Xno',

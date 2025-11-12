@@ -141,7 +141,19 @@ export default function MinecraftSdgsAdminPage() {
       body: JSON.stringify({ userId, stageId })
     })
     const json = await res.json()
-    if (!res.ok || !json?.success) throw new Error(json?.error || 'approve_failed')
+    if (!res.ok || !json?.success) {
+      // 詳細なエラー情報をログ出力
+      console.error('承認APIエラー詳細:', {
+        status: res.status,
+        error: json?.error,
+        details: json?.details,
+        hint: json?.hint,
+        code: json?.code
+      })
+      // エラーメッセージに詳細情報を含める
+      const errorMsg = json?.details ? `${json.error}: ${json.details}` : (json?.error || 'approve_failed')
+      throw new Error(errorMsg)
+    }
     return json
   }
 
@@ -173,14 +185,15 @@ export default function MinecraftSdgsAdminPage() {
     
     try {
       await callApproveApi(approval.user_id, approval.stage_id)
-      alert('承認しました')
+      alert('✅ 承認しました')
       await Promise.all([
         fetchPendingApprovals(),
         activeTab === 'overview' ? fetchAllProgress() : Promise.resolve()
       ])
     } catch (error) {
       console.error('承認エラー:', error)
-      alert('承認処理に失敗しました')
+      const errorMessage = error instanceof Error ? error.message : '承認処理に失敗しました'
+      alert(`❌ 承認処理に失敗しました\n\nエラー: ${errorMessage}\n\n詳細はブラウザのコンソールを確認してください。`)
     } finally {
       setProcessingId(null)
     }
@@ -206,7 +219,7 @@ export default function MinecraftSdgsAdminPage() {
     
     try {
       await callRejectApi(selectedApproval.user_id, selectedApproval.stage_id, rejectionReason)
-      alert('却下しました')
+      alert('✅ 却下しました')
       setRejectModalOpen(false)
       setSelectedApproval(null)
       setRejectionReason('')
@@ -216,7 +229,8 @@ export default function MinecraftSdgsAdminPage() {
       ])
     } catch (error) {
       console.error('却下エラー:', error)
-      alert('却下処理に失敗しました')
+      const errorMessage = error instanceof Error ? error.message : '却下処理に失敗しました'
+      alert(`❌ 却下処理に失敗しました\n\nエラー: ${errorMessage}\n\n詳細はブラウザのコンソールを確認してください。`)
     } finally {
       setProcessingId(null)
     }

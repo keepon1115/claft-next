@@ -295,7 +295,7 @@ export default function QuestPage() {
                         <span className="badge">NEW</span>
                       </li>
                       <li>
-                        <span className="title">【発表・プレゼン】2-3 「イマイチな話」から「いい話」にするには</span>
+                        <span className="title">2-3 「イマイチな話」から「いい話」にするには</span>
                         <span className="badge">NEW</span>
                       </li>
                     </ul>
