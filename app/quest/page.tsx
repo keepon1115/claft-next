@@ -26,6 +26,55 @@ const DynamicLoginPromptModal = dynamic(
 );
 
 // ==========================================
+// ユーティリティ関数
+// ==========================================
+/**
+ * 9がつく日かどうかを判定する関数
+ * 9日、19日、29日が対象
+ */
+const isQuestUpdateDay = (): boolean => {
+  const today = new Date();
+  const day = today.getDate();
+  return day === 9 || day === 19 || day === 29;
+};
+
+/**
+ * 次の9がつく日を取得する関数
+ */
+const getNextQuestUpdateDay = (): string => {
+  const today = new Date();
+  const currentDay = today.getDate();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  let nextDay: number;
+  let nextMonth = currentMonth;
+  let nextYear = currentYear;
+  
+  if (currentDay < 9) {
+    nextDay = 9;
+  } else if (currentDay < 19) {
+    nextDay = 19;
+  } else if (currentDay < 29) {
+    nextDay = 29;
+  } else {
+    // 来月の9日
+    nextDay = 9;
+    nextMonth += 1;
+    if (nextMonth > 11) {
+      nextMonth = 0;
+      nextYear += 1;
+    }
+  }
+  
+  const nextDate = new Date(nextYear, nextMonth, nextDay);
+  return nextDate.toLocaleDateString('ja-JP', { 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
+
+// ==========================================
 // クエストページメインコンポーネント
 // ==========================================
 
@@ -55,6 +104,7 @@ export default function QuestPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [promptStageId, setPromptStageId] = useState<number>(1)
   const [showVideoPop, setShowVideoPop] = useState(false)
+  const [showQuestUpdateNotice, setShowQuestUpdateNotice] = useState(false)
 
   // 現在のエリアのステージのみを表示
   const currentAreaStages = areas[currentArea].stages
@@ -118,6 +168,20 @@ export default function QuestPage() {
       checkAreaUnlock()
     }
   }, [questInitialized, checkAreaUnlock])
+
+  // 9がつく日のクエスト更新通知
+  useEffect(() => {
+    if (isQuestUpdateDay()) {
+      // ローカルストレージで今日の通知を既に表示したかチェック
+      const today = new Date().toDateString();
+      const lastNoticeDate = localStorage.getItem('questUpdateNoticeDate');
+      
+      if (lastNoticeDate !== today) {
+        setShowQuestUpdateNotice(true);
+        localStorage.setItem('questUpdateNoticeDate', today);
+      }
+    }
+  }, [])
 
   // ステージクリック処理
   const handleStageClick = (stageId: number) => {
@@ -205,6 +269,39 @@ export default function QuestPage() {
         </div>
 
         <div className="container">
+          {/* 9がつく日のクエスト更新通知 */}
+          {showQuestUpdateNotice && (
+            <div className="quest-update-notice">
+              <div className="quest-update-content">
+                <div className="quest-update-header">
+                  🎉 クエスト更新日！
+                </div>
+                <p>
+                  今日は9がつく日！新しいジブンクラフト動画が追加されました。
+                  <br />
+                  「どんな冒険をする？」ボタンから最新の動画をチェックしよう！
+                </p>
+                <div className="quest-update-actions">
+                  <button 
+                    onClick={() => setShowVideoPop(true)}
+                    className="quest-update-btn primary"
+                  >
+                    🎬 新しい動画を見る
+                  </button>
+                  <button 
+                    onClick={() => setShowQuestUpdateNotice(false)}
+                    className="quest-update-btn secondary"
+                  >
+                    ✕ 閉じる
+                  </button>
+                </div>
+                <div className="quest-update-next">
+                  次回更新予定: {getNextQuestUpdateDay()}
+                </div>
+              </div>
+            </div>
+          )}
+
           <header className="map-header">
             <h1>🗺️ クエストマップ</h1>
             
@@ -284,19 +381,43 @@ export default function QuestPage() {
                 </button>
                 {showVideoPop && (
                   <div id="next-videos-pop" className="quest-pop" role="dialog" aria-modal="false">
-                    <div className="quest-pop-header">最新のクエスト動画</div>
+                    <div className="quest-pop-header">最新のジブンクラフト動画</div>
                     <ul className="quest-pop-list">
                       <li>
-                        <span className="title">世界が集まる、万博の魅力!!①</span>
-                        <span className="badge">NEW</span>
+                        <button 
+                          onClick={() => {
+                            setShowVideoPop(false);
+                            switchArea('jibun');
+                          }}
+                          className="quest-video-link quest-jibun-link"
+                        >
+                          <span className="title">ポケモンから考える人気キャラクターのヒミツ①</span>
+                          <span className="badge anime-manga">アニメ・マンガ</span>
+                        </button>
                       </li>
                       <li>
-                        <span className="title">世界が集まる、万博の魅力!!②</span>
-                        <span className="badge">NEW</span>
+                        <button 
+                          onClick={() => {
+                            setShowVideoPop(false);
+                            switchArea('jibun');
+                          }}
+                          className="quest-video-link quest-jibun-link"
+                        >
+                          <span className="title">ポケモンから考える人気キャラクターのヒミツ②</span>
+                          <span className="badge anime-manga">アニメ・マンガ</span>
+                        </button>
                       </li>
                       <li>
-                        <span className="title">2-3 「イマイチな話」から「いい話」にするには</span>
-                        <span className="badge">NEW</span>
+                        <button 
+                          onClick={() => {
+                            setShowVideoPop(false);
+                            switchArea('jibun');
+                          }}
+                          className="quest-video-link quest-jibun-link"
+                        >
+                          <span className="title">【マネーリテラシー】③お金を手にいれよう！</span>
+                          <span className="badge money-economy">お金・経済</span>
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -579,11 +700,159 @@ export default function QuestPage() {
           font-weight: 900;
           color: #4E342E;
         }
-        .quest-pop-list { list-style: none; margin: 0; padding: 8px 10px; display: grid; gap: 8px; }
-        .quest-pop-list li { display: flex; align-items: center; gap: 8px; }
-        .quest-pop-list .title { flex: 1; font-weight: 700; color: #222; }
-        .quest-pop-list .badge { background: #EF4444; color: #fff; font-size: 12px; font-weight: 900; padding: 2px 6px; border-radius: 6px; letter-spacing: .5px; }
+        .quest-pop-list { list-style: none; margin: 0; padding: 8px 10px; display: grid; gap: 12px; }
+        .quest-pop-list li { 
+          display: flex; 
+          flex-direction: column; 
+          gap: 8px; 
+          padding: 12px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1px solid #e9ecef;
+        }
+        .quest-video-link {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          text-decoration: none;
+          color: inherit;
+        }
+        .quest-video-link:hover .title {
+          color: #1976d2;
+        }
+        .quest-jibun-link {
+          background: none;
+          border: none;
+          width: 100%;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .quest-jibun-link:hover {
+          background: rgba(25, 118, 210, 0.05);
+          border-radius: 8px;
+        }
+        .quest-pop-list .title { flex: 1; font-weight: 700; color: #222; font-size: 14px; }
+        .quest-pop-list .badge { 
+          font-size: 11px; 
+          font-weight: 900; 
+          padding: 3px 8px; 
+          border-radius: 12px; 
+          letter-spacing: .5px;
+          color: #fff;
+        }
+        .quest-pop-list .badge.anime-manga { background: #FF6B6B; }
+        .quest-pop-list .badge.money-economy { background: #4ECDC4; }
+        .quest-form-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 12px;
+          background: #4CAF50;
+          color: white;
+          text-decoration: none;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+        .quest-form-link:hover {
+          background: #45a049;
+          transform: translateY(-1px);
+        }
         @keyframes pop-in { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* 9がつく日のクエスト更新通知 */
+        .quest-update-notice {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          animation: slideDown 0.5s ease-out;
+        }
+        
+        .quest-update-content {
+          background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+          border: 3px solid #FF8C00;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 8px 32px rgba(255, 140, 0, 0.3);
+          max-width: 400px;
+          text-align: center;
+          position: relative;
+        }
+        
+        .quest-update-header {
+          font-size: 20px;
+          font-weight: 900;
+          color: #8B4513;
+          margin-bottom: 12px;
+          text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+        
+        .quest-update-content p {
+          color: #8B4513;
+          font-weight: 600;
+          margin-bottom: 16px;
+          line-height: 1.5;
+        }
+        
+        .quest-update-actions {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          margin-bottom: 12px;
+        }
+        
+        .quest-update-btn {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 20px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-size: 14px;
+        }
+        
+        .quest-update-btn.primary {
+          background: #FF6B6B;
+          color: white;
+          box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+        
+        .quest-update-btn.primary:hover {
+          background: #FF5252;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+        
+        .quest-update-btn.secondary {
+          background: rgba(139, 69, 19, 0.1);
+          color: #8B4513;
+          border: 2px solid rgba(139, 69, 19, 0.3);
+        }
+        
+        .quest-update-btn.secondary:hover {
+          background: rgba(139, 69, 19, 0.2);
+        }
+        
+        .quest-update-next {
+          font-size: 12px;
+          color: #8B4513;
+          opacity: 0.8;
+          font-weight: 600;
+        }
+        
+        @keyframes slideDown {
+          from {
+            transform: translateX(-50%) translateY(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+          }
+        }
 
         @keyframes pulse_button {
           0%, 100% { transform: scale(1); }
@@ -640,6 +909,39 @@ export default function QuestPage() {
           .quest-button:active,
           .quest-register-button:active {
             transform: translateX(-50%) translate(2px, 2px);
+          }
+
+          /* 9がつく日通知のレスポンシブ対応 */
+          .quest-update-notice {
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            transform: none;
+          }
+          
+          .quest-update-content {
+            padding: 16px;
+            max-width: none;
+          }
+          
+          .quest-update-header {
+            font-size: 18px;
+          }
+          
+          .quest-update-actions {
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .quest-update-btn {
+            width: 100%;
+          }
+
+          /* ポップアップのレスポンシブ対応 */
+          .quest-pop {
+            width: 280px;
+            right: 10px;
+            bottom: 80px;
           }
         }
       `}</style>

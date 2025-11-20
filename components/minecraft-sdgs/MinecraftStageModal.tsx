@@ -143,15 +143,40 @@ export default function MinecraftStageModal({ stageId, isOpen, onClose }: Minecr
 
   // ステップ情報
   const getStepInfo = (step: string) => {
+    // ステージ3の特別なタイトル
+    const getStage3Title = (step: string) => {
+      if (stage.stageId === 3) {
+        switch (step) {
+          case 'programming_video':
+            return '③家の基本建築にチャレンジしよう！を見る'
+          case 'programming_work':
+            return '③家の基本建築にチャレンジしよう！に挑む'
+        }
+      }
+      return null
+    }
+
     switch (step) {
       case 'sdgs_video':
         return { title: 'SDGsワークを見る', icon: <Book className="w-6 h-6" />, description: 'SDGsについて学ぼう！', url: stage.sdgsWorkUrl, intent: 'sdgs_video' as const }
       case 'sdgs_work':
         return { title: 'SDGsワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: 'SDGsの解決案を建築しよう！', url: stage.sdgsFormUrl, intent: 'sdgs_work' as const }
       case 'programming_video':
-        return { title: 'マイクラワークを見る', icon: <Code className="w-6 h-6" />, description: 'プログラミングスキルを身につけよう！', url: stage.programmingWorkUrl, intent: 'programming_video' as const }
+        return { 
+          title: getStage3Title(step) || 'マイクラワークを見る', 
+          icon: <Code className="w-6 h-6" />, 
+          description: 'プログラミングスキルを身につけよう！', 
+          url: stage.programmingWorkUrl, 
+          intent: 'programming_video' as const 
+        }
       case 'programming_work':
-        return { title: 'マイクラワークに挑む', icon: <CheckCircle className="w-6 h-6" />, description: 'プログラミング＆マイクラ建築を提出しよう！', url: stage.programmingFormUrl, intent: 'programming_work' as const }
+        return { 
+          title: getStage3Title(step) || 'マイクラワークに挑む', 
+          icon: <CheckCircle className="w-6 h-6" />, 
+          description: 'プログラミング＆マイクラ建築を提出しよう！', 
+          url: stage.programmingFormUrl, 
+          intent: 'programming_work' as const 
+        }
       case 'message':
         return { title: 'ステージクリア', icon: <Trophy className="w-6 h-6" />, description: '完了メッセージを確認しよう！', url: null, intent: undefined }
       default:

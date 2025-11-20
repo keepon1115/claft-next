@@ -81,6 +81,36 @@ export const mediaItems: MediaItem[] = [
 		provider: 'youtube',
 		createdAt: '2024-11-09T02:00:00.000Z'
 	},
+	{
+		id: 'pokemon-character-1',
+		title: 'ポケモンから考える人気キャラクターのヒミツ①',
+		description: 'ポケモンの人気キャラクターから学ぶキャラクター作りの秘密',
+		tags: ['アニメ・マンガ'],
+		url: 'https://youtu.be/kbl-xAjOe3g',
+		questUrl: 'https://forms.gle/3H7T6QovReb8ThaLA',
+		provider: 'youtube',
+		createdAt: '2024-11-19T00:00:00.000Z'
+	},
+	{
+		id: 'pokemon-character-2',
+		title: 'ポケモンから考える人気キャラクターのヒミツ②',
+		description: 'ポケモンの人気キャラクターから学ぶキャラクター作りの秘密 第2弾',
+		tags: ['アニメ・マンガ'],
+		url: 'https://youtu.be/KPc1RuqzYoU',
+		questUrl: 'https://forms.gle/1g5vzDST6PyxtY3U6',
+		provider: 'youtube',
+		createdAt: '2024-11-19T01:00:00.000Z'
+	},
+	{
+		id: 'money-literacy-3',
+		title: '【マネーリテラシー】③お金を手にいれよう！',
+		description: 'お金を手に入れるための基本的な考え方と方法を学ぶ',
+		tags: ['お金・経済'],
+		url: 'https://youtu.be/4czctqGKL3k',
+		questUrl: 'https://forms.gle/Gbixj2qwfVM29GJo9',
+		provider: 'youtube',
+		createdAt: '2024-11-19T02:00:00.000Z'
+	},
 ]
 
 

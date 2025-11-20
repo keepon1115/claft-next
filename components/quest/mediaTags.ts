@@ -5,6 +5,7 @@ export const DOMAIN_TAGS = [
 	'SDGs・環境',
 	'脳・心理',
 	'世界・歴史',
+	'アニメ・マンガ',
 ]
 
 export const SKILL_TAGS = [
