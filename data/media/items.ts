@@ -103,13 +103,43 @@ export const mediaItems: MediaItem[] = [
 	},
 	{
 		id: 'money-literacy-3',
-		title: '【マネーリテラシー】③お金を手にいれよう！',
+		title: '【マネーリテラシー】③-1 お金を手にいれよう！',
 		description: 'お金を手に入れるための基本的な考え方と方法を学ぶ',
 		tags: ['お金・経済'],
 		url: 'https://youtu.be/4czctqGKL3k',
 		questUrl: 'https://forms.gle/Gbixj2qwfVM29GJo9',
 		provider: 'youtube',
 		createdAt: '2024-11-19T02:00:00.000Z'
+	},
+	{
+		id: 'ai-manga-3-1',
+		title: '【生成AI】③-1 AIと漫画を創ろう',
+		description: '生成AIを使って漫画を創る方法を学ぶ 第1弾',
+		tags: ['AI・ITスキル'],
+		url: 'https://youtu.be/jx8Xm7b1D-w',
+		questUrl: 'https://forms.gle/jtW1NPmx1FCgzvfi8',
+		provider: 'youtube',
+		createdAt: '2025-11-28T00:00:00.000Z'
+	},
+	{
+		id: 'ai-manga-3-2',
+		title: '【生成AI】③-2 AIと漫画を創ろう',
+		description: '生成AIを使って漫画を創る方法を学ぶ 第2弾',
+		tags: ['AI・ITスキル'],
+		url: 'https://youtu.be/fNVTFxuDsCU',
+		questUrl: 'https://forms.gle/gKZnyxBrFbGWkbAo9',
+		provider: 'youtube',
+		createdAt: '2025-11-28T01:00:00.000Z'
+	},
+	{
+		id: 'money-literacy-3-2',
+		title: '【マネーリテラシー】③-2ワクワクするライフプランニングで大切なこと',
+		description: 'ワクワクするライフプランニングについて学ぶ',
+		tags: ['お金・経済'],
+		url: 'https://youtu.be/g_Ie4A4QmiM',
+		questUrl: 'https://forms.gle/67qyiyCfQ6xjmKiw6',
+		provider: 'youtube',
+		createdAt: '2025-11-28T02:00:00.000Z'
 	},
 ]
 

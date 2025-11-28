@@ -237,23 +237,23 @@ export default function MinecraftSdgsAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">マイクラSDGs 管理</h1>
-          <p className="text-gray-600">全ユーザーの進捗確認と承認作業を行います</p>
-          <div className="mt-4 flex gap-2">
+        <div className="bg-white rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">マイクラSDGs 管理</h1>
+          <p className="text-sm md:text-base text-gray-600">全ユーザーの進捗確認と承認作業を行います</p>
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
-              <ShieldCheck className="inline w-4 h-4 mr-1" /> 承認待ち
+              <ShieldCheck className="inline w-5 h-5 mr-2" /> 承認待ち
             </button>
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
-              <List className="inline w-4 h-4 mr-1" /> 進捗一覧
+              <List className="inline w-5 h-5 mr-2" /> 進捗一覧
             </button>
           </div>
         </div>
@@ -270,165 +270,293 @@ export default function MinecraftSdgsAdminPage() {
             <p className="text-gray-600 text-lg">承認待ちのステージはありません</p>
           </div>
           ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    ユーザー
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    ステージ
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    申請日時
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    回答状況
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {pendingApprovals.map((approval) => (
-                  <tr key={approval.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
+          <>
+            {/* PC用テーブル表示 */}
+            <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      ユーザー
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      ステージ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      申請日時
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      回答状況
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {pendingApprovals.map((approval) => (
+                    <tr key={approval.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {approval.user_nickname}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {approval.user_email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-blue-600">
+                          ステージ {approval.stage_id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {new Date(approval.submitted_at).toLocaleString('ja-JP')}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-xs">
+                            {approval.sdgs_form_submitted_at ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-gray-300" />
+                            )}
+                            <span className="text-gray-600">SDGsワーク</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            {approval.programming_form_submitted_at ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-gray-300" />
+                            )}
+                            <span className="text-gray-600">マイクラワーク</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => handleApprove(approval)}
+                          disabled={processingId === approval.id}
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          {processingId === approval.id ? (
+                            <>
+                              <Clock className="w-4 h-4 animate-spin" />
+                              処理中
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4" />
+                              承認
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => openRejectModal(approval)}
+                          disabled={processingId === approval.id}
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          却下
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* スマホ用カード表示 */}
+            <div className="md:hidden space-y-4">
+              {pendingApprovals.map((approval) => (
+                <div key={approval.id} className="bg-white rounded-lg shadow p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="text-base font-bold text-gray-900 mb-1">
                         {approval.user_nickname}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 mb-2">
                         {approval.user_email}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-bold text-blue-600">
+                      <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
                         ステージ {approval.stage_id}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {new Date(approval.submitted_at).toLocaleString('ja-JP')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs">
-                          {approval.sdgs_form_submitted_at ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-gray-300" />
-                          )}
-                          <span className="text-gray-600">SDGsワーク</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          {approval.programming_form_submitted_at ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-gray-300" />
-                          )}
-                          <span className="text-gray-600">マイクラワーク</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleApprove(approval)}
-                        disabled={processingId === approval.id}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        {processingId === approval.id ? (
-                          <>
-                            <Clock className="w-4 h-4 animate-spin" />
-                            処理中
-                          </>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-3 mb-3">
+                    <div className="text-xs text-gray-500 mb-2">
+                      申請日時: {new Date(approval.submitted_at).toLocaleString('ja-JP')}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        {approval.sdgs_form_submitted_at ? (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                         ) : (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            承認
-                          </>
+                          <XCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
                         )}
-                      </button>
-                      <button
-                        onClick={() => openRejectModal(approval)}
-                        disabled={processingId === approval.id}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        却下
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          )
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ユーザー</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ステージ</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">状態</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {allProgress.map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3">
-                      <div className="text-sm font-medium text-gray-900">{row.user_nickname}</div>
-                      <div className="text-sm text-gray-500">{row.user_email}</div>
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className="text-sm font-semibold text-blue-600">ステージ {row.stage_id}</span>
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : row.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-right space-x-2">
-                      {row.status === 'pending_approval' ? (
+                        <span className="text-gray-700">SDGsワーク</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {approval.programming_form_submitted_at ? (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                        )}
+                        <span className="text-gray-700">マイクラワーク</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApprove(approval)}
+                      disabled={processingId === approval.id}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+                    >
+                      {processingId === approval.id ? (
                         <>
-                          <button
-                            onClick={() => handleApprove(row)}
-                            disabled={processingId === row.id}
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                          >
-                            <CheckCircle className="w-4 h-4" /> 承認
-                          </button>
-                          <button
-                            onClick={() => openRejectModal(row)}
-                            disabled={processingId === row.id}
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                          >
-                            <XCircle className="w-4 h-4" /> 却下
-                          </button>
+                          <Clock className="w-5 h-5 animate-spin" />
+                          処理中
                         </>
                       ) : (
-                        <span className="text-xs text-gray-400">承認操作対象外</span>
+                        <>
+                          <CheckCircle className="w-5 h-5" />
+                          承認
+                        </>
                       )}
-                    </td>
+                    </button>
+                    <button
+                      onClick={() => openRejectModal(approval)}
+                      disabled={processingId === approval.id}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+                    >
+                      <XCircle className="w-5 h-5" />
+                      却下
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+          )
+        ) : (
+          <>
+            {/* PC用テーブル表示 */}
+            <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ユーザー</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ステージ</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">状態</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">操作</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {allProgress.map(row => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-3">
+                        <div className="text-sm font-medium text-gray-900">{row.user_nickname}</div>
+                        <div className="text-sm text-gray-500">{row.user_email}</div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-sm font-semibold text-blue-600">ステージ {row.stage_id}</span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : row.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-right space-x-2">
+                        {row.status === 'pending_approval' ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(row)}
+                              disabled={processingId === row.id}
+                              className="inline-flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <CheckCircle className="w-4 h-4" /> 承認
+                            </button>
+                            <button
+                              onClick={() => openRejectModal(row)}
+                              disabled={processingId === row.id}
+                              className="inline-flex items-center gap-2 px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <XCircle className="w-4 h-4" /> 却下
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">承認操作対象外</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* スマホ用カード表示 */}
+            <div className="md:hidden space-y-4">
+              {allProgress.map(row => (
+                <div key={row.id} className="bg-white rounded-lg shadow p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="text-base font-bold text-gray-900 mb-1">
+                        {row.user_nickname}
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                        {row.user_email}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
+                          ステージ {row.stage_id}
+                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' : row.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {row.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {row.status === 'pending_approval' ? (
+                    <div className="flex gap-2 mt-3 border-t pt-3">
+                      <button
+                        onClick={() => handleApprove(row)}
+                        disabled={processingId === row.id}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+                      >
+                        <CheckCircle className="w-5 h-5" /> 承認
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(row)}
+                        disabled={processingId === row.id}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+                      >
+                        <XCircle className="w-5 h-5" /> 却下
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center text-xs text-gray-400 mt-3 border-t pt-3">
+                      承認操作対象外
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* 却下モーダル */}
       {rejectModalOpen && selectedApproval && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-4 md:p-6 max-w-md w-full">
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-3 md:mb-4">
               ステージ{selectedApproval.stage_id}を却下
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm md:text-base text-gray-600 mb-4">
               {selectedApproval.user_nickname}さんのステージを却下します。<br />
               却下理由を入力してください（ユーザーに通知されます）
             </p>
@@ -436,23 +564,23 @@ export default function MinecraftSdgsAdminPage() {
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="却下理由を入力..."
-              className="w-full border border-gray-300 rounded-lg p-3 mb-4 min-h-[100px] focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg p-3 mb-4 min-h-[120px] text-base focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   setRejectModalOpen(false)
                   setSelectedApproval(null)
                   setRejectionReason('')
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleReject}
                 disabled={!rejectionReason.trim() || processingId === selectedApproval.id}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
               >
                 {processingId === selectedApproval.id ? '処理中...' : '却下する'}
               </button>

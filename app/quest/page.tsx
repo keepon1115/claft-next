@@ -391,8 +391,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">ポケモンから考える人気キャラクターのヒミツ①</span>
-                          <span className="badge anime-manga">アニメ・マンガ</span>
+                          <span className="title">【生成AI】③-1 AIと漫画を創ろう</span>
+                          <span className="badge ai-it">AI・ITスキル</span>
                         </button>
                       </li>
                       <li>
@@ -403,8 +403,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">ポケモンから考える人気キャラクターのヒミツ②</span>
-                          <span className="badge anime-manga">アニメ・マンガ</span>
+                          <span className="title">【生成AI】③-2 AIと漫画を創ろう</span>
+                          <span className="badge ai-it">AI・ITスキル</span>
                         </button>
                       </li>
                       <li>
@@ -415,7 +415,7 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【マネーリテラシー】③お金を手にいれよう！</span>
+                          <span className="title">【マネーリテラシー】③-2ワクワクするライフプランニングで大切なこと</span>
                           <span className="badge money-economy">お金・経済</span>
                         </button>
                       </li>
@@ -742,6 +742,7 @@ export default function QuestPage() {
         }
         .quest-pop-list .badge.anime-manga { background: #FF6B6B; }
         .quest-pop-list .badge.money-economy { background: #4ECDC4; }
+        .quest-pop-list .badge.ai-it { background: #9C27B0; }
         .quest-form-link {
           display: inline-flex;
           align-items: center;

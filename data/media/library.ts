@@ -9,7 +9,7 @@ const sectionMediaItems: MediaItem[] = [
 	// おかね・経済（セクションにも掲載）
 	{
 		id: 'money-001',
-		title: '①お金ってなんだろう？',
+		title: '【マネーリテラシー】①お金ってなんだろう？',
 		description: 'お金の役割や機能を学ぶ',
 		tags: ['series:section', 'topic:money', 'stage:jibuncraft'],
 		url: 'https://youtu.be/EBudngoyo2M',
@@ -80,7 +80,7 @@ const sectionMediaItems: MediaItem[] = [
 	// AI・ITスキル
 	{
 		id: 'aiit-001',
-		title: '①AIといっしょに描こう！',
+		title: '【生成AI】①AIといっしょに描こう！',
 		description: '生成AIで画像を作る',
 		tags: ['series:section', 'topic:ai', 'stage:jibuncraft'],
 		url: 'https://youtu.be/QCPWmaj-vGQ',
@@ -91,7 +91,7 @@ const sectionMediaItems: MediaItem[] = [
 	},
 	{
 		id: 'aiit-002',
-		title: '②AIと仲良くなろう！',
+		title: '【生成AI】②AIと仲良くなろう！',
 		description: '生成AIで動画を作る',
 		tags: ['series:section', 'topic:ai', 'stage:jibuncraft'],
 		url: 'https://youtu.be/v42HNh-DoSk',
