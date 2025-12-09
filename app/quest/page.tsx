@@ -391,8 +391,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【生成AI】③-1 AIと漫画を創ろう</span>
-                          <span className="badge ai-it">AI・ITスキル</span>
+                          <span className="title">時間の正体①内側の時間と外側の時間</span>
+                          <span className="badge philosophy">哲学・思考</span>
                         </button>
                       </li>
                       <li>
@@ -403,8 +403,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【生成AI】③-2 AIと漫画を創ろう</span>
-                          <span className="badge ai-it">AI・ITスキル</span>
+                          <span className="title">時間の正体②心を震わす「共鳴」とは？</span>
+                          <span className="badge philosophy">哲学・思考</span>
                         </button>
                       </li>
                       <li>
@@ -415,8 +415,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【マネーリテラシー】③-2ワクワクするライフプランニングで大切なこと</span>
-                          <span className="badge money-economy">お金・経済</span>
+                          <span className="title">【プレゼン・発表】2-4「話す」の基本</span>
+                          <span className="badge presentation">プレゼン・発表</span>
                         </button>
                       </li>
                     </ul>
@@ -743,6 +743,8 @@ export default function QuestPage() {
         .quest-pop-list .badge.anime-manga { background: #FF6B6B; }
         .quest-pop-list .badge.money-economy { background: #4ECDC4; }
         .quest-pop-list .badge.ai-it { background: #9C27B0; }
+        .quest-pop-list .badge.philosophy { background: #6366f1; }
+        .quest-pop-list .badge.presentation { background: #ec4899; }
         .quest-form-link {
           display: inline-flex;
           align-items: center;

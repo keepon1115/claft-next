@@ -6,6 +6,7 @@ export const DOMAIN_TAGS = [
 	'脳・心理',
 	'世界・歴史',
 	'アニメ・マンガ',
+	'哲学・思考',
 ]
 
 export const SKILL_TAGS = [
