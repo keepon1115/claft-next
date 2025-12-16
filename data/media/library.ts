@@ -28,6 +28,28 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/2z9I_Y7fmyE/hqdefault.jpg',
 		createdAt: '2024-01-01T00:00:00.000Z'
 	},
+	{
+		id: 'money-005',
+		title: '【マネーリテラシー】⑤お金を貯めよう！',
+		description: 'お金を貯める方法と重要性を学ぶ',
+		tags: ['お金・経済'],
+		url: 'https://youtu.be/S-S0UBln5Vc',
+		questUrl: 'https://forms.gle/zr1jHnLJdE2zjFY68',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/S-S0UBln5Vc/hqdefault.jpg',
+		createdAt: '2024-12-16T00:00:00.000Z'
+	},
+	{
+		id: 'money-006',
+		title: '【マネーリテラシー】⑥貯めたお金はどこにおけばいいの？',
+		description: '貯蓄の方法と投資の基本を学ぶ',
+		tags: ['お金・経済'],
+		url: 'https://youtu.be/U8iEgioKsNU',
+		questUrl: 'https://forms.gle/3r2k5CYM3RDJ5tHr5',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/U8iEgioKsNU/hqdefault.jpg',
+		createdAt: '2024-12-16T00:00:00.000Z'
+	},
 
 	// プレゼン・発表
 	{

@@ -180,9 +180,9 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     sdgsFormUrl: 'https://forms.gle/GQi9eYYrc4vPkDQWA',
     sdgsSupportPrintUrl: 'https://www.canva.com/design/DAG5yEP0dFc/4VkXyVPAlt9Ox2StMoyWKw/edit?utm_content=DAG5yEP0dFc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
     sdgsStageDownloadUrl: 'https://xgf.nu/fkkt3',
-    programmingWorkUrl: 'https://youtu.be/XK8c_4KBUxw',
+    programmingWorkUrl: 'https://youtu.be/5C13_WEGBlg',
     programmingFormUrl: 'https://forms.gle/1ntg3xRmGKn2e1Ey6',
-    programmingSupportPrintUrl: 'https://www.canva.com/design/DAG7BIeveZo/XmAqn6sIreHC0B-4BO94PA/edit?utm_content=DAG7BIeveZo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
+    programmingSupportPrintUrl: 'https://www.canva.com/design/DAG7hSdjyVk/kBshZPdY-Z1egCnWucK-pw/edit?utm_content=DAG7hSdjyVk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
     programmingApDojoUrl: 'https://xgf.nu/i10g0',
     fallbackIcon: '🌾',
     sdgsGoal: 2

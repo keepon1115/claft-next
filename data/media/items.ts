@@ -103,7 +103,7 @@ export const mediaItems: MediaItem[] = [
 	},
 	{
 		id: 'money-literacy-3',
-		title: '【マネーリテラシー】③-1 お金を手にいれよう！',
+		title: '【マネーリテラシー】③ お金を手にいれよう！',
 		description: 'お金を手に入れるための基本的な考え方と方法を学ぶ',
 		tags: ['お金・経済'],
 		url: 'https://youtu.be/4czctqGKL3k',
@@ -133,7 +133,7 @@ export const mediaItems: MediaItem[] = [
 	},
 	{
 		id: 'money-literacy-3-2',
-		title: '【マネーリテラシー】③-2ワクワクするライフプランニングで大切なこと',
+		title: '【マネーリテラシー】④ワクワクするライフプランニングで大切なこと',
 		description: 'ワクワクするライフプランニングについて学ぶ',
 		tags: ['お金・経済'],
 		url: 'https://youtu.be/g_Ie4A4QmiM',
