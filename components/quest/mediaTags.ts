@@ -7,6 +7,7 @@ export const DOMAIN_TAGS = [
 	'世界・歴史',
 	'アニメ・マンガ',
 	'哲学・思考',
+	'キャリア',
 ]
 
 export const SKILL_TAGS = [

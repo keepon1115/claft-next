@@ -391,7 +391,7 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【マネーリテラシー】⑤お金を貯めよう！</span>
+                          <span className="title">【マネーリテラシー】⑦保険ってなんだろう？</span>
                           <span className="badge money">お金・経済</span>
                         </button>
                       </li>
@@ -403,8 +403,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【マネーリテラシー】⑥貯めたお金はどこにおけばいいの？</span>
-                          <span className="badge money">お金・経済</span>
+                          <span className="title">【キャリア理論入門】①キャリアについて</span>
+                          <span className="badge career">キャリア</span>
                         </button>
                       </li>
                       <li>
@@ -415,8 +415,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【プレゼン・発表】2-4「話す」の基本</span>
-                          <span className="badge presentation">プレゼン・発表</span>
+                          <span className="title">【キャリア理論入門】②D.E.スーパー</span>
+                          <span className="badge career">キャリア</span>
                         </button>
                       </li>
                     </ul>
@@ -745,6 +745,7 @@ export default function QuestPage() {
         .quest-pop-list .badge.ai-it { background: #9C27B0; }
         .quest-pop-list .badge.philosophy { background: #6366f1; }
         .quest-pop-list .badge.presentation { background: #ec4899; }
+        .quest-pop-list .badge.career { background: #f59e0b; }
         .quest-form-link {
           display: inline-flex;
           align-items: center;

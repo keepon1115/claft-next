@@ -182,6 +182,43 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/V9SSFXkjsH4/hqdefault.jpg',
 		createdAt: '2024-12-09T00:00:00.000Z'
 	},
+
+	// マネーリテラシー (追加動画)
+	{
+		id: 'money-007',
+		title: '【マネーリテラシー】⑦保険ってなんだろう？',
+		description: '保険の基本と重要性を学ぶ',
+		tags: ['お金・経済'],
+		url: 'https://youtu.be/U8iEgioKsNU',
+		questUrl: 'https://forms.gle/3r2k5CYM3RDJ5tHr5',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/U8iEgioKsNU/hqdefault.jpg',
+		createdAt: '2024-12-28T00:00:00.000Z'
+	},
+
+	// キャリア理論入門
+	{
+		id: 'career-001',
+		title: '【キャリア理論入門】①キャリアについて',
+		description: 'キャリアの基本概念を学ぶ',
+		tags: ['キャリア'],
+		url: 'https://youtu.be/gHYcdNBSi5Y',
+		questUrl: 'https://forms.gle/39f85VK7q6SUzBWm7',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/gHYcdNBSi5Y/hqdefault.jpg',
+		createdAt: '2024-12-28T00:00:00.000Z'
+	},
+	{
+		id: 'career-002',
+		title: '【キャリア理論入門】②D.E.スーパー',
+		description: 'D.E.スーパーのキャリア理論を学ぶ',
+		tags: ['キャリア'],
+		url: 'https://youtu.be/k7T4EFzcKa0',
+		questUrl: 'https://forms.gle/yobZR1GVMLsXRyBv9',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/k7T4EFzcKa0/hqdefault.jpg',
+		createdAt: '2024-12-28T00:00:00.000Z'
+	},
 ]
 
 // ジブンクラフト横断ライブラリ: セクション固定 + 追加メディア(items.ts) をマージ
