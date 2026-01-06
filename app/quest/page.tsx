@@ -16,6 +16,7 @@ import { AuthButton } from '@/components/auth/AuthButton'
 import { ModalLoadingFallback } from '@/components/common/DynamicLoader'
 import UnlockAnimation from '@/components/quest/UnlockAnimation'
 import BackgroundAnimations from '@/components/common/BackgroundAnimations'
+import JibunMediaLibrary from '@/components/quest/JibunMediaLibrary'
 
 // ==========================================
 // 動的インポートコンポーネント
@@ -340,18 +341,22 @@ export default function QuestPage() {
 
           </header>
 
-          {/* クエストマップ表示 */}
-          <QuestMap
-            stages={stages}
-            statistics={displayStatistics}
-            onStageClick={handleStageClick}
-            theme={currentTheme}
-            area={currentArea as any}
-          />
+          {/* クエストマップまたはジブンクラフト表示 */}
+          {currentArea === 'jibun' ? (
+            <JibunMediaLibrary />
+          ) : (
+            <QuestMap
+              stages={stages}
+              statistics={displayStatistics}
+              onStageClick={handleStageClick}
+              theme={currentTheme}
+              area={currentArea as any}
+            />
+          )}
         </div>
 
-        {/* 次の冒険ボタン or 吹き出しCTA（認証済みユーザーのみ） */}
-        {isAuthenticated && (
+        {/* 次の冒険ボタン or 吹き出しCTA（認証済みユーザーのみ、ジブンクラフトエリア以外） */}
+        {isAuthenticated && currentArea !== 'jibun' && (
           (() => {
             const nextStageId = getNextAvailableStage()
             if (nextStageId) {
@@ -391,19 +396,7 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【マネーリテラシー】⑦保険ってなんだろう？</span>
-                          <span className="badge money">お金・経済</span>
-                        </button>
-                      </li>
-                      <li>
-                        <button 
-                          onClick={() => {
-                            setShowVideoPop(false);
-                            switchArea('jibun');
-                          }}
-                          className="quest-video-link quest-jibun-link"
-                        >
-                          <span className="title">【キャリア理論入門】①キャリアについて</span>
+                          <span className="title">【キャリア理論入門】③J.D.クランボルツ</span>
                           <span className="badge career">キャリア</span>
                         </button>
                       </li>
@@ -415,7 +408,7 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【キャリア理論入門】②D.E.スーパー</span>
+                          <span className="title">【キャリア理論入門】④M.L.サビカス</span>
                           <span className="badge career">キャリア</span>
                         </button>
                       </li>
@@ -427,8 +420,8 @@ export default function QuestPage() {
           })()
         )}
 
-        {/* 未認証ユーザー向けの登録促進ボタン */}
-        {!isAuthenticated && (
+        {/* 未認証ユーザー向けの登録促進ボタン（ジブンクラフトエリア以外） */}
+        {!isAuthenticated && currentArea !== 'jibun' && (
           <button 
             className="quest-register-button"
             onClick={() => setShowAuthModal(true)}
@@ -483,7 +476,9 @@ export default function QuestPage() {
           font-family: var(--font-dot-gothic), var(--font-m-plus-rounded), sans-serif;
           ${currentTheme === 'sky' 
             ? 'background: radial-gradient(circle at 15% 12%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0) 20%), linear-gradient(to bottom, #aee8ff 0%, #c8f0ff 40%, #eaf9ff 70%, #ffffff 100%);' 
-            : 'background: radial-gradient(circle at 85% 18%, rgba(255,180,80,0.9) 0%, rgba(255,180,80,0.5) 10%, rgba(255,180,80,0) 22%), linear-gradient(to bottom, #ffb36b 0%, #ff8e6b 35%, #c065b8 65%, #1f2a44 100%);'
+            : currentTheme === 'twilight'
+            ? 'background: radial-gradient(circle at 85% 18%, rgba(255,180,80,0.9) 0%, rgba(255,180,80,0.5) 10%, rgba(255,180,80,0) 22%), linear-gradient(to bottom, #ffb36b 0%, #ff8e6b 35%, #c065b8 65%, #1f2a44 100%);'
+            : 'background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.1) 20%, rgba(99, 102, 241, 0) 40%), linear-gradient(to bottom, #1e1b4b 0%, #312e81 40%, #4c1d95 70%, #2e1065 100%);'
           }
           min-height: 100vh;
           position: relative;

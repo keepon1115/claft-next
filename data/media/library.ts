@@ -219,6 +219,28 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/k7T4EFzcKa0/hqdefault.jpg',
 		createdAt: '2024-12-28T00:00:00.000Z'
 	},
+	{
+		id: 'career-003',
+		title: '【キャリア理論入門】③J.D.クランボルツ',
+		description: 'J.D.クランボルツのキャリア理論を学ぶ',
+		tags: ['キャリア'],
+		url: 'https://youtu.be/uiAygESMsP0',
+		questUrl: 'https://forms.gle/wLss2hkHtej55Uqm6',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/uiAygESMsP0/hqdefault.jpg',
+		createdAt: '2025-01-06T00:00:00.000Z'
+	},
+	{
+		id: 'career-004',
+		title: '【キャリア理論入門】④M.L.サビカス',
+		description: 'M.L.サビカスのキャリア理論を学ぶ',
+		tags: ['キャリア'],
+		url: 'https://youtu.be/WokTgU92J4g',
+		questUrl: 'https://forms.gle/8dD7MDqjL9eLk3Xn9',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/WokTgU92J4g/hqdefault.jpg',
+		createdAt: '2025-01-06T00:00:00.000Z'
+	},
 ]
 
 // ジブンクラフト横断ライブラリ: セクション固定 + 追加メディア(items.ts) をマージ
