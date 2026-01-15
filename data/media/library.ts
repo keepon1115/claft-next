@@ -241,6 +241,30 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/WokTgU92J4g/hqdefault.jpg',
 		createdAt: '2025-01-06T00:00:00.000Z'
 	},
+
+	// プレゼン・発表
+	{
+		id: 'presentation-001',
+		title: '【発表・プレゼン】3-2 「聴く」の基本',
+		description: 'プレゼンテーションにおける「聴く」スキルを学ぶ',
+		tags: ['プレゼン・発表'],
+		url: 'https://youtu.be/Mj0DbqyOvkQ',
+		questUrl: 'https://forms.gle/XTrBpQswkWWdt2aY9',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/Mj0DbqyOvkQ/hqdefault.jpg',
+		createdAt: '2025-01-15T00:00:00.000Z'
+	},
+	{
+		id: 'presentation-002',
+		title: '【発表・プレゼン】3-3 「訊く」の基本',
+		description: 'プレゼンテーションにおける「訊く」スキルを学ぶ',
+		tags: ['プレゼン・発表'],
+		url: 'https://youtu.be/k3JjPE9ksao',
+		questUrl: 'https://forms.gle/zgPTqVYs4JX7VzSQ9',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/k3JjPE9ksao/hqdefault.jpg',
+		createdAt: '2025-01-15T00:00:00.000Z'
+	},
 ]
 
 // ジブンクラフト横断ライブラリ: セクション固定 + 追加メディア(items.ts) をマージ

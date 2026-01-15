@@ -355,24 +355,28 @@ export default function QuestPage() {
           )}
         </div>
 
-        {/* 次の冒険ボタン or 吹き出しCTA（認証済みユーザーのみ、ジブンクラフトエリア以外） */}
-        {isAuthenticated && currentArea !== 'jibun' && (
+        {/* 次の冒険ボタン or 吹き出しCTA（認証済みユーザーのみ） */}
+        {isAuthenticated && (
           (() => {
-            const nextStageId = getNextAvailableStage()
-            if (nextStageId) {
-              return (
-                <button
-                  className="quest-button"
-                  onClick={() => {
-                    setSelectedStageId(nextStageId)
-                    setIsModalOpen(true)
-                  }}
-                  aria-label="次の冒険へ進む"
-                >
-                  {currentTheme === 'sky' ? '🔥 次の冒険へ進む！' : '🌇 次の冒険へ進む！'}
-                </button>
-              )
+            // ジブンクラフトエリア以外では次のステージボタンを表示
+            if (currentArea !== 'jibun') {
+              const nextStageId = getNextAvailableStage()
+              if (nextStageId) {
+                return (
+                  <button
+                    className="quest-button"
+                    onClick={() => {
+                      setSelectedStageId(nextStageId)
+                      setIsModalOpen(true)
+                    }}
+                    aria-label="次の冒険へ進む"
+                  >
+                    {currentTheme === 'sky' ? '🔥 次の冒険へ進む！' : '🌇 次の冒険へ進む！'}
+                  </button>
+                )
+              }
             }
+            // 全エリアで「どんな冒険をする？」ポップアップを表示
             return (
               <div className="quest-bubble-wrapper" role="region" aria-label="次のコンテンツ案内">
                 <button
@@ -396,8 +400,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【キャリア理論入門】③J.D.クランボルツ</span>
-                          <span className="badge career">キャリア</span>
+                          <span className="title">【発表・プレゼン】3-2 「聴く」の基本</span>
+                          <span className="badge presentation">プレゼン・発表</span>
                         </button>
                       </li>
                       <li>
@@ -408,8 +412,8 @@ export default function QuestPage() {
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【キャリア理論入門】④M.L.サビカス</span>
-                          <span className="badge career">キャリア</span>
+                          <span className="title">【発表・プレゼン】3-3 「訊く」の基本</span>
+                          <span className="badge presentation">プレゼン・発表</span>
                         </button>
                       </li>
                     </ul>
