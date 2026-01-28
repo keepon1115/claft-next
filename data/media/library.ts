@@ -265,6 +265,28 @@ const sectionMediaItems: MediaItem[] = [
 		thumbnailUrl: 'https://img.youtube.com/vi/k3JjPE9ksao/hqdefault.jpg',
 		createdAt: '2025-01-15T00:00:00.000Z'
 	},
+	{
+		id: 'brain-psychology-001',
+		title: 'ずっと続くハッピー①長く続くか短く終わるか',
+		description: '幸せの持続性について考える',
+		tags: ['脳・心理'],
+		url: 'https://youtu.be/1SgQV_n6Pak',
+		questUrl: 'https://forms.gle/WY2ZBLd1k6arCa5FA',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/1SgQV_n6Pak/hqdefault.jpg',
+		createdAt: '2025-01-28T00:00:00.000Z'
+	},
+	{
+		id: 'brain-psychology-002',
+		title: 'ずっと続くハッピー②幸せな人の4つの考え方',
+		description: '幸せな人の思考パターンを学ぶ',
+		tags: ['脳・心理'],
+		url: 'https://youtu.be/BZ_V1F38j2s',
+		questUrl: 'https://forms.gle/7GvQoBWSPGPYLrbn7',
+		provider: 'youtube',
+		thumbnailUrl: 'https://img.youtube.com/vi/BZ_V1F38j2s/hqdefault.jpg',
+		createdAt: '2025-01-28T00:00:00.000Z'
+	},
 ]
 
 // ジブンクラフト横断ライブラリ: セクション固定 + 追加メディア(items.ts) をマージ

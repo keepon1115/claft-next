@@ -396,24 +396,24 @@ export default function QuestPage() {
                         <button 
                           onClick={() => {
                             setShowVideoPop(false);
-                            switchArea('jibun');
+                            window.open('https://youtu.be/1SgQV_n6Pak', '_blank', 'noopener,noreferrer');
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【発表・プレゼン】3-2 「聴く」の基本</span>
-                          <span className="badge presentation">プレゼン・発表</span>
+                          <span className="title">ずっと続くハッピー①長く続くか短く終わるか</span>
+                          <span className="badge brain-psychology">脳・心理</span>
                         </button>
                       </li>
                       <li>
                         <button 
                           onClick={() => {
                             setShowVideoPop(false);
-                            switchArea('jibun');
+                            window.open('https://youtu.be/BZ_V1F38j2s', '_blank', 'noopener,noreferrer');
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">【発表・プレゼン】3-3 「訊く」の基本</span>
-                          <span className="badge presentation">プレゼン・発表</span>
+                          <span className="title">ずっと続くハッピー②幸せな人の4つの考え方</span>
+                          <span className="badge brain-psychology">脳・心理</span>
                         </button>
                       </li>
                     </ul>
