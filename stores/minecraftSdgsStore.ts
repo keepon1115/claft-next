@@ -213,9 +213,10 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     sdgsWorkUrl: 'https://youtu.be/qamrO-k220Y',
     sdgsFormUrl: 'https://forms.gle/q7HMaP4PqTKkShXAA',
     sdgsSupportPrintUrl: 'https://www.canva.com/design/DAG_kJBoQbg/_4Bx5vUD5oTKPWdoMcVwpQ/edit?utm_content=DAG_kJBoQbg&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
-    programmingWorkUrl: 'https://youtu.be/sample6-programming',
-    programmingFormUrl: 'https://forms.gle/sample6-programming',
-    programmingSupportPrintUrl: 'https://example.com/stage-6-programming-support',
+    programmingWorkUrl: 'https://youtu.be/kDru1c6PsVY',
+    programmingFormUrl: 'https://forms.gle/ouKeZa6TC2vPpFS87',
+    programmingSupportPrintUrl: 'https://www.canva.com/design/DAHBdYZ9dC4/Jqqo27RkvZnwbeIEwBKtdQ/edit?utm_content=DAHBdYZ9dC4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
+    programmingApDojoUrl: 'https://xgf.nu/amYRL',
     fallbackIcon: '📚',
     sdgsGoal: 4
   },
