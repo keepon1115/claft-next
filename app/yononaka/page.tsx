@@ -88,20 +88,22 @@ export default function YononakaPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <a
-                  href="https://forms.gle/Sujpn4T5auNQwmPe8"
+                  href="https://forms.gle/qVtyDanyVPszFxAo8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                【Yo103】あなたが一番好きな季節は？
+                【Yo109】<br></br>
+                学校や家の中で、『困ったこと』や『もったいないと思うこと』を教えてください
                 </a>
                 <a
-                  href="https://forms.gle/PgrkekVwFRS7zC8k7"
+                  href="https://forms.gle/vtNLqArw8Joh2A2U8"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                【Yo104】時間を忘れるくらい夢中になれること
+                【Yo110】<br></br>
+                今あるスポーツのルールをちょっとだけ変えて、新しいスポーツを考えてみよう！
                 </a>
               </div>
 
@@ -117,36 +119,38 @@ export default function YononakaPage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-pulse">
                   <span className="text-2xl">🌍</span>
                 </div>
-                <h2 className="text-2xl font-bold text-amber-900">Yononakaワーク</h2>
+                <h2 className="text-2xl font-bold text-amber-900">イベントワーク</h2>
               </div>
               <p className="text-amber-800 mb-6">
-                オンラインで集まり、参加者同士がお題に対して話し合う、対話ワーク。
+                現在参加募集中のイベントやワークショップの申し込みはこちらから。
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch flex-grow">
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">時間の正体</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">Yononaka</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 12月4日(木) 20時~21時</p>
+                    <p>テーマ「「物語」があふれる世の中」</p>
+                    <p>📅 3/4(水) 20時~21時</p>
                   </div>
-                  <a href="https://us02web.zoom.us/j/81885057215?pwd=YisSmG0PJgb9JaS8lhKHcC7biYjDF3.1" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    ZOOMに入る
+                  <a href="https://forms.gle/SFA3n3BsCrtU778WA" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    参加する
                   </a>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">ミライクラフトミーティング</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">春のスクールフェスタ</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 12月中旬</p>
+                    <p>📅 3/29(日)</p>
+                    <p>場所：アーテック5F</p>
                   </div>
-                  <a href="#" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    日時未定
+                  <a href="https://forms.gle/bFBtDLBBkyegx72x8" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    参加する
                   </a>
                 </div>
               </div>
 
-              <a href="https://forms.gle/HdTici5TDgqfihFTA" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <span className="relative z-10">12月の参加申し込みはこちら</span>
+              <a href="https://keepon.my.canva.site/weekly-keepon2-13/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
             </section>
