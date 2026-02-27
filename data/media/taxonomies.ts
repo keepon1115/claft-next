@@ -7,6 +7,7 @@ export const GENRES: Genre[] = [
 	'AI・ITスキル',
 	'SDGs・環境',
 	'脳・心理',
+	'身体・健康',
 ]
 
 export const POWERS: Power[] = [

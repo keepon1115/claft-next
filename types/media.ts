@@ -2,7 +2,7 @@
 
 export type MediaProvider = 'youtube' | 'vimeo' | 'file'
 
-export type Genre = 'お金・経済' | 'プレゼン・発表' | 'AI・ITスキル' | 'SDGs・環境' | '脳・心理' | '哲学・思考'
+export type Genre = 'お金・経済' | 'プレゼン・発表' | 'AI・ITスキル' | 'SDGs・環境' | '脳・心理' | '哲学・思考' | '身体・健康'
 export type Power = 'ひらく' | 'えがく' | 'つなぐ' | 'なりきる' | 'まきこむ'
 
 export interface MediaItem {

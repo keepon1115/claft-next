@@ -141,6 +141,36 @@ export const mediaItems: MediaItem[] = [
 		provider: 'youtube',
 		createdAt: '2025-11-28T02:00:00.000Z'
 	},
+	{
+		id: 'exercise-brain-1',
+		title: '運動すると頭がよくなるってホント？①',
+		description: '運動が脳に与える影響を学ぶ 第1弾',
+		tags: ['身体・健康'],
+		url: 'https://youtu.be/QhxWwca69yk',
+		questUrl: 'https://forms.gle/GGqBsZR9qDicUjnh6',
+		provider: 'youtube',
+		createdAt: '2026-02-27T00:00:00.000Z'
+	},
+	{
+		id: 'exercise-brain-2',
+		title: '運動すると頭がよくなるってホント？②',
+		description: '運動が脳に与える影響を学ぶ 第2弾',
+		tags: ['身体・健康'],
+		url: 'https://youtu.be/HfAiOLdNjGo',
+		questUrl: 'https://forms.gle/LF2NZx5dkyNReSYMA',
+		provider: 'youtube',
+		createdAt: '2026-02-27T01:00:00.000Z'
+	},
+	{
+		id: 'exercise-brain-3',
+		title: '運動すると頭がよくなるってホント？③',
+		description: '運動が脳に与える影響を学ぶ 第3弾',
+		tags: ['身体・健康'],
+		url: 'https://youtu.be/L9l3F3r5A_Y',
+		questUrl: 'https://forms.gle/Rg7nKsi5dc5MNbPL7',
+		provider: 'youtube',
+		createdAt: '2026-02-27T02:00:00.000Z'
+	},
 ]
 
 

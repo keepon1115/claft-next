@@ -396,24 +396,36 @@ export default function QuestPage() {
                         <button 
                           onClick={() => {
                             setShowVideoPop(false);
-                            window.open('https://youtu.be/1SgQV_n6Pak', '_blank', 'noopener,noreferrer');
+                            switchArea('jibun');
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">ずっと続くハッピー①長く続くか短く終わるか</span>
-                          <span className="badge brain-psychology">脳・心理</span>
+                          <span className="title">運動すると頭がよくなるってホント？①</span>
+                          <span className="badge body-health">身体・健康</span>
                         </button>
                       </li>
                       <li>
                         <button 
                           onClick={() => {
                             setShowVideoPop(false);
-                            window.open('https://youtu.be/BZ_V1F38j2s', '_blank', 'noopener,noreferrer');
+                            switchArea('jibun');
                           }}
                           className="quest-video-link quest-jibun-link"
                         >
-                          <span className="title">ずっと続くハッピー②幸せな人の4つの考え方</span>
-                          <span className="badge brain-psychology">脳・心理</span>
+                          <span className="title">運動すると頭がよくなるってホント？②</span>
+                          <span className="badge body-health">身体・健康</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => {
+                            setShowVideoPop(false);
+                            switchArea('jibun');
+                          }}
+                          className="quest-video-link quest-jibun-link"
+                        >
+                          <span className="title">運動すると頭がよくなるってホント？③</span>
+                          <span className="badge body-health">身体・健康</span>
                         </button>
                       </li>
                     </ul>
@@ -745,6 +757,7 @@ export default function QuestPage() {
         .quest-pop-list .badge.philosophy { background: #6366f1; }
         .quest-pop-list .badge.presentation { background: #ec4899; }
         .quest-pop-list .badge.career { background: #f59e0b; }
+        .quest-pop-list .badge.body-health { background: #22c55e; }
         .quest-form-link {
           display: inline-flex;
           align-items: center;
