@@ -229,6 +229,7 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
     sdgsWorkUrl: 'https://youtu.be/bOF1SdQHcIQ',
     sdgsFormUrl: 'https://forms.gle/G6uWEsFc3tJVMfn7A',
     sdgsSupportPrintUrl: 'https://www.canva.com/design/DAHCOAdkwuo/_pILPHLZjcAVbnmKK47hRA/edit?utm_content=DAHCOAdkwuo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton',
+    sdgsStageDownloadUrl: 'https://xgf.nu/mLhCJ',
     programmingWorkUrl: 'https://youtu.be/sample7-programming',
     programmingFormUrl: 'https://forms.gle/sample7-programming',
     programmingSupportPrintUrl: 'https://example.com/stage-7-programming-support',
