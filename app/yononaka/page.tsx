@@ -57,25 +57,26 @@ export default function YononakaPage() {
 
         <div className="relative z-10 p-8">
           {/* タイトルバナー */}
-          <div className="max-w-4xl mx-auto mb-12">
-            <div className="bg-white border-4 border-amber-600 rounded-3xl p-12 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-white/30 to-transparent animate-pulse"></div>
-              <div className="relative z-10 text-center">
-                <h1 className="text-5xl font-black text-amber-900 mb-4">
-                  Yononaka
-                </h1>
-                <p className="text-xl text-amber-700 font-medium">
-                 正解が一つでない問いに対して自分の意見を共有する時間
-                </p>
-              </div>
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="flex justify-center items-center gap-6">
+              {/* ロゴ画像 */}
+              <img
+                src="/assets/Yononaka/Yononaka.png"
+                alt="Yononaka"
+                className="h-20 w-auto flex-shrink-0"
+              />
+              {/* 説明テキスト */}
+              <p className="text-lg text-amber-700 font-medium leading-relaxed">
+                正解が一つでない問いに対して<br />自分の意見を共有する時間
+              </p>
             </div>
           </div>
 
           {/* メインコンテンツグリッド */}
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-y-12 gap-x-16">
             
             {/* ちょこっとYononaka */}
-            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px] flex flex-col">
+            <section className="bg-white/90 backdrop-blur-sm border-3 border-amber-600 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 min-h-[360px]">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                   <span className="text-2xl">☺</span>
@@ -85,32 +86,50 @@ export default function YononakaPage() {
               <p className="text-amber-800 mb-6">
                 かんたんなお題から、正解がひとつでない問いに向き合いましょう！
               </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <a
-                  href="https://forms.gle/vtNLqArw8Joh2A2U8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                【Yo110】<br></br>
-                今あるスポーツのルールをちょっとだけ変えて、新しいスポーツを考えてみよう！
-                </a>
+
+              {/* 2×2グリッド: カード×3 + ボタン */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* 左上：カード1 */}
                 <a
                   href="https://forms.gle/iQoCxzTSabVzE5AS9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                【Yo111】<br></br>
-                この1年（今年度）の一番の思い出を教えてください！
+                  【Yo111】<br />
+                  この1年（今年度）の一番の思い出を教えてください！
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/yAb8gqNZLL42ntTk6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo112】<br />
+                  最近、心を動かされた物語は？
+                </a>
+                {/* 左下：カード3（新規） */}
+                <a
+                  href="https://forms.gle/1Usd2erJLbwHVzPQ7"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                >
+                  【News1】<br />
+                  WBCがテレビで放送されないのは、どうしてなんだろう？
+                </a>
+                {/* 右下：チェックボタン */}
+                <a
+                  href="https://www.canva.com/design/DAGsulhyDNA/cmqZ6G-eGMVs7ABWtFKskg/edit?utm_content=DAGsulhyDNA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-center text-center bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                >
+                  <span className="relative z-10">これまでのみんなの回答を<br></br>チェック！！</span>
+                  <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </a>
               </div>
-
-              <a href="https://www.canva.com/design/DAGsulhyDNA/cmqZ6G-eGMVs7ABWtFKskg/edit?utm_content=DAGsulhyDNA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer" className="group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                <span className="relative z-10">これまでのみんなの回答をチェック</span>
-                <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-              </a>
             </section>
 
             {/* Yononakaワーク */}
