@@ -60,6 +60,27 @@ export type {
   WeeklyProgressStats
 } from './quest'
 
+// スクール生管理型
+export type {
+  Student,
+  MonthlyReport,
+  MonthlyReportContent,
+  StudentWithReports,
+  StudentFormValues,
+  MonthlyReportFormValues,
+  StudentFilter,
+} from './student'
+
+export {
+  studentFormSchema,
+  monthlyReportFormSchema,
+  monthlyReportContentSchema,
+  DEFAULT_REPORT_CONTENT,
+  GRADE_OPTIONS,
+  COURSE_OPTIONS,
+  SCHEDULE_OPTIONS,
+} from './student'
+
 // ヘルパー関数
 export {
   isActiveUser,

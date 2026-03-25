@@ -280,6 +280,19 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                 </li>
                 <li>
                   <a 
+                    href="/admin/students"
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      hover:text-white hover:bg-white/10 transition-colors duration-150
+                    "
+                    onClick={(e) => { e.preventDefault(); router.push('/admin/students'); onClose(); }}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">🎓</i>
+                    <span className="text-base">スクール生管理</span>
+                  </a>
+                </li>
+                <li>
+                  <a 
                     href="/admin/hirameki-posts"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline

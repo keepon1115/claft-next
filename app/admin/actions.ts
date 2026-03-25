@@ -13,9 +13,9 @@ async function checkAdminPermission() {
   const supabase = createServerSupabaseClient(cookieStore)
   
   try {
-    // セッション確認
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session?.user) {
+    // getUser() でサーバー側JWT検証を行う（getSession() はローカルデコードのみ）
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       throw new Error('認証が必要です')
     }
     
@@ -23,7 +23,7 @@ async function checkAdminPermission() {
     const { data: adminUser, error: adminError } = await supabase
       .from('admin_users')
       .select('user_id, email, is_active')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
     
@@ -32,7 +32,7 @@ async function checkAdminPermission() {
     }
     
     return {
-      userId: session.user.id,
+      userId: user.id,
       email: adminUser.email,
       supabase
     }

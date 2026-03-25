@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "init:user-stats": "node scripts/init-user-stats.js",
+    "import:students": "node scripts/import-students.js",
     "analyze": "ANALYZE=true npm run build",
     "lighthouse": "node scripts/performance-audit.js",
     "perf:dev": "npm run dev & sleep 5 && npm run lighthouse",
@@ -17,7 +18,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.50.2",
+    "@supabase/supabase-js": "^2.99.2",
     "@swc/core": "^1.12.7",
     "@swc/helpers": "^0.5.17",
     "@vercel/analytics": "^1.5.0",

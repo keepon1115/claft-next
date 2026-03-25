@@ -4,6 +4,12 @@ import { type Database } from '@/types/index'
 import { type NextRequest, type NextResponse } from 'next/server'
 import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
+/**
+ * ブラウザ・サーバー両クライアントで統一する Cookie/Storage キー名。
+ * ここを変えると既存セッションが無効になるので慎重に。
+ */
+export const SUPABASE_STORAGE_KEY = 'claft-auth'
+
 // グローバル変数の型定義
 declare global {
   var supabaseDevWarningShown: boolean | undefined
@@ -105,7 +111,7 @@ export function createBrowserSupabaseClient() {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'claft-auth'
+        storageKey: SUPABASE_STORAGE_KEY,
       },
       realtime: {
         params: {
@@ -137,6 +143,10 @@ export function createServerSupabaseClient(
       url,
       anonKey,
       {
+        auth: {
+          // ブラウザ側と同じキーを使うことでCookieを正しく読める
+          storageKey: SUPABASE_STORAGE_KEY,
+        },
         cookies: {
           get(name: string) {
             return cookieStore.get(name)?.value

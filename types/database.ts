@@ -232,6 +232,83 @@ export type Database = {
           }
         ]
       }
+      students: {
+        Row: {
+          id: string
+          name: string
+          grade: string
+          course: string
+          schedule: string
+          interests: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          grade?: string
+          course?: string
+          schedule?: string
+          interests?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          grade?: string
+          course?: string
+          schedule?: string
+          interests?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_reports_student_id_fkey"
+            columns: ["id"]
+            referencedRelation: "monthly_reports"
+            referencedColumns: ["student_id"]
+          }
+        ]
+      }
+      monthly_reports: {
+        Row: {
+          id: string
+          student_id: string
+          month: string
+          goal: string
+          content: Record<string, any>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          student_id: string
+          month: string
+          goal?: string
+          content?: Record<string, any>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          student_id?: string
+          month?: string
+          goal?: string
+          content?: Record<string, any>
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_reports_student_id_fkey"
+            columns: ["student_id"]
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notifications: {
         Row: {
           id: string

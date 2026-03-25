@@ -1,0 +1,4 @@
+name,grade,course,schedule,interests,month,goal,session1_date,session1_description,session2_date,session2_description,proficiency,notes
+山田 太郎,小5,プログラミング基礎,水曜,マイクラ・ゲーム制作,2026-03,Scratchで自作ゲームを完成させる,3/5 15:00,Scratchの基本操作・スプライト追加,3/19 15:00,条件分岐と変数を使ったゲーム制作,基本操作は理解済み。条件分岐はもう少し練習が必要,集中力が高く意欲的
+鈴木 花子,中1,ゲーム制作,土曜,イラスト・Web,2026-03,Unityで簡単な2Dゲームを作る,3/1 10:00,Unity環境構築・基本操作,3/15 10:00,2Dスプライトの配置とスクリプト,環境構築は完了。C#の基礎をもう少し補強したい,
+佐藤 一郎,小3,ロボティクス,金曜,ロボット・工作,,,,,,,
