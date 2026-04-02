@@ -157,18 +157,18 @@ export default function YononakaPage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">春のスクールフェスタ</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">発表会『日本の魅力を伝えよう！』</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>📅 3/29(日)</p>
-                    <p>場所：アーテック5F</p>
+                    <p>申込&制作期限：～4/27(月)まで</p>
+                    <p>参加賞:参加賞状、タッチペン</p>
                   </div>
-                  <a href="https://forms.gle/bFBtDLBBkyegx72x8" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/bdRURKsciM6n2hBq9" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
               </div>
 
-              <a href="https://keepon.my.canva.site/weekly-keepon3-27/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://keepon.my.canva.site/weekly-keepon4-3/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
