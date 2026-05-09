@@ -201,7 +201,7 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
 
             {/* ひらめきポスト/Q＆A（アントレプレナーの次） */}
             <li>
-              <a 
+              <a
                 href="/hirameki-post"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
@@ -213,6 +213,22 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
               >
                 <i className="w-[25px] text-[18px] mr-[15px] text-center">💡</i>
                 <span className="text-base">ひらめきポスト/Q＆A</span>
+              </a>
+            </li>
+
+            <li>
+              <a
+                href="/twilight"
+                className="
+                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
+                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-purple-400
+                "
+                onClick={(e) => { e.preventDefault(); router.push('/twilight'); onClose(); }}
+              >
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🌙</i>
+                <span className="text-base">黄昏の対話室</span>
               </a>
             </li>
             

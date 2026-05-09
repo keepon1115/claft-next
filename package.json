@@ -16,6 +16,7 @@
     "bundle-analyzer": "npx @next/bundle-analyzer"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
     "@hookform/resolvers": "^5.1.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.99.2",
