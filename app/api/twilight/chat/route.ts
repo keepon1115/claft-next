@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface Character {
@@ -13,8 +12,6 @@ interface ChatMsg {
   role: 'user' | 'character'
   text: string
 }
-
-const client = new Anthropic()
 
 function buildSystemPrompt(character: Character): string {
   const { name, firstPerson, personality, traits, backgroundEpisodes } = character
@@ -74,13 +71,6 @@ function parseEmotionTag(text: string): { emotion: { type: string; intensity: nu
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(
-      { text: '……この場所に、言葉が届かない。ANTHROPIC_API_KEYを設定してください。', emotion: null },
-      { status: 503 }
-    )
-  }
-
   try {
     const { character, messages, userMessage } = await req.json() as {
       character: Character
@@ -111,14 +101,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system: buildSystemPrompt(character),
-      messages: history,
+    const res = await fetch('http://localhost:11434/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ollama',
+      },
+      body: JSON.stringify({
+        model: 'gemma4:e4b',
+        max_tokens: 512,
+        messages: [
+          { role: 'system', content: buildSystemPrompt(character) },
+          ...history,
+        ],
+      }),
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('Ollama error:', errText)
+      return NextResponse.json({ text: '……言葉が、出てこない', emotion: null }, { status: 500 })
+    }
+
+    const data = await res.json()
+    const rawText: string = data.choices?.[0]?.message?.content ?? ''
     const { emotion, cleanText } = parseEmotionTag(rawText)
 
     return NextResponse.json({ text: cleanText, emotion })

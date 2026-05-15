@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/GRfdYTNyjYrjmZyU6"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo114】<br />
-                  気分が上がるアイテムを教えてください！
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/tzWUWh7zugSjqn2s5"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -108,6 +98,16 @@ export default function YononakaPage() {
                 >
                   【Yo116】<br />
                   学校にいってて「楽しいなぁ」と思うのはどんなとき？
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/k75Nqhwtor7wmJN39"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo117】<br />
+                  どんなゲーム・遊びをつくったことがある？
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
@@ -148,10 +148,10 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">Yononaka</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>テーマ「「なんかいい」ってなに？」</p>
-                    <p>📅 5/14(木) 20:00~21:15</p>
+                    <p>テーマ「じぶんの『みかた』を見つけるアート鑑賞」</p>
+                    <p>📅 6/4(木) 20:00~21:15</p>
                   </div>
-                  <a href="https://forms.gle/f2he5CmvAPNJYXR49" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/VoGcSHPUpo8iAwTP8" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
@@ -167,7 +167,7 @@ export default function YononakaPage() {
                 </div>
               </div>
 
-              <a href="https://keepon.my.canva.site/weekly-keepon5-8/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://keepon.my.canva.site/weekly-keepon5-15/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
