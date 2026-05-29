@@ -4,7 +4,12 @@
       "PowerShell(Get-ChildItem -Path c:\\\\dev\\\\claft-next\\\\components -Recurse -Depth 1 | Where-Object {$_.PSIsContainer} | Select-Object Name)",
       "PowerShell(Get-ChildItem -Path c:\\\\dev\\\\claft-next\\\\lib -Recurse -Depth 1 | Where-Object {$_.PSIsContainer} | Select-Object Name)",
       "Bash(npm install *)",
-      "Bash(mkdir -p \"c:\\\\dev\\\\claft-next\\\\app\\\\api\\\\twilight\\\\chat\" \"c:\\\\dev\\\\claft-next\\\\components\\\\twilight\" \"c:\\\\dev\\\\claft-next\\\\app\\\\twilight\" 2>&1; echo \"dirs created\")"
+      "Bash(mkdir -p \"c:\\\\dev\\\\claft-next\\\\app\\\\api\\\\twilight\\\\chat\" \"c:\\\\dev\\\\claft-next\\\\components\\\\twilight\" \"c:\\\\dev\\\\claft-next\\\\app\\\\twilight\" 2>&1; echo \"dirs created\")",
+      "PowerShell(Set-Location \"c:\\\\dev\\\\claft-next\"; npx tsc --noEmit --skipLibCheck 2>&1 | Where-Object { $_ -match \"app/\\(api/chat|api/twilight|chat/page\\)\" })",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"c:\\\\dev\\\\claft-next\\\\.env\"\\); \"BOM: $\\($bytes[0]\\) $\\($bytes[1]\\) $\\($bytes[2]\\)\"; \"Encoding: $\\(if \\($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE\\) { 'UTF-16 LE' } elseif \\($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF\\) { 'UTF-8 BOM' } else { 'UTF-8 or other' }\\)\")",
+      "PowerShell($content = [System.IO.File]::ReadAllText\\(\"c:\\\\dev\\\\claft-next\\\\.env\", [System.Text.Encoding]::Unicode\\); $content | Select-String \"GEMINI\")",
+      "PowerShell($content = Get-Content \"c:\\\\dev\\\\claft-next\\\\node_modules\\\\@google\\\\generative-ai\\\\dist\\\\generative-ai.d.ts\"; $start = \\($content | Select-String \"class GoogleGenerativeAI \" | Select-Object -First 1\\).LineNumber; $content[\\($start-1\\)..\\($start+10\\)])",
+      "PowerShell(npm show @google/generative-ai version)"
     ],
     "additionalDirectories": [
       "c:\\dev\\claft-next\\app\\api\\twilight"

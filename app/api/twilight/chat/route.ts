@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!)
 
 interface Character {
   name: string
@@ -60,7 +63,7 @@ function buildSystemPrompt(character: Character): string {
 }
 
 function parseEmotionTag(text: string): { emotion: { type: string; intensity: number } | null; cleanText: string } {
-  const match = text.match(/^\[EMOTION:(\{[^}]+\})\]\n?/)
+  const match = text.match(/^\[EMOTION:(\{[^}]+\})\][\s]*/)
   if (!match) return { emotion: null, cleanText: text.trim() }
   try {
     const emotion = JSON.parse(match[1])
@@ -83,55 +86,38 @@ export async function POST(req: NextRequest) {
       ? 'あなたはこの薄暗い対話室に今初めて現れた。静かに、けれど確かな存在感で。あなたらしい短い開幕の言葉を。'
       : userMessage
 
-    // Build alternating message history
-    const raw: Array<{ role: 'user' | 'assistant'; content: string }> = []
+    // Build history for Gemini: merge consecutive same-role, drop leading model msgs
+    const geminiHistory: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
     for (const msg of messages) {
-      raw.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.text })
-    }
-    raw.push({ role: 'user', content: effectiveMsg })
-
-    // Normalize to prevent consecutive same-role messages
-    const history: typeof raw = []
-    for (const msg of raw) {
-      const last = history[history.length - 1]
-      if (last && last.role === msg.role) {
-        last.content = last.content + '\n' + msg.content
+      const role = msg.role === 'user' ? 'user' : 'model'
+      const last = geminiHistory[geminiHistory.length - 1]
+      if (last && last.role === role) {
+        last.parts[0].text += '\n' + msg.text
       } else {
-        history.push({ ...msg })
+        geminiHistory.push({ role, parts: [{ text: msg.text }] })
       }
     }
-
-    const res = await fetch('http://localhost:11434/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ollama',
-      },
-      body: JSON.stringify({
-        model: 'gemma4:e4b',
-        max_tokens: 512,
-        messages: [
-          { role: 'system', content: buildSystemPrompt(character) },
-          ...history,
-        ],
-      }),
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      console.error('Ollama error:', errText)
-      return NextResponse.json({ text: '……言葉が、出てこない', emotion: null }, { status: 500 })
+    // Gemini requires history to start with 'user'
+    while (geminiHistory.length > 0 && geminiHistory[0].role === 'model') {
+      geminiHistory.shift()
     }
 
-    const data = await res.json()
-    const rawText: string = data.choices?.[0]?.message?.content ?? ''
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction: buildSystemPrompt(character),
+    })
+
+    const chat = model.startChat({ history: geminiHistory })
+    const result = await chat.sendMessage(effectiveMsg)
+    const rawText = result.response.text()
     const { emotion, cleanText } = parseEmotionTag(rawText)
 
     return NextResponse.json({ text: cleanText, emotion })
   } catch (error) {
-    console.error('Twilight chat error:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Twilight chat error:', msg)
     return NextResponse.json(
-      { text: '……言葉が、出てこない', emotion: null },
+      { text: `[DEBUG] ${msg}`, emotion: null },
       { status: 500 }
     )
   }
