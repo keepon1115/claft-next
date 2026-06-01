@@ -91,33 +91,33 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/tzWUWh7zugSjqn2s5"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo116】<br />
-                  学校にいってて「楽しいなぁ」と思うのはどんなとき？
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/k75Nqhwtor7wmJN39"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
-                  【Yo117】<br />
+                  【Yo117】※ゲーム展示会<br />
                   どんなゲーム・遊びをつくったことがある？
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/avb7ubgsCwTGwrbe8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo118】※PLAY CLAFT<br />
+                  スクールフェスタでイベントを企画しよう！！
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
-                  href="https://forms.gle/HdXnBJw3VHMw68fRA"
+                  href="https://forms.gle/RWPtsYLfg6K3mqHQ9"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  【News3】<br />
-                  歩行ロボットが進化したら・・・？
+                  【News4】<br />
+                  ロボットを導入できそうな場所って？？
                 </a>
                 {/* 右下：チェックボタン */}
                 <a
@@ -157,12 +157,12 @@ export default function YononakaPage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold text-amber-900 mb-3">発表会『日本の魅力を伝えよう！』</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-3">7/26(日)なんでも発表会</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>コメント募集開始！</p>
+                    <p>テーマフリーの発表会を今年も開催！</p>
                   </div>
-                  <a href="https://sites.google.com/view/spring-robot2026/" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    作品をみる
+                  <a href="https://forms.gle/EMHTAm5XyUZh1Foy9" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    くわしくみる
                   </a>
                 </div>
               </div>
