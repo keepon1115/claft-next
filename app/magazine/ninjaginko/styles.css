@@ -1,0 +1,678 @@
+:root {
+    --bg-color: #F4F1EC;
+    --text-primary: #1A1F35;
+    --text-secondary: #5A6080;
+    --accent-gold: #B4922A;
+    --accent-gold-light: #F5EDD8;
+    --accent-gold-pale: #FBF7EF;
+    --accent-crimson: #7B3333;
+    --navy-dark: #0B1220;
+    --navy-mid: #1B2749;
+    --navy-soft: #273562;
+
+    --sho-bg: #EAF0F6;
+    --sho-border: #7A9CBF;
+    --sho-text: #19304A;
+
+    --k-bg: #F5ECEC;
+    --k-border: #BF8585;
+    --k-text: #3A1A1A;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Shippori Mincho', serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.95;
+    font-size: 1.08rem;
+    overflow-x: hidden;
+    letter-spacing: 0.03em;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+p {
+    margin-bottom: 1.6rem;
+}
+
+/* ─── 進捗バー ─── */
+.progress-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    z-index: 10000;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, var(--accent-gold), #E8C86A, var(--accent-gold));
+    transition: width 0.1s ease-out;
+}
+
+/* ─── ヒーローセクション ─── */
+.hero {
+    position: relative;
+    height: 100vh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+    color: #fff;
+    padding: 2rem;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--navy-dark);
+    z-index: 0;
+}
+
+/* サブタイルなグリッドパターン（帳簿×忍術） */
+.hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(180, 146, 42, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 146, 42, 0.08) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+
+.hero-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(27, 39, 73, 0.6) 0%, transparent 70%);
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(11, 18, 32, 0.2) 0%,
+        rgba(11, 18, 32, 0.5) 60%,
+        rgba(11, 18, 32, 0.85) 100%
+    );
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+}
+
+.category-badge {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--accent-gold);
+    border: 1px solid rgba(180, 146, 42, 0.5);
+    padding: 0.45rem 1.4rem;
+    border-radius: 2px;
+    margin-bottom: 2rem;
+    display: inline-block;
+}
+
+.hero-content h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 900;
+    line-height: 1.25;
+    margin-bottom: 2rem;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.05em;
+}
+
+.hero-accent {
+    color: var(--accent-gold);
+    position: relative;
+    display: inline-block;
+}
+
+.hero-divider {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
+    margin: 0 auto 1.8rem;
+}
+
+.hero-sub {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.1em;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+    font-family: 'Inter', sans-serif;
+}
+
+.meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.1em;
+}
+
+.meta-divider {
+    color: var(--accent-gold);
+    opacity: 0.6;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    color: rgba(255, 255, 255, 0.45);
+    z-index: 2;
+}
+
+.scroll-indicator .line {
+    width: 1px;
+    height: 55px;
+    background: linear-gradient(to bottom, rgba(180, 146, 42, 0.6) 0%, transparent 100%);
+    margin-top: 10px;
+    animation: scrollLine 2.4s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes scrollLine {
+    0%   { transform: scaleY(0); transform-origin: top; }
+    50%  { transform: scaleY(1); transform-origin: top; }
+    50.1%{ transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ─── コンテンツラッパー ─── */
+.content-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 7rem 2rem 4rem;
+}
+
+/* ─── イントロ ─── */
+.intro {
+    font-size: 1.12rem;
+    text-align: justify;
+    margin-bottom: 5rem;
+}
+
+.intro p:first-of-type {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--navy-mid);
+    border-left: 3px solid var(--accent-gold);
+    padding-left: 1.2rem;
+    margin-bottom: 2rem;
+    line-height: 1.7;
+}
+
+.interviewee-note {
+    background: var(--accent-gold-pale);
+    border-left: 3px solid var(--accent-gold);
+    padding: 1rem 1.5rem;
+    border-radius: 0 6px 6px 0;
+    margin-top: 1.5rem;
+}
+
+.interviewee-note p {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ─── 漢字ディバイダー ─── */
+.kanji-divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 5.5rem 0;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(180, 146, 42, 0.35), transparent);
+}
+
+.kanji-divider:last-of-type .divider-line {
+    background: linear-gradient(to left, transparent, rgba(180, 146, 42, 0.35), transparent);
+}
+
+.divider-kanji {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+    opacity: 0.5;
+    line-height: 1;
+    letter-spacing: 0;
+    flex-shrink: 0;
+}
+
+/* ─── インタビューセクション ─── */
+.interview-section {
+    margin-bottom: 6rem;
+}
+
+.section-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--navy-mid);
+    margin-bottom: 3.5rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 1.2rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 2px;
+    background: var(--accent-gold);
+}
+
+/* ─── ダイアログUI ─── */
+.dialogue {
+    display: flex;
+    margin-bottom: 2.4rem;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70px;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: 'Noto Serif JP', serif;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.avatar:hover {
+    transform: scale(1.08);
+}
+
+/* 将（インタビュアー）*/
+.sho-avatar {
+    background: linear-gradient(145deg, #3B6EA0 0%, #5A8FC2 100%);
+}
+
+/* Kさん（インタビュイー）*/
+.k-avatar {
+    background: linear-gradient(145deg, #6B2A2A 0%, #9B4444 100%);
+}
+
+.bubble {
+    padding: 1.2rem 1.6rem;
+    border-radius: 16px;
+    position: relative;
+    max-width: calc(100% - 85px);
+    font-size: 1.02rem;
+    line-height: 1.95;
+    border: 1px solid transparent;
+    flex: 1;
+}
+
+/* 将（左寄り） */
+.dialogue.sho {
+    flex-direction: row;
+}
+
+.dialogue.sho .bubble {
+    background: var(--sho-bg);
+    border-color: rgba(122, 156, 191, 0.25);
+    color: var(--sho-text);
+    margin-left: 1rem;
+    border-top-left-radius: 4px;
+}
+
+.dialogue.sho .bubble::before {
+    content: '';
+    position: absolute;
+    top: 16px; left: -8px;
+    border-style: solid;
+    border-width: 7px 9px 7px 0;
+    border-color: transparent var(--sho-bg) transparent transparent;
+}
+
+/* Kさん（右寄り） */
+.dialogue.k-san {
+    flex-direction: row-reverse;
+}
+
+.dialogue.k-san .bubble {
+    background: var(--k-bg);
+    border-color: rgba(191, 133, 133, 0.25);
+    color: var(--k-text);
+    margin-right: 1rem;
+    border-top-right-radius: 4px;
+}
+
+.dialogue.k-san .bubble::before {
+    content: '';
+    position: absolute;
+    top: 16px; right: -8px;
+    border-style: solid;
+    border-width: 7px 0 7px 9px;
+    border-color: transparent transparent transparent var(--k-bg);
+}
+
+/* ─── クォートハイライト ─── */
+.quote-highlight {
+    text-align: center;
+    margin: 5.5rem 0;
+    padding: 3.5rem 3rem;
+    background: linear-gradient(135deg, var(--accent-gold-pale) 0%, var(--accent-gold-light) 100%);
+    border-radius: 4px;
+    border: 1px solid rgba(180, 146, 42, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.quote-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--accent-gold);
+}
+
+.quote-highlight blockquote {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--navy-mid);
+    line-height: 1.65;
+    position: relative;
+}
+
+.quote-mark {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 2.5rem;
+    color: var(--accent-gold);
+    opacity: 0.7;
+    vertical-align: -0.3em;
+    line-height: 0;
+    display: inline-block;
+}
+
+.quote-mark.left { margin-right: 0.2em; }
+.quote-mark.right { margin-left: 0.2em; }
+
+/* ─── NARUTOクォートセクション（クライマックス） ─── */
+.naruto-section {
+    margin: 7rem 0;
+}
+
+.naruto-wrapper {
+    background: var(--navy-dark);
+    border-radius: 6px;
+    padding: 5rem 3rem;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.naruto-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(180, 146, 42, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 146, 42, 0.06) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+.naruto-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
+}
+
+.naruto-bg-kanji {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(10rem, 30vw, 20rem);
+    font-weight: 900;
+    color: rgba(180, 146, 42, 0.04);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    letter-spacing: 0;
+}
+
+.naruto-content {
+    position: relative;
+    z-index: 1;
+}
+
+.naruto-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.naruto-quote {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.4rem, 4vw, 2.1rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+}
+
+.naruto-cite {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    color: var(--accent-gold);
+    letter-spacing: 0.1em;
+    font-style: normal;
+    opacity: 0.8;
+}
+
+/* ─── アウトロ（編集後記） ─── */
+.outro {
+    margin-top: 5rem;
+    margin-bottom: 4rem;
+}
+
+.outro-inner {
+    border-top: 1px solid rgba(180, 146, 42, 0.25);
+    padding-top: 3.5rem;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 2;
+}
+
+/* ─── フッター ─── */
+.footer {
+    background: var(--navy-dark);
+    padding: 4rem 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(180, 146, 42, 0.2);
+}
+
+.footer-inner {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.footer-logo {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+    letter-spacing: 0.3em;
+    margin-bottom: 0.8rem;
+}
+
+.footer-copy {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.08em;
+    margin-bottom: 0;
+}
+
+/* ─── アニメーション ─── */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(28px);
+    animation: fadeInUp 1s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+.delay-3 { animation-delay: 0.6s; }
+.delay-4 { animation-delay: 0.8s; }
+
+@keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.section-fade {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.85s ease-out, transform 0.85s ease-out;
+}
+
+.section-fade.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ─── レスポンシブ ─── */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 5rem 1.4rem 3rem;
+    }
+
+    .hero-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .section-title {
+        font-size: 1.35rem;
+    }
+
+    .bubble {
+        font-size: 0.97rem;
+        padding: 1rem 1.2rem;
+        max-width: calc(100% - 70px);
+    }
+
+    .avatar-wrapper {
+        width: 58px;
+    }
+
+    .avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 0.9rem;
+    }
+
+    .quote-highlight {
+        padding: 2.5rem 1.5rem;
+    }
+
+    .quote-highlight blockquote {
+        font-size: 1.25rem;
+    }
+
+    .naruto-wrapper {
+        padding: 4rem 1.8rem;
+    }
+
+    .naruto-quote {
+        font-size: 1.3rem;
+    }
+
+    .kanji-divider {
+        margin: 4rem 0;
+    }
+
+    .divider-kanji {
+        font-size: 1.8rem;
+    }
+
+    /* モバイルでは吹き出し矢印を非表示 */
+    .bubble::before {
+        display: none;
+    }
+
+    .dialogue.k-san {
+        flex-direction: row;
+    }
+
+    .dialogue.k-san .bubble {
+        margin-right: 0;
+        margin-left: 1rem;
+        border-top-right-radius: 16px;
+        border-top-left-radius: 4px;
+    }
+
+    .dialogue.k-san .avatar {
+        background: linear-gradient(145deg, #6B2A2A 0%, #9B4444 100%);
+    }
+}

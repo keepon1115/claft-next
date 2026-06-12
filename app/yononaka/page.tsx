@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/k75Nqhwtor7wmJN39"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo117】※ゲーム展示会<br />
-                  どんなゲーム・遊びをつくったことがある？
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/avb7ubgsCwTGwrbe8"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -108,6 +98,16 @@ export default function YononakaPage() {
                 >
                   【Yo118】※PLAY CLAFT<br />
                   スクールフェスタでイベントを企画しよう！！
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/eHcodny3JSFDSGZ5A"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo119】※URC<br />
+                  楽しくはたらきたい！！！！
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
