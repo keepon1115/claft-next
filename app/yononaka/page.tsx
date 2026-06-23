@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/eHcodny3JSFDSGZ5A"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo119】※URC<br />
-                  楽しくはたらきたい！！！！
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/bxcX3qJsnC4cfrX6A"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -108,6 +98,16 @@ export default function YononakaPage() {
                 >
                   【Yo120】<br />
                   みんなは他にどんな習い事をしていますか？
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/PvjykYEVVURcFYSK8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo121】※プレイクラフト<br />
+                  イベントアイデアを投票しよう！！
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
@@ -167,7 +167,7 @@ export default function YononakaPage() {
                 </div>
               </div>
 
-              <a href="https://keepon.my.canva.site/weekly-keepon6-19/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://keepon.my.canva.site/weekly-keepon6-26/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
