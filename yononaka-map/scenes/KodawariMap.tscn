@@ -1,0 +1,47 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script"      path="res://scripts/KodawariMap.gd"        id="1_map"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"             id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueUI.tscn"         id="3_dlg"]
+[ext_resource type="PackedScene" path="res://scenes/MonsterDialogueUI.tscn"  id="4_mon"]
+[ext_resource type="Script"      path="res://scripts/PortalTo.gd"            id="5_portal"]
+[ext_resource type="Script"      path="res://scripts/SignPost.gd"            id="6_sign"]
+
+[sub_resource type="RectangleShape2D" id="1_shape"]
+size = Vector2(80, 20)
+
+[node name="KodawariMap" type="Node2D"]
+script = ExtResource("1_map")
+
+; 宵の入りの環境光（灯り・蛍が映えるよう、わずかに暗く青紫寄り）
+[node name="AmbientLight" type="CanvasModulate" parent="."]
+color = Color(0.93, 0.91, 0.97, 1)
+
+[node name="Ground" type="Node2D" parent="."]
+
+[node name="NPCLayer" type="Node2D" parent="."]
+
+[node name="MonsterLayer" type="Node2D" parent="."]
+
+; プレイヤーは入口付近（下端）にスポーン
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(0, 240)
+
+; 案内看板（入口正面）— 調べると里の説明を表示
+[node name="GuideSign" type="Area2D" parent="."]
+position = Vector2(0, 195)
+script = ExtResource("6_sign")
+message = "ここは「こだわりの里」。\n6つの島があるよ。\n気になった島を、歩いて回ってみて。"
+
+; 広場への出口（来た方向と同じ下側）
+[node name="PortalBack" type="Area2D" parent="."]
+position = Vector2(0, 310)
+script = ExtResource("5_portal")
+target_scene = "res://scenes/Main.tscn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PortalBack"]
+shape = SubResource("1_shape")
+
+[node name="DialogueUI" parent="." instance=ExtResource("3_dlg")]
+
+[node name="MonsterDialogueUI" parent="." instance=ExtResource("4_mon")]

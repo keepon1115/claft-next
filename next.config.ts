@@ -27,6 +27,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.youtube.com',
         pathname: '/vi/**',
+      },
+      // microCMS メディアライブラリ画像（ロボクエスト等のCSV運用コンテンツ）
+      {
+        protocol: 'https',
+        hostname: 'images.microcms-assets.io',
       }
     ],
     formats: ['image/webp', 'image/avif'],
@@ -75,6 +80,18 @@ const pwaConfig = withPWA({
       handler: "CacheFirst",
       options: {
         cacheName: "youtube-thumbnails-cache",
+        expiration: {
+          maxEntries: 200,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7日
+        },
+      },
+    },
+    // microCMS メディアライブラリ画像のキャッシュ
+    {
+      urlPattern: /^https:\/\/images\.microcms-assets\.io\/.*$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "microcms-images-cache",
         expiration: {
           maxEntries: 200,
           maxAgeSeconds: 7 * 24 * 60 * 60, // 7日

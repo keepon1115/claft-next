@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export interface SidebarProps {
   isOpen: boolean
@@ -152,7 +153,23 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
             </li>
             
             <li>
-              <a 
+              <Link
+                href="/robo"
+                className="
+                  flex items-center py-[15px] px-[25px] text-white/80 no-underline
+                  transition-all duration-300 ease-in-out font-medium
+                  hover:bg-white/10 hover:text-white hover:pl-[35px]
+                  focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-green-400
+                "
+                onClick={() => onClose()}
+              >
+                <i className="w-[25px] text-[18px] mr-[15px] text-center">🤖</i>
+                <span className="text-base">ロボクエスト</span>
+              </Link>
+            </li>
+
+            <li>
+              <a
                 href="/yononaka"
                 className="
                   flex items-center py-[15px] px-[25px] text-white/80 no-underline
@@ -296,7 +313,22 @@ export function Sidebar({ isOpen, onClose, className = '' }: SidebarProps) {
                   </a>
                 </li>
                 <li>
-                  <a 
+                  <Link
+                    href="/admin/robo"
+                    className="
+                      flex items-center py-[12px] px-[25px] text-white/80 no-underline
+                      transition-all duration-300 ease-in-out font-medium
+                      hover:bg-white/10 hover:text-white hover:pl-[35px]
+                      focus:bg-white/15 focus:text-white focus:border-l-4 focus:border-blue-400
+                    "
+                    onClick={() => onClose()}
+                  >
+                    <i className="w-[25px] text-[18px] mr-[15px] text-center">🤖</i>
+                    <span className="text-base">ロボクエスト管理</span>
+                  </Link>
+                </li>
+                <li>
+                  <a
                     href="/admin/settings"
                     className="
                       flex items-center py-[12px] px-[25px] text-white/80 no-underline

@@ -43,6 +43,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [...]
 📖 自分を理解する
    ├ 😊 自分のデータ → /profile
    ├ 📊 非認知能力レポート → /myself/report
+   ├ 📖 であった人ずかん → /myself/zukan   (フェーズ11-A実装まではコメントアウト)
    ├ 📜 ストーリー → /myself/story
    └ 🕵️ PBL → /pbl
 🗺 仕事・社会を知る

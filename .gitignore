@@ -47,3 +47,11 @@ next-env.d.ts
 # 開発用メモファイル
 typescript-errors.txt
 dev-log.txt
+
+# Yononaka map (Godot)
+# .godot: Godotのインポートキャッシュ(自動再生成される)
+# assets/raw: 素材パック原本(再DL可能。使う分はassets/配下にコピー済み)
+# exports: 旧書き出し先(新書き出し先はpublic/games/へ変更)
+yononaka-map/.godot/
+yononaka-map/assets/raw/
+yononaka-map/exports/

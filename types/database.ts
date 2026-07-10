@@ -344,6 +344,251 @@ export type Database = {
           updated_at?: string
         }
       }
+      robo_themes: {
+        Row: {
+          id: string
+          level: number
+          theme_number: number
+          title: string
+          question_prompt: string
+          case_study_md: string
+          is_published: boolean
+          display_order: number
+          icon_url: string | null
+          icon_emoji: string
+          question_image_url: string | null
+          case_image_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          level: number
+          theme_number: number
+          title: string
+          question_prompt?: string
+          case_study_md?: string
+          is_published?: boolean
+          display_order?: number
+          icon_url?: string | null
+          icon_emoji?: string
+          question_image_url?: string | null
+          case_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          level?: number
+          theme_number?: number
+          title?: string
+          question_prompt?: string
+          case_study_md?: string
+          is_published?: boolean
+          display_order?: number
+          icon_url?: string | null
+          icon_emoji?: string
+          question_image_url?: string | null
+          case_image_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      robo_questions: {
+        Row: {
+          id: string
+          theme_id: string
+          body: string
+          choice_1: string
+          choice_2: string
+          choice_3: string
+          correct_index: number
+          explanation: string | null
+          image_url: string | null
+          video_url: string | null
+          reference_note: string | null
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          theme_id: string
+          body: string
+          choice_1: string
+          choice_2: string
+          choice_3: string
+          correct_index: number
+          explanation?: string | null
+          image_url?: string | null
+          video_url?: string | null
+          reference_note?: string | null
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          theme_id?: string
+          body?: string
+          choice_1?: string
+          choice_2?: string
+          choice_3?: string
+          correct_index?: number
+          explanation?: string | null
+          image_url?: string | null
+          video_url?: string | null
+          reference_note?: string | null
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "robo_questions_theme_id_fkey"
+            columns: ["theme_id"]
+            referencedRelation: "robo_themes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      robo_quiz_answers: {
+        Row: {
+          id: string
+          user_id: string
+          question_id: string
+          theme_id: string
+          selected_index: number
+          is_correct: boolean
+          answered_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          question_id: string
+          theme_id: string
+          selected_index: number
+          is_correct: boolean
+          answered_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          question_id?: string
+          theme_id?: string
+          selected_index?: number
+          is_correct?: boolean
+          answered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "robo_quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            referencedRelation: "robo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "robo_quiz_answers_theme_id_fkey"
+            columns: ["theme_id"]
+            referencedRelation: "robo_themes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      robo_open_answers: {
+        Row: {
+          id: string
+          user_id: string
+          theme_id: string
+          body: string
+          is_visible: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme_id: string
+          body: string
+          is_visible?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme_id?: string
+          body?: string
+          is_visible?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "robo_open_answers_theme_id_fkey"
+            columns: ["theme_id"]
+            referencedRelation: "robo_themes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      robo_feedbacks: {
+        Row: {
+          id: string
+          user_id: string
+          theme_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "robo_feedbacks_theme_id_fkey"
+            columns: ["theme_id"]
+            referencedRelation: "robo_themes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      robo_theme_clears: {
+        Row: {
+          id: string
+          user_id: string
+          theme_id: string
+          cleared_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme_id: string
+          cleared_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme_id?: string
+          cleared_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "robo_theme_clears_theme_id_fkey"
+            columns: ["theme_id"]
+            referencedRelation: "robo_themes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

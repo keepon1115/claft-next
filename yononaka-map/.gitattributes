@@ -1,0 +1,3 @@
+# Godot推奨設定: Gitがテキストと判定したファイルの改行コードをLFに正規化する。
+# バイナリ(png/wav/ogg/ttf/zip/wasm/pck等)はGitの自動判定で対象外になる。
+* text=auto eol=lf

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/Monster.gd" id="1"]
+
+[sub_resource type="CircleShape2D" id="2"]
+radius = 50.0
+
+[node name="Monster" type="Area2D"]
+script = ExtResource("1")
+
+; 浮遊感のあるドロップシャドウ（本体より少し下に分離）
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(5, 10, 4.3, 10.9, 2.5, 11.6, 0, 11.8, -2.5, 11.6, -4.3, 10.9, -5, 10, -4.3, 9.1, -2.5, 8.4, 0, 8.2, 2.5, 8.4, 4.3, 9.1)
+color = Color(0.08, 0.07, 0.05, 0.22)
+
+; 精霊スプライト（Monster.gd が実行時に組み立てる）
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("2")

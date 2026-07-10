@@ -1,0 +1,151 @@
+[gd_scene format=3 uid="uid://lnp5jo0qdwqm"]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueUI.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/Monster.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/MonsterDialogueUI.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/VillageChief.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ChiefDialogueUI.tscn" id="7"]
+[ext_resource type="Script" uid="uid://uss6ddu5mpab" path="res://scripts/PortalTo.gd" id="8"]
+[ext_resource type="Texture2D" path="res://assets/tiles/bg_grass.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/tiles/zone_family.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/objects/tree_trio.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/objects/bench.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/objects/tree_sakura.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/objects/tree_green.png" id="14"]
+[ext_resource type="Script" path="res://scripts/MainPlaza.gd" id="15"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(60, 20)
+
+[node name="Main" type="Node2D" unique_id=47349514]
+script = ExtResource("15")
+
+; 午後の暖かい環境光（CanvasLayer 上の UI には影響しない）
+[node name="AmbientLight" type="CanvasModulate" parent="."]
+color = Color(1, 0.97, 0.9, 1)
+
+[node name="Ground" type="Node2D" parent="." unique_id=1645031151]
+
+[node name="Grass" type="Polygon2D" parent="Ground" unique_id=901973602]
+position = Vector2(-28, 196)
+texture_repeat = 2
+texture = ExtResource("9")
+polygon = PackedVector2Array(-500, -400, 500, -400, 500, 400, -500, 400)
+uv = PackedVector2Array(-500, -400, 500, -400, 500, 400, -500, 400)
+
+[node name="Path" type="Polygon2D" parent="Ground" unique_id=707688250]
+texture_repeat = 2
+texture = ExtResource("10")
+polygon = PackedVector2Array(-40, -400, 40, -400, 40, 400, -40, 400)
+uv = PackedVector2Array(-40, -400, 40, -400, 40, 400, -40, 400)
+
+; 大木（広場のシンボルツリー・2倍スケール）
+[node name="TreeShadow" type="Polygon2D" parent="Ground"]
+position = Vector2(-200, -152)
+polygon = PackedVector2Array(36, 0, 31.2, 4.5, 18, 7.8, 0, 9, -18, 7.8, -31.2, 4.5, -36, 0, -31.2, -4.5, -18, -7.8, 0, -9, 18, -7.8, 31.2, -4.5)
+color = Color(0.08, 0.07, 0.05, 0.22)
+
+[node name="Tree" type="Sprite2D" parent="Ground"]
+position = Vector2(-200, -150)
+offset = Vector2(0, -22)
+scale = Vector2(2, 2)
+texture = ExtResource("11")
+
+; 丸太ベンチ
+[node name="Bench" type="Sprite2D" parent="Ground"]
+position = Vector2(171, 79)
+offset = Vector2(0, -7)
+texture = ExtResource("12")
+
+; 桜の木（広場の彩り）
+[node name="SakuraShadow" type="Polygon2D" parent="Ground"]
+position = Vector2(-350, -62)
+polygon = PackedVector2Array(20, 0, 17.3, 3, 10, 5.2, 0, 6, -10, 5.2, -17.3, 3, -20, 0, -17.3, -3, -10, -5.2, 0, -6, 10, -5.2, 17.3, -3)
+color = Color(0.08, 0.07, 0.05, 0.22)
+
+[node name="Sakura" type="Sprite2D" parent="Ground"]
+position = Vector2(-350, -60)
+offset = Vector2(0, -24)
+texture = ExtResource("13")
+
+; 緑の木
+[node name="GreenTreeShadow" type="Polygon2D" parent="Ground"]
+position = Vector2(320, 238)
+polygon = PackedVector2Array(20, 0, 17.3, 3, 10, 5.2, 0, 6, -10, 5.2, -17.3, 3, -20, 0, -17.3, -3, -10, -5.2, 0, -6, 10, -5.2, 17.3, -3)
+color = Color(0.08, 0.07, 0.05, 0.22)
+
+[node name="GreenTree" type="Sprite2D" parent="Ground"]
+position = Vector2(320, 240)
+offset = Vector2(0, -24)
+texture = ExtResource("14")
+
+[node name="GatePostL" type="Polygon2D" parent="Ground" unique_id=179542032]
+color = Color(0.545, 0.392, 0.278, 1)
+polygon = PackedVector2Array(-32, -395, -27, -395, -27, -365, -32, -365)
+
+[node name="GatePostR" type="Polygon2D" parent="Ground" unique_id=1015367396]
+color = Color(0.545, 0.392, 0.278, 1)
+polygon = PackedVector2Array(27, -395, 32, -395, 32, -365, 27, -365)
+
+[node name="GateCrossbar" type="Polygon2D" parent="Ground" unique_id=335305344]
+color = Color(0.545, 0.392, 0.278, 1)
+polygon = PackedVector2Array(-33, -390, 33, -390, 33, -385, -33, -385)
+
+[node name="GateSign" type="Polygon2D" parent="Ground" unique_id=2045735618]
+color = Color(0.941, 0.875, 0.718, 1)
+polygon = PackedVector2Array(-46, -401, 46, -401, 46, -392, -46, -392)
+
+; こだわりの里への方向案内ラベル（看板板の上）
+[node name="GateLabel" type="Label" parent="Ground"]
+position = Vector2(-44, -401)
+size = Vector2(88, 10)
+horizontal_alignment = 1
+text = "↑ こだわりの里"
+theme_override_font_sizes/font_size = 7
+theme_override_colors/font_color = Color(0.361, 0.227, 0.129, 1)
+
+[node name="Player" parent="." unique_id=742381474 instance=ExtResource("1")]
+position = Vector2(0, 150)
+
+[node name="NPC_Zeroichi" parent="." unique_id=1785918950 instance=ExtResource("2")]
+position = Vector2(0, -40)
+npc_id = "zeroichi"
+
+[node name="NPC_Takeshi" parent="." unique_id=330641744 instance=ExtResource("2")]
+position = Vector2(-150, 30)
+npc_id = "takeshi"
+
+[node name="NPC_Takuya" parent="." unique_id=1067874279 instance=ExtResource("2")]
+position = Vector2(150, -70)
+npc_id = "takuya"
+
+[node name="NPC_Tsukasa" parent="." unique_id=1661645983 instance=ExtResource("2")]
+position = Vector2(80, 90)
+npc_id = "tsukasa"
+
+[node name="NPC_Nanae" parent="." unique_id=222163066 instance=ExtResource("2")]
+position = Vector2(-110, -100)
+npc_id = "nanae"
+
+[node name="Monster_Guardian" parent="." unique_id=990235393 instance=ExtResource("4")]
+position = Vector2(220, 120)
+monster_id = "guardian_yononaka"
+
+[node name="DialogueUI" parent="." unique_id=987067182 instance=ExtResource("3")]
+
+[node name="MonsterDialogueUI" parent="." unique_id=287060297 instance=ExtResource("5")]
+
+[node name="VillageChief" parent="." unique_id=1465095102 instance=ExtResource("6")]
+position = Vector2(-60, 110)
+
+[node name="ChiefDialogueUI" parent="." unique_id=1551134902 instance=ExtResource("7")]
+
+[node name="PortalKodawari" type="Area2D" parent="." unique_id=1310322033]
+position = Vector2(0, -375)
+script = ExtResource("8")
+target_scene = "res://scenes/KodawariMap.tscn"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PortalKodawari" unique_id=722926102]
+shape = SubResource("1")

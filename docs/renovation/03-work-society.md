@@ -9,8 +9,9 @@ Godot製「Yononakaマップ」(別リポジトリ `c:\dev\Yononaka マップ`�
 
 ## 背景(重要な設計判断)
 
-- Yononakaマップは**別アプリ(Godot Web書き出し)、Supabaseは共有**という構想(構想書より)
-- CLAFT本体には**iframeで埋め込む**。Godotのwasm/pckは重いので **CLAFTの`public/`には置かない**(PWAのprecacheが膨張するため)。外部ホスティング(itch.io embed か 別Vercelプロジェクト)とする → ホスティング先はTBD-3
+- Yononakaマップは**同一リポジトリ内のGodotプロジェクト(`yononaka-map/`)、Supabase共有**
+- CLAFT本体には**iframeで埋め込む**。書き出し先は `public/games/yononaka-map/`(同一オリジン)。
+  PWAプリキャッシュからの除外等の配信構成は `10-map-integration.md` に従う(旧TBD-3は解決済み)
 - メンバー同士の見え合いはフェーズ5(`/members`)が担当。このページは「大人に出会う」専用
 
 ## デザイントーン: 冒険地図・ドット絵風
@@ -30,17 +31,22 @@ Godot製「Yononakaマップ」(別リポジトリ `c:\dev\Yononaka マップ`�
 1. **ヒーローセクション**(羊皮紙+ドット風): タイトル「Yononakaマップ」、リード文
    「マップを歩いて、大人に話しかけよう。その人の生き方に触れられる。」
 2. **プレイエリア**: iframe埋め込み
-   - URLは `data/yononakaMap.ts` の定数 `YONONAKA_MAP_URL` で管理(TBD-3のため初期値はプレースホルダ。未設定時は「準備中 — もうすぐ冒険に出られます」の看板風表示)
+   - URLは `data/yononakaMap.ts` の定数 `YONONAKA_MAP_URL = '/games/yononaka-map/index.html'` で管理
+     (書き出しファイル未生成の間は「準備中 — もうすぐ冒険に出られます」の看板風表示。存在チェックは初回fetchのHEADで)
    - `width:100%; aspect-ratio:16/9; max-height:80dvh; border:none`
    - モバイル: マップ側にバーチャルDパッドありなのでそのまま埋め込みでOK。ただし全画面ボタン(`requestFullscreen`)を併設
 3. **遊び方看板**: 操作方法(WASD/矢印/タップ移動、Enter/Spaceで話す)を立て看板風カードで
 4. **併設リンク**: 「クエストに出かける」→ `/quest` への誘導カード(「学びの道はこちら」)
 
+## このページが後続フェーズで担う役割(実装時はスタブでよい)
+
+- **認証ブリッジ**(11-0): iframeロード後にaccess_tokenをpostMessageで送る。フェーズ3時点では未実装でよいが、iframeを `ref` で持つ構造にしておく
+- **📮じぶんのポスト**(11-B-1): 手紙モーダルと返信バッジがこのページに載る
+
 ## 注意
 
-- iframe先が未定でもページとして成立させる(準備中状態を丁寧に作る)
-- ログイン不要(マップの公開ゾーン方針に合わせる)
-- Godot側のログイン連携(回答保存等)はマップ側リポジトリの仕事。CLAFT側では何もしない
+- 書き出しファイルが未生成でもページとして成立させる(準備中状態を丁寧に作る)
+- ログイン不要(マップの公開ゾーン方針に合わせる)。ログイン時のみブリッジが動く
 
 ## 完了条件
 
