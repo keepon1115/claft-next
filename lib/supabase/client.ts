@@ -91,22 +91,34 @@ function getEnvVars() {
   return { url, anonKey }
 }
 
+// ブラウザ用クライアントのシングルトンキャッシュ。
+// createBrowserClient()は内部に認証リスナー・トークン自動リフレッシュタイマー・
+// Realtimeソケット管理を持つため、呼び出すたびに新規生成すると
+// タイマー/リスナーが蓄積し体感速度が悪化する（詳細: docs/performance-investigation.md）。
+let browserSupabaseClientSingleton: ReturnType<typeof createBrowserClient<Database>> | ReturnType<typeof createMockSupabaseClient> | null = null
+
 /**
  * ブラウザ（クライアントサイド）用Supabaseクライアント
  * クライアントコンポーネントで使用
+ * 同一ブラウザコンテキスト内では同じインスタンスを使い回す（シングルトン）
  */
 export function createBrowserSupabaseClient() {
+  if (browserSupabaseClientSingleton) {
+    return browserSupabaseClientSingleton
+  }
+
   try {
     const envVars = getEnvVars()
-    
+
     // 開発モードで環境変数が設定されていない場合はモッククライアントを返す
     if (!envVars) {
-      return createMockSupabaseClient()
+      browserSupabaseClientSingleton = createMockSupabaseClient()
+      return browserSupabaseClientSingleton
     }
-    
+
     const { url, anonKey } = envVars
-    
-    return createBrowserClient<Database>(url, anonKey, {
+
+    browserSupabaseClientSingleton = createBrowserClient<Database>(url, anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -119,10 +131,12 @@ export function createBrowserSupabaseClient() {
         }
       }
     })
+    return browserSupabaseClientSingleton
   } catch (error) {
     // 開発モードではエラーをキャッチしてモッククライアントを返す
     if (process.env.NODE_ENV === 'development') {
-      return createMockSupabaseClient()
+      browserSupabaseClientSingleton = createMockSupabaseClient()
+      return browserSupabaseClientSingleton
     }
     console.error('❌ ブラウザSupabaseクライアントの初期化に失敗:', error)
     throw error

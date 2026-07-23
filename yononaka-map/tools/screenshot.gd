@@ -3,6 +3,7 @@
 #   godot --path . -s tools/screenshot.gd                    → KodawariMap を撮影
 #   godot --path . -s tools/screenshot.gd -- main            → Main を撮影
 #   godot --path . -s tools/screenshot.gd -- main at=-300,-40 → プレイヤーを指定位置に置いて撮影
+#   godot --path . -s tools/screenshot.gd -- map             → 全体マップ（V8）を開いて撮影
 # 出力: exports/shot_<scene>_near.png / _far.png
 # OS ウィンドウのサイズに左右されないよう、オフスクリーンの SubViewport に描画する。
 extends SceneTree
@@ -12,12 +13,15 @@ const SIZE := Vector2i(720, 1280)
 var _frames := 0
 var _scene_name := "kodawari"
 var _at := Vector2.INF   # INF = 移動しない
+var _open_map := false
 var _vp: SubViewport
 
 func _initialize() -> void:
 	for a: String in OS.get_cmdline_user_args():
 		if a == "main":
 			_scene_name = "main"
+		elif a == "map":
+			_open_map = true
 		elif a.begins_with("at="):
 			var p := a.substr(3).split(",")
 			if p.size() == 2:
@@ -37,6 +41,10 @@ func _process(_delta: float) -> bool:
 		if cam:
 			(cam.get_parent() as Node2D).position = _at
 			cam.reset_smoothing()   # カメラを即座に追従させる
+	if _frames == 10 and _open_map:
+		for c: Node in _vp.get_child(0).get_children():
+			if c is OverviewMap:
+				(c as OverviewMap)._toggle()
 	if _frames == 30:
 		_save("near")
 		var cam := _vp.get_camera_2d()

@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
@@ -204,9 +204,8 @@ const calculateExperienceToNext = (experience: number): number => {
 // =====================================================
 
 export const useUserStore = create<UserState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           // 初期状態
           profileData: { ...defaultProfileData },
@@ -540,11 +539,7 @@ export const useUserStore = create<UserState>()(
           version: 1,
         }
       )
-    ),
-    {
-      name: 'CLAFT User Store',
-    }
-  )
+    )
 )
 
 // =====================================================

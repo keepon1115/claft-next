@@ -39,6 +39,7 @@ python -m http.server 8080
 |---|---|---|
 | 移動 | WASD / 矢印キー | 画面左下のバーチャル D パッド |
 | 話しかける / つぎへ | Enter / Space | ボタンをタップ |
+| 全体マップ開閉 | M | 画面右上の MAP ボタン |
 
 ---
 
@@ -59,6 +60,8 @@ scripts/
   DialogueUI.gd        会話 UI（CanvasLayer）
   VirtualDPad.gd       タッチ用バーチャル D パッド
   SignPost.gd          案内看板（インタラクティブ）
+  Waypost.gd           道しるべ（分岐点の方向看板、V8）
+  OverviewMap.gd       簡易全体マップ（M キー / MAP ボタン、V8）
   PortalTo.gd          シーン遷移ポータル
   Player.gd            プレイヤー移動
   NPC.gd               NPC（近接判定 → 会話）

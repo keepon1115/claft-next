@@ -40,6 +40,13 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   /* config options here */
+  // /yononaka は温存(2026-07-19確定: ナビ「よのなかを知る」配下)のためリダイレクトしない。
+  // permanent: false はオーナー方針変更に備えて(ブラウザに308を永続キャッシュさせない)
+  async redirects() {
+    return [
+      { source: '/entrepreneur', destination: '/members', permanent: false },
+    ]
+  },
 };
 
 // PWA設定
@@ -48,6 +55,8 @@ const pwaConfig = withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  // Godot書き出し物(games配下、wasm数十MB)をService Workerの先読み対象から外す
+  publicExcludes: ['!games/**/*'],
   runtimeCaching: [
     // Supabase APIのキャッシュ戦略
     {

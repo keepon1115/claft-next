@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/stores/authStore';
 import { useUserStats } from '@/stores/userStore';
+import { Settings, Link2, Lightbulb, Ruler, Drama, Users, JapaneseYen, Laptop, MessagesSquare, Lock, Star, Gem } from 'lucide-react';
 
 // =====================================================
 // 型定義
@@ -17,7 +18,7 @@ interface PowerMeter {
   name: string;
   level: number;
   progress: number; // 0-100
-  icon: string;
+  icon: React.ElementType;
   color: 'tsunagu' | 'hiraku' | 'egaku' | 'narikiru' | 'makikomu';
 }
 
@@ -25,7 +26,7 @@ interface SkillTab {
   id: string;
   label: string;
   level: number;
-  icon: string;
+  icon: React.ElementType;
   unlocked: boolean;
 }
 
@@ -37,7 +38,7 @@ interface LevelUpData {
 interface RewardItem {
   id: string;
   type: 'exp' | 'badge' | 'skill' | 'other';
-  icon: string;
+  icon: React.ElementType;
   text: string;
 }
 
@@ -51,7 +52,7 @@ const defaultPowerMeters: PowerMeter[] = [
     name: 'つなぐ力',
     level: 4,
     progress: 40,
-    icon: 'fa-link',
+    icon: Link2,
     color: 'tsunagu'
   },
   {
@@ -59,7 +60,7 @@ const defaultPowerMeters: PowerMeter[] = [
     name: 'ひらく力',
     level: 6,
     progress: 60,
-    icon: 'fa-lightbulb',
+    icon: Lightbulb,
     color: 'hiraku'
   },
   {
@@ -67,7 +68,7 @@ const defaultPowerMeters: PowerMeter[] = [
     name: 'えがく力',
     level: 6,
     progress: 60,
-    icon: 'fa-pencil-ruler',
+    icon: Ruler,
     color: 'egaku'
   },
   {
@@ -75,7 +76,7 @@ const defaultPowerMeters: PowerMeter[] = [
     name: 'なりきる力',
     level: 4,
     progress: 40,
-    icon: 'fa-theater-masks',
+    icon: Drama,
     color: 'narikiru'
   },
   {
@@ -83,7 +84,7 @@ const defaultPowerMeters: PowerMeter[] = [
     name: 'まきこむ力',
     level: 4,
     progress: 40,
-    icon: 'fa-users',
+    icon: Users,
     color: 'makikomu'
   }
 ];
@@ -93,28 +94,28 @@ const defaultSkillTabs: SkillTab[] = [
     id: 'money',
     label: 'お金',
     level: 5,
-    icon: 'fa-yen-sign',
+    icon: JapaneseYen,
     unlocked: true
   },
   {
     id: 'technology',
     label: '技術',
     level: 3,
-    icon: 'fa-laptop-code',
+    icon: Laptop,
     unlocked: true
   },
   {
     id: 'communication',
     label: '対話力',
     level: 4,
-    icon: 'fa-comments',
+    icon: MessagesSquare,
     unlocked: true
   },
   {
     id: 'mystery',
     label: '？？？',
     level: 0,
-    icon: 'fa-lock',
+    icon: Lock,
     unlocked: false
   }
 ];
@@ -127,7 +128,7 @@ const CardHeader: React.FC = () => {
   return (
     <div className="card-header">
       <h3 className="card-title">
-        <i className="fas fa-cogs"></i>
+        <Settings size="1em" />
         ジブンクラフト
       </h3>
     </div>
@@ -150,7 +151,7 @@ const PowerMeterComponent: React.FC<{ power: PowerMeter }> = ({ power }) => {
       <div className="power-header">
         <span className="power-name">
           <span className={`power-icon ${power.color}`}>
-            <i className={`fas ${power.icon}`}></i>
+            <power.icon size="1em" />
           </span>
           {power.name}
         </span>
@@ -191,7 +192,7 @@ const SkillTabComponent: React.FC<{
   return (
     <div className={getClassName()} onClick={skill.unlocked ? onClick : undefined}>
       <div className="skill-tab-content">
-        <i className={`fas ${skill.icon}`}></i>
+        <skill.icon size="1em" />
         <div className="skill-tab-label">{skill.label}</div>
       </div>
       {skill.unlocked && (
@@ -237,7 +238,7 @@ const LevelUpModal: React.FC<{
           {levelUpData.rewards.map((reward, index) => (
             <div key={index} className="reward-item">
               <span className="reward-icon">
-                <i className={`fas ${reward.icon}`}></i>
+                <reward.icon size="1em" />
               </span>
               <span className="reward-text">{reward.text}</span>
             </div>
@@ -272,8 +273,8 @@ const JibunCraft: React.FC<JibunCraftProps> = ({ className = '' }) => {
     const demoLevelUpData: LevelUpData = {
       newLevel: (userStats?.level || 1) + 1,
       rewards: [
-        { id: '1', type: 'exp', icon: 'fa-star', text: '+100 EXP' },
-        { id: '2', type: 'badge', icon: 'fa-gem', text: '新しいバッジ' }
+        { id: '1', type: 'exp', icon: Star, text: '+100 EXP' },
+        { id: '2', type: 'badge', icon: Gem, text: '新しいバッジ' }
       ]
     };
     setLevelUpData(demoLevelUpData);

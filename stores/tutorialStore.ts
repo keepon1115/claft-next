@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 
 interface TutorialState {
@@ -25,9 +25,8 @@ interface TutorialState {
 export const ONBOARDING_VERSION = 1
 
 export const useTutorialStore = create<TutorialState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           active: false,
           step: 0,
@@ -93,9 +92,7 @@ export const useTutorialStore = create<TutorialState>()(
           name: 'claft-tutorial-store'
         }
       )
-    ),
-    { name: 'tutorial-store' }
-  )
+    )
 )
 
 

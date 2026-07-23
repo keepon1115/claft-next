@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery } from '@/lib/supabase/client'
 import type { QuestProgress, QuestStatus } from '@/types/quest'
@@ -347,9 +347,8 @@ function mapStageStatusToSupabaseStatus(stageStatus: StageStatus): QuestStatus {
 // =====================================================
 
 export const useQuestStore = create<QuestState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           // 初期状態
           userProgress: { ...defaultUserProgress },
@@ -1181,12 +1180,7 @@ export const useQuestStore = create<QuestState>()(
           })
         }
       )
-    ),
-    {
-      name: 'quest-store',
-      enabled: process.env.NODE_ENV === 'development'
-    }
-  )
+    )
 )
 
 // =====================================================

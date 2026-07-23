@@ -2041,7 +2041,7 @@ img.pixel {
   filter: blur(10px);
 }
 
-.avatar-container i {
+.avatar-container svg {
   z-index: 1;
   animation: breathe-icon 3s ease-in-out infinite;
 }
@@ -2874,7 +2874,7 @@ img.pixel {
   z-index: 1;
 }
 
-.skill-tab i {
+.skill-tab svg {
   font-size: 28px;
   margin-bottom: 10px;
   display: block;

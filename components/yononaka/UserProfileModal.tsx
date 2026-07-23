@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { X } from 'lucide-react'
 
 // =====================================================
 // 型定義
@@ -30,6 +31,13 @@ interface UserProfileData {
   login_count?: number
 }
 
+// 非認知能力の公開情報(強みTOP3・偉人見立て)。
+// member_traits_public ビューは11-Fで作成予定のため、存在しない間は非表示スキップ
+interface PublicTraits {
+  strengths: string[]
+  heroTitle: string | null
+}
+
 interface UserProfileModalProps {
   userId: string | null
   isOpen: boolean
@@ -42,6 +50,7 @@ interface UserProfileModalProps {
 
 export default function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalProps) {
   const [userData, setUserData] = useState<UserProfileData | null>(null)
+  const [traits, setTraits] = useState<PublicTraits | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const supabase = createBrowserSupabaseClient()
@@ -112,6 +121,25 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
 
       setUserData(combinedData)
 
+      // 強みTOP3・偉人バッジ(ビュー未作成・データなしなら黙ってスキップ)
+      const { data: traitsRow, error: traitsError } = await supabase
+        .from('member_traits_public')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .maybeSingle()
+      if (!traitsError && traitsRow) {
+        const row = traitsRow as Record<string, unknown>
+        setTraits({
+          strengths: Array.isArray(row.strengths) ? (row.strengths as string[]) : [],
+          heroTitle:
+            typeof row.hero_title === 'string' && row.hero_title
+              ? row.hero_title
+              : typeof row.hero_name === 'string' && row.hero_name
+                ? row.hero_name
+                : null,
+        })
+      }
+
     } catch (error) {
       console.error('ユーザーデータ取得エラー:', error)
       setError('ユーザー情報の取得に失敗しました')
@@ -131,6 +159,7 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
   useEffect(() => {
     if (!isOpen) {
       setUserData(null)
+      setTraits(null)
       setError(null)
     }
   }, [isOpen])
@@ -188,7 +217,7 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
             onClick={onClose}
             className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30 transition-all duration-200"
           >
-            <i className="fas fa-times text-lg"></i>
+            <X size="1em" className="text-lg" />
           </button>
           
           <div className="text-center text-white">
@@ -251,6 +280,24 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
                   </p>
                   {userData.catchphrase && (
                     <p className="text-gray-600 italic">「{userData.catchphrase}」</p>
+                  )}
+                  {/* 強みTOP3・偉人バッジ(member_traits_publicがある場合のみ) */}
+                  {traits && (traits.strengths.length > 0 || traits.heroTitle) && (
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      {traits.heroTitle && (
+                        <span className="bg-gradient-to-r from-amber-200 to-yellow-100 border border-amber-400 text-amber-800 px-3 py-1 rounded-full text-sm font-bold">
+                          🏅 {traits.heroTitle}
+                        </span>
+                      )}
+                      {traits.strengths.slice(0, 3).map((strength, index) => (
+                        <span
+                          key={index}
+                          className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-medium"
+                        >
+                          💎 {strength}
+                        </span>
+                      ))}
+                    </div>
                   )}
                   {/* バッジ表示エリア */}
                   <div className="flex items-center gap-2 mt-2">
@@ -406,6 +453,15 @@ export default function UserProfileModal({ userId, isOpen, onClose }: UserProfil
                   />
                 </div>
               )}
+
+              {/* 作品(将来枠: ひらめきポストは投稿者非公開のため当面は準備中表示) */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-bold text-gray-800 border-b-2 border-amber-200 pb-2">🎨 作品</h4>
+                <div className="bg-gray-50 rounded-xl p-6 text-center">
+                  <div className="text-4xl mb-2">🚧</div>
+                  <p className="text-gray-500">作品はまだ準備中</p>
+                </div>
+              </div>
 
               {/* アクションボタン */}
               <div className="flex justify-center pt-4">

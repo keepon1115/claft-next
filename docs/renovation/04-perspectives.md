@@ -48,9 +48,10 @@ export const FUTURE_LINKS: PerspectiveLink[] = [
 3. **「未来をのぞく」セクション**: FUTURE_LINKS 同様
 4. カード: icon+title+description。`url`ありなら `target="_blank" rel="noopener noreferrer"`、
    空なら押せない「準備中🔒」スタイル(グレーアウト+微光)
-5. **「Yononakaワークショップ」紹介セクション**を末尾に追加(確定済み)。
-   既存 `app/yononaka/page.tsx` のワークショップ紹介部分(冒険者一覧を除く)をここへ移植し、
-   天文台トーンにリスタイルする
+5. ~~「Yononakaワークショップ」紹介セクションを末尾に追加~~ **取りやめ(2026-07-19)**:
+   `/yononaka` は全面温存し、ナビの「よのなかを知る」グループに
+   Yononaka(`/yononaka`)と視点をふやす(`/perspectives`)を並べる構成に変更。
+   コテンラジオのURLは `https://coten.co.jp/services/cotenradio/` で確定済み
 
 ## 完了条件
 

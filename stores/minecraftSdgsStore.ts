@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery } from '@/lib/supabase/client'
 import {
@@ -423,9 +423,8 @@ const defaultStageDetails: Record<number, MinecraftStageProgress> = {
 // =====================================================
 
 export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
-  devtools(
-    persist(
-      immer((set, get) => ({
+  persist(
+    immer((set, get) => ({
         // 初期状態
         userProgress: {},
         stageDetails: defaultStageDetails,
@@ -812,9 +811,5 @@ export const useMinecraftSdgsStore = create<MinecraftSdgsState>()(
           currentUserId: state.currentUserId
         }),
       }
-    ),
-    {
-      name: 'minecraft-sdgs-store',
-    }
-  )
+    )
 )

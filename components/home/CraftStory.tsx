@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuestStore } from '@/stores/questStore';
 import { useUserGoals } from '@/hooks/useUserGoals';
+import { BookOpen, Flag, Mountain, Palette, MessagesSquare, ChevronRight } from 'lucide-react';
 
 // =====================================================
 // 型定義
@@ -13,13 +14,13 @@ interface CraftStoryProps {
   className?: string;
 }
 
-interface Goal { id: string; type: 'short' | 'long'; label: string; text: string; icon: string; }
+interface Goal { id: string; type: 'short' | 'long'; label: string; text: string; icon: React.ElementType; }
 
 interface ActionItem {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: React.ElementType;
   href: string;
   color: 'primary' | 'secondary';
 }
@@ -29,8 +30,8 @@ interface ActionItem {
 // =====================================================
 
 const defaultGoals: Goal[] = [
-  { id: 'short-goal', type: 'short', label: '短期目標', text: '', icon: 'fa-flag-checkered' },
-  { id: 'long-goal', type: 'long', label: '長期目標', text: '', icon: 'fa-mountain' }
+  { id: 'short-goal', type: 'short', label: '短期目標', text: '', icon: Flag },
+  { id: 'long-goal', type: 'long', label: '長期目標', text: '', icon: Mountain }
 ];
 
 const defaultActions: ActionItem[] = [
@@ -38,7 +39,7 @@ const defaultActions: ActionItem[] = [
     id: 'created',
     title: 'つくったもの',
     description: '作品ギャラリーを見る',
-    icon: 'fa-palette',
+    icon: Palette,
     href: 'https://jet-vinyl-ae2.notion.site/d1c14aebdb6747b794d15100958c9d96?source=copy_link',
     color: 'primary'
   },
@@ -46,7 +47,7 @@ const defaultActions: ActionItem[] = [
     id: 'talked',
     title: 'はなしたこと',
     description: '会話の記録を見る',
-    icon: 'fa-comments',
+    icon: MessagesSquare,
     href: 'https://jet-vinyl-ae2.notion.site/d1c14aebdb6747b794d15100958c9d96?source=copy_link',
     color: 'secondary'
   }
@@ -60,7 +61,7 @@ const CardHeader: React.FC = () => {
   return (
     <div className="card-header">
       <h3 className="card-title">
-        <i className="fas fa-book-open"></i>
+        <BookOpen size="1em" />
         クラフトストーリー
       </h3>
     </div>
@@ -73,7 +74,7 @@ const GoalCard: React.FC<{ goal: Goal; value: string; onChange: (v: string) => v
   return (
     <div className="goal-card">
       <div className="goal-content">
-        <div className="goal-icon"><i className={`fas ${goal.icon}`}></i></div>
+        <div className="goal-icon"><goal.icon size="1em" /></div>
         <div className="goal-label">{goal.label}</div>
         <textarea
           className="goal-textarea"
@@ -109,14 +110,14 @@ const ActionLink: React.FC<{ action: ActionItem }> = ({ action }) => {
       target="_blank" rel="noopener noreferrer"
     >
       <div className="action-icon">
-        <i className={`fas ${action.icon}`}></i>
+        <action.icon size="1em" />
       </div>
       <div className="action-content">
         <div className="action-title">{action.title}</div>
         <div className="action-desc">{action.description}</div>
       </div>
       <div className="action-arrow">
-        <i className="fas fa-chevron-right"></i>
+        <ChevronRight size="1em" />
       </div>
     </a>
   );

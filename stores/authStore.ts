@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery, SupabaseError } from '@/lib/supabase/client'
 import { useUserStore } from '@/stores/userStore'
@@ -44,9 +44,8 @@ interface AuthState {
 // =====================================================
 
 export const useAuthStore = create<AuthState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           // 初期状態
           user: null,
@@ -853,12 +852,7 @@ export const useAuthStore = create<AuthState>()(
           })
         }
       )
-    ),
-    {
-      name: 'auth-store',
-      enabled: process.env.NODE_ENV === 'development'
-    }
-  )
+    )
 )
 
 // =====================================================

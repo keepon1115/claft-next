@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 
 // =====================================================
 // 型定義
@@ -63,12 +63,14 @@ export const staggerChildVariants = {
 // アニメーションプロバイダー
 // =====================================================
 
+// アプリ全体をAnimatePresenceでラップしない: ページ全体を単位にした
+// enter/exit制御は用途に合わずオーバーヘッドだけが乗るため、
+// enter/exitが必要な個別コンポーネント(モーダル・通知等)側でAnimatePresenceを使う
+// (詳細: docs/performance-investigation.md Step4)。
 const AnimationProvider: React.FC<AnimationProviderProps> = ({ children }) => {
   return (
     <MotionConfig reducedMotion="user">
-      <AnimatePresence mode="wait">
-        {children}
-      </AnimatePresence>
+      {children}
     </MotionConfig>
   );
 };

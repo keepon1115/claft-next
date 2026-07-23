@@ -244,7 +244,7 @@ const sectionMediaItems: MediaItem[] = [
 
 	// プレゼン・発表
 	{
-		id: 'presentation-001',
+		id: 'presentation-006',
 		title: '【発表・プレゼン】3-2 「聴く」の基本',
 		description: 'プレゼンテーションにおける「聴く」スキルを学ぶ',
 		tags: ['プレゼン・発表'],
@@ -255,7 +255,7 @@ const sectionMediaItems: MediaItem[] = [
 		createdAt: '2025-01-15T00:00:00.000Z'
 	},
 	{
-		id: 'presentation-002',
+		id: 'presentation-007',
 		title: '【発表・プレゼン】3-3 「訊く」の基本',
 		description: 'プレゼンテーションにおける「訊く」スキルを学ぶ',
 		tags: ['プレゼン・発表'],

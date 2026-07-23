@@ -9,6 +9,11 @@ import { Sidebar } from '@/components/common/Sidebar'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/stores/userStore'
 import AccountSettings from '@/components/profile/AccountSettings'
+import {
+  ArrowLeft, Rocket, User, Star, Heart, Shield, Undo2, TriangleAlert,
+  Image as ImageIcon, Upload, CircleCheckBig, LoaderCircle, Check, PenLine,
+  Drama, MessageCircle, Images, Meh, MapPin, BatteryFull, Users, MessageSquare, Save,
+} from 'lucide-react'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -428,7 +433,7 @@ export default function ProfilePage() {
               className="back-button"
               onClick={() => router.push('/')}
             >
-              <i className="fas fa-arrow-left"></i>
+              <ArrowLeft size="1em" />
               ホームに戻る
             </button>
             
@@ -438,7 +443,7 @@ export default function ProfilePage() {
             </div>
             
             <div className={`save-indicator ${saveStatus === 'saving' ? 'saving' : ''}`}>
-              <i className={`fas ${saveStatus === 'saving' ? 'fa-spinner fa-spin' : 'fa-check'}`}></i>
+              {saveStatus === 'saving' ? <LoaderCircle size="1em" className="animate-spin" /> : <Check size="1em" />}
               {saveStatus === 'saving' ? '保存中...' : '保存済み'}
             </div>
           </div>
@@ -458,7 +463,7 @@ export default function ProfilePage() {
                       className="avatar-image"
                     />
                   ) : (
-                    <i className="fas fa-user-astronaut"></i>
+                    <Rocket size="1em" />
                   )}
                 </div>
                 <div className="character-speech active">
@@ -512,28 +517,28 @@ export default function ProfilePage() {
                 className={`tab-button ${activeTab === 'basic' ? 'active' : ''}`}
                 onClick={() => setActiveTab('basic')}
               >
-                <i className="fas fa-user"></i>
+                <User size="1em" />
                 基本情報
               </button>
               <button 
                 className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
                 onClick={() => setActiveTab('skills')}
               >
-                <i className="fas fa-star"></i>
+                <Star size="1em" />
                 スキル
               </button>
               <button 
                 className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
                 onClick={() => setActiveTab('personal')}
               >
-                <i className="fas fa-heart"></i>
+                <Heart size="1em" />
                 大切なこと
               </button>
               <button 
                 className={`tab-button ${activeTab === 'account' ? 'active' : ''}`}
                 onClick={() => setActiveTab('account')}
               >
-                <i className="fas fa-shield-alt"></i>
+                <Shield size="1em" />
                 アカウント設定
               </button>
             </div>
@@ -545,7 +550,7 @@ export default function ProfilePage() {
                 disabled={!localChanges || saveStatus === 'saving'}
                 className={`save-btn ${!localChanges ? 'disabled' : ''} ${saveStatus === 'saving' ? 'saving' : ''}`}
               >
-                <i className={`fas ${saveStatus === 'saving' ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+                {saveStatus === 'saving' ? <LoaderCircle size="1em" className="animate-spin" /> : <Save size="1em" />}
                 {saveStatus === 'saving' ? '保存中...' : 'プロフィールを保存する'}
               </button>
               
@@ -558,14 +563,14 @@ export default function ProfilePage() {
                   }}
                   className="cancel-btn"
                 >
-                  <i className="fas fa-undo"></i>
+                  <Undo2 size="1em" />
                   変更を取り消す
                 </button>
               )}
               
               {saveStatus === 'error' && (
                 <div className="error-message">
-                  <i className="fas fa-exclamation-triangle"></i>
+                  <TriangleAlert size="1em" />
                   保存に失敗しました。もう一度お試しください。
                 </div>
               )}
@@ -579,7 +584,7 @@ export default function ProfilePage() {
                   {/* アバター画像アップロード */}
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-image"></i>
+                      <ImageIcon size="1em" />
                       アバター画像
                     </label>
                     <div className="avatar-upload-area">
@@ -592,7 +597,7 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="avatar-placeholder">
-                            <i className="fas fa-user-astronaut"></i>
+                            <Rocket size="1em" />
                             <span>画像を選択</span>
                           </div>
                         )}
@@ -606,18 +611,18 @@ export default function ProfilePage() {
                           className="hidden"
                         />
                         <label htmlFor="avatar-upload" className="avatar-upload-btn">
-                          <i className="fas fa-upload"></i>
+                          <Upload size="1em" />
                           画像を選択
                         </label>
                         {avatarFile && (
                           <div className="upload-status">
-                            <i className="fas fa-check-circle text-green-500"></i>
+                            <CircleCheckBig size="1em" className="text-green-500" />
                             {avatarFile.name}
                           </div>
                         )}
                         {uploadingAvatar && (
                           <div className="upload-progress">
-                            <i className="fas fa-spinner fa-spin"></i>
+                            <LoaderCircle size="1em" className="animate-spin" />
                             アップロード中...
                           </div>
                         )}
@@ -630,7 +635,7 @@ export default function ProfilePage() {
 
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-signature"></i>
+                      <PenLine size="1em" />
                       なまえ（ニックネーム）
                     </label>
                     <input
@@ -644,7 +649,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-mask"></i>
+                      <Drama size="1em" />
                       キャラ（特性）
                     </label>
                     <input
@@ -661,7 +666,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-comment"></i>
+                      <MessageCircle size="1em" />
                       セリフ（口ぐせ）
                     </label>
                     <input
@@ -680,7 +685,7 @@ export default function ProfilePage() {
                 <div className="form-section">
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-photo-video"></i>
+                      <Images size="1em" />
                       今ハマっていること・見てほしいモノなど（画像）
                     </label>
                     <div className="avatar-upload-area">
@@ -694,7 +699,7 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="avatar-placeholder">
-                            <i className="fas fa-image"></i>
+                            <ImageIcon size="1em" />
                             <span>画像を選択</span>
                           </div>
                         )}
@@ -708,18 +713,18 @@ export default function ProfilePage() {
                           className="hidden"
                         />
                         <label htmlFor="favnow-upload" className="avatar-upload-btn">
-                          <i className="fas fa-upload"></i>
+                          <Upload size="1em" />
                           画像を選択
                         </label>
                         {favNowFile && (
                           <div className="upload-status">
-                            <i className="fas fa-check-circle text-green-500"></i>
+                            <CircleCheckBig size="1em" className="text-green-500" />
                             {favNowFile.name}
                           </div>
                         )}
                         {uploadingFavNow && (
                           <div className="upload-progress">
-                            <i className="fas fa-spinner fa-spin"></i>
+                            <LoaderCircle size="1em" className="animate-spin" />
                             アップロード中...
                           </div>
                         )}
@@ -729,7 +734,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-star"></i>
+                      <Star size="1em" />
                       とくい（スキル）
                     </label>
                     <input
@@ -746,7 +751,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-grimace"></i>
+                      <Meh size="1em" />
                       よわみ（苦手）
                     </label>
                     <input
@@ -765,7 +770,7 @@ export default function ProfilePage() {
                 <div className="form-section">
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-map-marker-alt"></i>
+                      <MapPin size="1em" />
                       すきな時間・場所
                     </label>
                     <input
@@ -779,7 +784,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-battery-full"></i>
+                      <BatteryFull size="1em" />
                       エネルギーチャージ方法
                     </label>
                     <input
@@ -793,7 +798,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-users"></i>
+                      <Users size="1em" />
                       一緒に冒険したい人
                     </label>
                     <input
@@ -807,7 +812,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-message"></i>
+                      <MessageSquare size="1em" />
                       ひとこと
                     </label>
                     <textarea

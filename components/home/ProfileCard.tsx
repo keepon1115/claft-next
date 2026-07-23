@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { useUserStore, useUserProfile, useUserStats } from '@/stores/userStore';
+import { TriangleAlert, Rocket, Pencil, LogIn } from 'lucide-react';
 
 interface ProfileCardProps {
   className?: string;
@@ -88,7 +89,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
       <div className="profile-card">
         <div className="profile-header">
           <div className="text-center text-red-600">
-            <i className="fas fa-exclamation-triangle text-2xl mb-4"></i>
+            <TriangleAlert size="1em" className="text-2xl mb-4" />
             <p>{error}</p>
           </div>
         </div>
@@ -141,8 +142,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
                   }}
                 />
               ) : null}
-              <i 
-                className="fas fa-user-astronaut" 
+              <Rocket
+                size="1em"
                 style={{ display: displayData.avatarUrl ? 'none' : 'block' }}
               />
             </div>
@@ -250,7 +251,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
 
           {/* 編集ボタン - 認証ガード付き */}
           <button onClick={handleEditClick} className="edit-profile-btn">
-            <i className={`fas ${isAuthenticated ? 'fa-pencil-alt' : 'fa-sign-in-alt'}`}></i>
+            {isAuthenticated ? <Pencil size="1em" /> : <LogIn size="1em" />}
             {isAuthenticated ? 'プロフィール編集' : 'ログインして編集'}
           </button>
         </div>

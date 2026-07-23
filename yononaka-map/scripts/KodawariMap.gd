@@ -100,11 +100,14 @@ func _ready() -> void:
 		cam.limit_bottom =  370
 	_draw_terrain()
 	_draw_decorations()
+	_place_wayposts()
 	_build_walk_bounds()
 	_spawn_actors()
 	# 光と空気
 	Atmosphere.add_vignette(self)
 	add_child(Atmosphere.make_fireflies(Vector2(0, 20), Vector2(500, 330), 24))
+	# V8: M キー / MAP ボタンの簡易全体マップ
+	OverviewMap.attach(self, _build_map_spec())
 
 func _process(delta: float) -> void:
 	_anim_t += delta
@@ -407,10 +410,7 @@ func _draw_terrain() -> void:
 	gate_glow.position = Vector2(0, 232)
 	g.add_child(gate_glow)
 	_light_data.append({"node": gate_glow, "base": 0.65, "phase": 2.1})
-	# 案内板
-	_rect(g, -46, 262, 92, 12, Color("#F0E0C0"))
-	_rect(g, -46, 262, 92,  2, Color("#8B6347"))
-	_lbl(g, "↓ 広場へ", Vector2(-34, 263), 9, Color("#5C3A21"), 68.0)
+	# 案内板は V8 の道しるべ（_place_wayposts）に統合
 
 	# ── 海に点在する小島＋揺れる草 ───────────────────────────────────
 	var islet_spots: Array = [
@@ -539,6 +539,81 @@ func _deco_stone(parent: Node2D, pos: Vector2) -> void:
 	_deco_sprite(parent, "statue_oneeye", pos)
 	_deco_shadow(parent, pos + Vector2(-30, 4), 13, 4)
 	_deco_sprite(parent, "statue_frog", pos + Vector2(-30, 4))
+
+# ============================================================
+# V8: 道しるべ（分岐点の方向看板）と簡易全体マップ
+# ============================================================
+# 分岐点に置く道しるべ。文言・位置はここを編集するだけでよい
+# （矢印は実際に歩ける方向だけを指す: ROW2 の島同士は直接つながっていない）
+const WAYPOST_DEFS: Array = [
+	# 入口ドック（鳥居の下、島に上がる前に全体の向きが分かる）
+	{"pos": Vector2(-40, 305), "arms": [
+		{"dir": "up",   "text": "こだわりの里"},
+		{"dir": "down", "text": "広場へもどる"},
+	]},
+	# 挑戦の島・左手の空き地（里の十字路。石の門を隠さない位置）
+	{"pos": Vector2(-48, 104), "arms": [
+		{"dir": "up",    "text": "安定"},
+		{"dir": "left",  "text": "だれかの力に"},
+		{"dir": "right", "text": "技を極める職人"},
+	]},
+	# だれかの力に・のれんの渡しの前
+	{"pos": Vector2(COL_L + 56, 36), "arms": [
+		{"dir": "up", "text": "家族・地元"},
+	]},
+	# 技を極める職人・桟橋の前
+	{"pos": Vector2(COL_R - 56, 36), "arms": [
+		{"dir": "up", "text": "自由なくらし"},
+	]},
+]
+
+func _place_wayposts() -> void:
+	var g := $Ground
+	for d: Dictionary in WAYPOST_DEFS:
+		g.add_child(Waypost.make(d["pos"] as Vector2, d["arms"] as Array))
+
+# 全体マップの内容は島定義（ZONE_DEFS）から組み立てる。NPC の位置は載せない
+func _build_map_spec() -> Dictionary:
+	var areas: Array = []
+	# 橋・渡し・桟道（先に描き、島の縁で上書きされる）
+	for r: Array in [
+		[COL_L - 20.0, -64.0, 40.0, 88.0],
+		[COL_C - 20.0, -64.0, 40.0, 88.0],
+		[COL_R - 20.0, -64.0, 40.0, 88.0],
+		[-208.0, 70.0, 116.0, 40.0],
+		[92.0, 70.0, 116.0, 40.0],
+		[-30.0, 156.0, 60.0, 98.0],
+	]:
+		areas.append({
+			"points": _rect_pts(float(r[0]), float(r[1]), float(r[2]), float(r[3])),
+			"color":  Color("#C8A46E"),
+		})
+	# 6 つの島
+	for zone_key: String in ALL_ZONES:
+		var d: Dictionary = ZONE_DEFS[zone_key]
+		var cx := float(d["cx"])
+		var cy := float(d["cy"])
+		areas.append({
+			"points":    _octagon(cx, cy, IW, IH, ICH),
+			"color":     d["color"],
+			"label":     d["name"],
+			"label_pos": Vector2(cx, cy),
+			"label_col": d["label_col"],
+		})
+	# 入口ドック
+	areas.append({
+		"points":    _octagon(0.0, 285.0, 150.0, 86.0, 14.0),
+		"color":     Color("#C8D89E"),
+		"label":     "入口",
+		"label_pos": Vector2(0, 285),
+	})
+	return {
+		"title":      "こだわりの里",
+		"world_rect": Rect2(-520, -330, 1040, 700),
+		"bg_color":   SEA_FALLBACK,
+		"areas":      areas,
+		"marks":      [{"pos": Vector2(0, 348), "text": "↓ 広場へもどる"}],
+	}
 
 # ── 共通ヘルパー ──────────────────────────────────────────────────────────────
 func _add_swaying_grass(parent: Node2D, x: float, y: float) -> void:

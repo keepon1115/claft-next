@@ -18,7 +18,7 @@
 | 0 | ホーム | `/` | 現状維持 | `app/page.tsx` |
 | 1 | 自分を理解する | `/myself` (ハブ) | 自分のデータ(`/profile`)・非認知能力レポート(PDF)・ストーリー・PBL(`/pbl`) | profile 2000行実装、CraftStory/JibunCraft |
 | 2 | 仕事・社会を知る | グループ(ハブなし) | Yononakaマップ(`/yononaka-map`)・クエストに出かける(`/quest`) | Godot製マップ(別リポジトリ)、既存quest |
-| 3 | 視点をふやす | `/perspectives` | リンクボタン集(過去: キャリア理論・コテンラジオ / 未来: Society5.0・世代の価値観・世界の価値観) | 新規。URLは後日差し込み |
+| 3 | よのなかを知る | グループ(ハブなし) | Yononaka(`/yononaka` 現状維持)・視点をふやす(`/perspectives` リンクボタン集: 過去=キャリア理論・コテンラジオ / 未来=Society5.0・世代の価値観・世界の価値観) | 旧yononakaページ温存、perspectives実装済み(2026-07-19) |
 | 4 | メンバーを知る | `/members` | メタライフ広場(アバター空間+プロフィール・作品・成長)+アントレプレナー統合 | `useAdventurerList`、`UserProfileModal`、`/entrepreneur` |
 | 5 | カリキュラム動画 | `/videos` | マイクラ(→`/minecraft-sdgs`)・発表・AI・ロボット | quest のカテゴリブロックUIパターン |
 | 6 | 息抜きの場所 | `/asobiba` | メンバー作ゲーム+黄昏の対話室(`/twilight`) | twilight実装済み |
@@ -27,8 +27,8 @@
 ### 既存ページの行き先
 
 - `/entrepreneur` → コンテンツを`/members`に統合後、リダイレクト化
-- `/yononaka` → 冒険者一覧は`/members`へ移設。ルートは`/members`へリダイレクト
-  - Yononakaワークショップ紹介部分は `/perspectives` 内に1セクションとして移設(**確定済み**)
+- `/yononaka` → **2026-07-19変更: 全面温存**し、ナビ「よのなかを知る」グループ配下に残す。ワークショップ紹介の`/perspectives`移設は取りやめ
+  - フェーズ5で予定していた冒険者一覧の`/members`移設・`/yononaka`リダイレクト化は要再確認(オーナー判断待ち)
 - `/minecraft-sdgs`・`/quest`・`/twilight`・`/hirameki-post`・`/pbl`・`/profile` → **ルート・実装は変更しない**。ナビ上の所属だけ変わる
 - 管理セクション(`/admin/*`) → 既存機能は変更しない。**唯一の追加**はフェーズ11-Bの手紙管理(`/admin/letters`+ダッシュボード未返信バッジ)
 

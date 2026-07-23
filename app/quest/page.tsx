@@ -14,7 +14,6 @@ import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import { AuthButton } from '@/components/auth/AuthButton'
 import { ModalLoadingFallback } from '@/components/common/DynamicLoader'
-import UnlockAnimation from '@/components/quest/UnlockAnimation'
 import BackgroundAnimations from '@/components/common/BackgroundAnimations'
 import JibunMediaLibrary from '@/components/quest/JibunMediaLibrary'
 
@@ -24,6 +23,11 @@ import JibunMediaLibrary from '@/components/quest/JibunMediaLibrary'
 const DynamicLoginPromptModal = dynamic(
   () => import('@/components/quest/LoginPromptModal'),
   { loading: () => <ModalLoadingFallback title="ログイン案内を読み込み中..." />, ssr: false }
+);
+// 解放演出は showUnlockAnimation が true の時だけ必要なため遅延ロード
+const DynamicUnlockAnimation = dynamic(
+  () => import('@/components/quest/UnlockAnimation'),
+  { ssr: false }
 );
 
 // ==========================================
@@ -476,7 +480,7 @@ export default function QuestPage() {
 
       {/* エリア解放アニメーション（ステージ6→7-12解放時のみ表示） */}
       {showUnlockAnimation && unlockTargetArea === '7-12' && (
-        <UnlockAnimation
+        <DynamicUnlockAnimation
           isOpen={showUnlockAnimation}
           targetArea={'7-12'}
           onClose={() => {

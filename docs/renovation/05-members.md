@@ -30,7 +30,8 @@
 
 - 新規: `app/members/page.tsx`
 - 新規: `components/members/Plaza.tsx`(広場)、`components/members/MemberAvatar.tsx`
-- 改修: `next.config.ts` — `/yononaka` と `/entrepreneur` を `/members` へリダイレクト
+- 改修: `next.config.ts` — `/entrepreneur` を `/members` へリダイレクト
+  (**2026-07-19変更**: `/yononaka` は全面温存(ナビ「よのなかを知る」配下)のためリダイレクトしない。冒険者一覧も `/yononaka` に残したまま、`/members` は広場形式で併存)
 - 改修(移設のみ): UserProfileModal を `components/members/` へ移動 or そのままimport(そのままで可)
 
 ## 実装内容
@@ -69,7 +70,7 @@ UserProfileModal に(既存表示に加えて)タブまたはセクション追�
 
 - [ ] `/members` で全メンバーのアバターが広場に配置され、クリックでプロフィールが開く
 - [ ] 位置がリロードしても変わらない
-- [ ] アントレプレナーセクションが移植され、旧2ルートがリダイレクトされる
+- [ ] アントレプレナーセクションが移植され、`/entrepreneur` がリダイレクトされる(`/yononaka` は温存)
 - [ ] モバイルで操作可能
 - [ ] navConfigの該当リンクを解放
 - [ ] `npm run build` 成功
