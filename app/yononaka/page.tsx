@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/MiXJcpZELCCv9YX98"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo122】<br />
-                  日本の「はたらく」を解決する！
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/bzaV7uA52T9SiWSaA"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -108,6 +98,16 @@ export default function YononakaPage() {
                 >
                   【Yo123】<br />
                   ロボット発表会を盛り上げるアイデアやルールを考えよう
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/PAaZEMzM7GaKsZTY9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo124】<br />
+                  今までの夏休みで一番最高の思い出
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
