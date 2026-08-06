@@ -116,8 +116,8 @@ export default function YononakaPage() {
                   rel="noopener noreferrer"
                   className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  【7月のフォトコンテスト！】<br />
-                  🍟『スキなたべもの』🍕  
+                  【8月のフォトコンテスト！】<br />
+                  🌞『これは夏やなぁ～ 』😎  
                 </a>
                 {/* 右下：チェックボタン */}
                 <a
@@ -167,7 +167,7 @@ export default function YononakaPage() {
                 </div>
               </div>
 
-              <a href="https://keepon.my.canva.site/weekly-keepon7-31/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://keepon.my.canva.site/weekly-keepon8-7/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
