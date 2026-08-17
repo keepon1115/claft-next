@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/bzaV7uA52T9SiWSaA"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo123】<br />
-                  ロボット発表会を盛り上げるアイデアやルールを考えよう
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/PAaZEMzM7GaKsZTY9"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -108,6 +98,16 @@ export default function YononakaPage() {
                 >
                   【Yo124】<br />
                   今までの夏休みで一番最高の思い出
+                </a>
+                {/* 右上：カード2 */}
+                <a
+                  href="https://forms.gle/hqpCVyD9bV7ixDAS8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  【Yo125】<br />
+                  ちょっとした遊びを聞かせて！
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
@@ -148,10 +148,10 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">Yononaka</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>テーマ：からだを動かしているのはだれ？</p>
-                    <p>📅 8/18(火) 20:00~21:15</p>
+                    <p>テーマ：あなたのまちは、だれかのあこがれ？</p>
+                    <p>📅 9/3(火) 20:00~21:15</p>
                   </div>
-                  <a href="https://forms.gle/rvWdp7gimFsGZrNC7" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                  <a href="https://forms.gle/MFP2WR98vYfknUbf7" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
                   </a>
                 </div>
