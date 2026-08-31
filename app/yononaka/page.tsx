@@ -111,13 +111,13 @@ export default function YononakaPage() {
                 </a>
                 {/* 左下：カード3（新規） */}
                 <a
-                  href="https://forms.gle/ZDWbokLefiJvN3H39"
+                  href="https://forms.gle/2vMqMifirx1uVw499"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  【8月のフォトコンテスト！】<br />
-                  🌞『これは夏やなぁ～ 』😎  
+                  【Yo127】<br />
+                  学校の勉強や何かを覚えるときに工夫してることは？  
                 </a>
                 {/* 右下：チェックボタン */}
                 <a
