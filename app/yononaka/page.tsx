@@ -148,8 +148,8 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-2xl p-6 h-full flex flex-col">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">Yononaka</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>テーマ：あなたのまちは、だれかのあこがれ？</p>
-                    <p>📅 9/3(火) 20:00~21:15</p>
+                    <p>テーマ：じぶんってほんとに1人？</p>
+                    <p>📅 9/18(金) 20:00~21:15</p>
                   </div>
                   <a href="https://forms.gle/MFP2WR98vYfknUbf7" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-purple-400 to-indigo-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
                     参加する
@@ -167,7 +167,7 @@ export default function YononakaPage() {
                 </div>
               </div>
 
-              <a href="https://keepon.my.canva.site/weekly-keepon8-28/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <a href="https://keepon.my.canva.site/weekly-keepon9-4/" target="_blank" rel="noopener noreferrer" className="mt-4 group block text-center w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-amber-900 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <span className="relative z-10">今週のWeekly keeponはこちら</span>
                 <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
