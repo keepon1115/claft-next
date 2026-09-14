@@ -80,8 +80,13 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'mirai',
     label: 'ミライクラフト',
     icon: '🚀',
-    // ひらめきポスト(/hirameki-post)へは/mirai内の入口カードから遷移する
     href: '/mirai',
+  },
+  {
+    id: 'hirameki',
+    label: 'ひらめきポスト/Q&A',
+    icon: '💡',
+    href: '/hirameki-post',
   },
 ]
 

@@ -22,7 +22,8 @@
 | 4 | メンバーを知る | `/members` | メタライフ広場(アバター空間+プロフィール・作品・成長)+アントレプレナー統合 | `useAdventurerList`、`UserProfileModal`、`/entrepreneur` |
 | 5 | カリキュラム動画 | `/videos` | マイクラ(→`/minecraft-sdgs`)・発表・AI・ロボット | quest のカテゴリブロックUIパターン |
 | 6 | 息抜きの場所 | `/asobiba` | メンバー作ゲーム+黄昏の対話室(`/twilight`) | twilight実装済み |
-| 7 | ミライクラフト | `/mirai` | PLAY CLAFT・アプリ開発・ひらめきポスト(`/hirameki-post`) | mirai/hirameki-post実装済み |
+| 7 | ミライクラフト | `/mirai` | PLAY CLAFT・アプリ開発・ひらめきポスト(`/hirameki-post`への入口カードは維持) | mirai/hirameki-post実装済み |
+| 8 | ひらめきポスト/Q&A | `/hirameki-post` | 2026-09-14変更: ナビ独立項目化。`/mirai`内の入口カードは維持しつつ、ハンバーガーメニューからも直接遷移できるようにした | hirameki-post実装済み |
 
 ### 既存ページの行き先
 

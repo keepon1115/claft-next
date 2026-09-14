@@ -49,11 +49,14 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [...]
 🗺 仕事・社会を知る
    ├ 🧭 Yononakaマップ → /yononaka-map
    └ 🏋️ クエストに出かける → /quest
-🔭 視点をふやす → /perspectives
+🌏 よのなかを知る
+   ├ 😆 Yononaka → /yononaka
+   └ 🔭 視点をふやす → /perspectives
 🏘 メンバーを知る → /members
 🎬 カリキュラム動画 → /videos
 🕹 息抜きの場所 → /asobiba
 🚀 ミライクラフト → /mirai
+💡 ひらめきポスト/Q&A → /hirameki-post   (2026-09-14: ナビ独立項目化。/mirai内の入口カードは維持)
 ```
 
 管理セクション(ADMIN_NAV_ITEMS)は現Sidebarの6項目をそのまま移植。

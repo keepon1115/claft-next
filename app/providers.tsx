@@ -351,7 +351,7 @@ class AuthErrorBoundary extends React.Component<AuthErrorBoundaryProps, AuthErro
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <AuthErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} disableTransitionOnChange>
         <AuthProvider>
           <AnimationProvider>
             <PerformanceProvider>
