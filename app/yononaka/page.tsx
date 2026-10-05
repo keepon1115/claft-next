@@ -91,16 +91,6 @@ export default function YononakaPage() {
               <div className="grid grid-cols-2 gap-4">
                 {/* 左上：カード1 */}
                 <a
-                  href="https://forms.gle/2vMqMifirx1uVw499"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
-                >
-                  【Yo127】<br />
-                  学校の勉強や何かを覚えるときに工夫してることは？ 
-                </a>
-                {/* 右上：カード2 */}
-                <a
                   href="https://forms.gle/RYhyqZPyHHmaQYxX9"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -109,15 +99,25 @@ export default function YononakaPage() {
                   【Yo128】<br />
                   今の気分を教えて！
                 </a>
-                {/* 左下：カード3（新規） */}
+                {/* 右上：カード2 */}
                 <a
                   href="https://forms.gle/2cLFjNhJTh4gAFuw9"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                  className="block bg-gradient-to-br from-orange-100 to-yellow-100 border-2 border-orange-200 rounded-xl p-4 font-bold text-amber-900 hover:translate-x-1 hover:scale-105 transition-all duration-300 cursor-pointer"
                 >
                   【Yo129】<br />
                   こんな授業おもろかった！
+                </a>
+                {/* 左下：カード3（新規） */}
+                <a
+                  href="https://forms.gle/M7rTG8A8r5FV95xF6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                >
+                  【Yo130】<br />
+                  ある日、外国から転校生が来ることになりました！
                 </a>
                 {/* 右下：チェックボタン */}
                 <a
