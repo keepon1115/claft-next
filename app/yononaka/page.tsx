@@ -159,10 +159,10 @@ export default function YononakaPage() {
                 <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl p-6 h-full flex flex-col">
                   <h3 className="text-xl font-bold text-amber-900 mb-3">なんでも展示会</h3>
                   <div className="text-amber-700 text-sm space-y-1 mb-4">
-                    <p>参加者募集！</p>
+                    <p>ユニークな作品、今回もたくさん集まってます！作品へのコメントお願いします！☺</p>
                   </div>
-                  <a href="https://forms.gle/vLSmicDr1Xhh9vKm7" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
-                    くわしくみる
+                  <a href="https://claft.keeponlearning.fun/futurecraft/Exhibition2611" target="_blank" rel="noopener noreferrer" className="mt-auto bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold py-2 px-4 rounded-lg hover:shadow-md transition-all duration-300">
+                    作品へコメントする
                   </a>
                 </div>
               </div>
