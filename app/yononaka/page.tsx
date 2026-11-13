@@ -116,7 +116,7 @@ export default function YononakaPage() {
                   rel="noopener noreferrer"
                   className="group flex items-center justify-center bg-gradient-to-r from-yellow-200 to-orange-200 text-amber-900 font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  【Yo135】<br />
+                  【Yo133】<br />
                   最強に楽しい冬休み
                 </a>
                 {/* 右下：チェックボタン */}
