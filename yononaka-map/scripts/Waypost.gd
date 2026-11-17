@@ -10,12 +10,15 @@ extends Node2D
 const ARROWS: Dictionary = {"up": "↑", "down": "↓", "left": "←", "right": "→"}
 
 const BOARD_W    := 100.0
-const BOARD_H    := 14.0
+const BOARD_H    := 16.0
 const BOARD_GAP  :=  2.0
 const POST_COL   := Color("#8B6347")
-const BOARD_COL  := Color("#C8A46E")
+const BOARD_COL  := Color("#F3E4C0")   # 明るい板（文字とのコントラスト確保）
 const EDGE_COL   := Color("#8B6347")
-const TEXT_COL   := Color("#5C3A21")
+const TEXT_COL   := Color("#3A2616")
+# 文字は大きく描いてから縮小する（カメラの拡大でぼやけないように）
+const TEXT_RES   := 4.0
+const TEXT_SIZE  := 10.0
 
 # scale: カメラズームが大きいマップ（広場 zoom=3）では 0.8 程度に縮める
 static func make(pos: Vector2, arms: Array, post_scale: float = 1.0) -> Waypost:
@@ -51,15 +54,16 @@ func _build(arms: Array) -> void:
 			bx -= 8.0
 		elif dir == "right":
 			bx += 8.0
+		_rect(bx - 1.0, y - 1.0, BOARD_W + 2.0, BOARD_H + 2.0, EDGE_COL)   # ふち
 		_rect(bx, y, BOARD_W, BOARD_H, BOARD_COL)
-		_rect(bx, y, BOARD_W, 2.0, EDGE_COL)
 		var l := Label.new()
 		l.text                 = "%s %s" % [ARROWS.get(dir, "・"), str(arm.get("text", ""))]
-		l.position             = Vector2(bx, y + 1.0)
-		l.size                 = Vector2(BOARD_W, BOARD_H - 1.0)
+		l.position             = Vector2(bx, y)
+		l.size                 = Vector2(BOARD_W, BOARD_H) * TEXT_RES
+		l.scale                = Vector2.ONE / TEXT_RES
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-		l.add_theme_font_size_override("font_size", 9)
+		l.add_theme_font_size_override("font_size", int(TEXT_SIZE * TEXT_RES))
 		l.add_theme_color_override("font_color", TEXT_COL)
 		add_child(l)
 

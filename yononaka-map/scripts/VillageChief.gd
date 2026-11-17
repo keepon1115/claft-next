@@ -47,15 +47,19 @@ func _setup_notification() -> void:
 	lbl.add_theme_color_override("font_color", Color("#FFFFFF"))
 	_notification.add_child(lbl)
 
-	# フィールドメッセージ（★の下）
-	# font_size は world空間 → camera zoom=3 で3倍表示されるので小さめに
+	# フィールドメッセージ（★の下）。紙色の札にのせて、草の上でも読めるようにする。
+	# 文字は4倍で描いて縮小する（カメラの拡大でぼやけないように）
 	_field_msg = Label.new()
-	_field_msg.text = "村長が、なにか話したそうにこっちを見ている"
-	_field_msg.size = Vector2(200, 12)
-	_field_msg.position = Vector2(-100, 16)
+	_field_msg.text = "村長が、なにか話したそうに\nこっちを見ている"
+	_field_msg.size = Vector2(112, 26) * 4.0
+	_field_msg.scale = Vector2(0.25, 0.25)
+	_field_msg.position = Vector2(-56, 14)
 	_field_msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_field_msg.add_theme_font_size_override("font_size", 7)
-	_field_msg.add_theme_color_override("font_color", Color("#5C3A21"))
+	_field_msg.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	_field_msg.add_theme_font_size_override("font_size", 30)
+	_field_msg.add_theme_color_override("font_color", UIStyle.C_INK)
+	_field_msg.add_theme_stylebox_override("normal",
+		UIStyle.box(Color(UIStyle.C_PAPER, 0.92), UIStyle.C_BROWN, 4, 16))
 	_notification.add_child(_field_msg)
 
 	_notification.visible = false

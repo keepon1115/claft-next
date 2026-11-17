@@ -130,7 +130,12 @@ export default function YononakaMapPage() {
             </div>
 
             {/* プレイエリア */}
-            <div className="rounded-lg border-4 border-[#8b5e3c] bg-[#e8d9ba] shadow-[6px_6px_0_rgba(139,94,60,0.35)] overflow-hidden">
+            {/* ゲームは縦長(720x1280)。枠も縦長にし、画面の高さに収まる幅までに抑える */}
+            <div
+              className={`rounded-lg border-4 border-[#8b5e3c] bg-[#e8d9ba] shadow-[6px_6px_0_rgba(139,94,60,0.35)] overflow-hidden ${
+                mapStatus === 'ready' ? 'mx-auto w-full max-w-[calc(85dvh*9/16)]' : ''
+              }`}
+            >
               {mapStatus === 'ready' ? (
                 <>
                   <iframe
@@ -139,7 +144,7 @@ export default function YononakaMapPage() {
                     title="Yononakaマップ"
                     allow="fullscreen"
                     onLoad={() => void sendAuth()}
-                    className="block w-full aspect-video max-h-[80dvh] border-none bg-black"
+                    className="block w-full aspect-[9/16] border-none bg-black"
                   />
                   <div className="flex justify-end px-3 py-2 bg-[#8b5e3c]">
                     <button
