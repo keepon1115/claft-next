@@ -364,17 +364,36 @@ const LevelUpModal: React.FC<LevelUpModalProps> = ({
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ 
-                  scale: [0, 1.2, 1],
-                  rotate: [0, 360, 0],
-                  transition: {
+                  scale: 1,
+                  rotate: 360
+                }}
+                transition={{
+                  scale: {
                     type: "spring",
                     damping: 20,
                     stiffness: 300
+                  },
+                  rotate: {
+                    duration: 1,
+                    ease: "easeInOut"
                   }
                 }}
                 className="mb-6"
               >
-                <div className="text-6xl mb-2">🎉</div>
+                {/* バウンス効果のための内部アニメーション */}
+                <motion.div
+                  initial={{ scale: 1 }}
+                  animate={{ 
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    delay: 0.8,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <div className="text-6xl mb-2">🎉</div>
+                </motion.div>
                 <h2 className="text-3xl font-black mb-2">レベルアップ！</h2>
                 <div className="text-xl">
                   <span className="text-yellow-300">Level {level}</span> 達成

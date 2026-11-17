@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { useUserStore, useUserProfile, useUserStats } from '@/stores/userStore';
+import { TriangleAlert, Rocket, Pencil, LogIn } from 'lucide-react';
 
 interface ProfileCardProps {
   className?: string;
@@ -88,7 +89,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
       <div className="profile-card">
         <div className="profile-header">
           <div className="text-center text-red-600">
-            <i className="fas fa-exclamation-triangle text-2xl mb-4"></i>
+            <TriangleAlert size="1em" className="text-2xl mb-4" />
             <p>{error}</p>
           </div>
         </div>
@@ -107,6 +108,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
     companion: '',
     catchphrase: '',
     message: '',
+    favoriteNowImageUrl: '',
     profileCompletion: 85
   };
 
@@ -123,7 +125,27 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
         <div className="profile-header">
           <div className="profile-avatar">
             <div className="avatar-container">
-              <i className="fas fa-user-astronaut"></i>
+              {displayData.avatarUrl ? (
+                <img 
+                  src={displayData.avatarUrl} 
+                  alt={`${displayData.nickname}のアバター`}
+                  className="avatar-image"
+                  onLoad={() => {
+                    console.log('✅ アバター画像読み込み成功:', displayData.avatarUrl)
+                  }}
+                  onError={(e) => {
+                    console.warn('⚠️ アバター画像読み込み失敗:', displayData.avatarUrl)
+                    // 画像読み込みエラー時はデフォルトアイコンを表示
+                    e.currentTarget.style.display = 'none'
+                    const fallbackIcon = e.currentTarget.nextElementSibling as HTMLElement
+                    if (fallbackIcon) fallbackIcon.style.display = 'block'
+                  }}
+                />
+              ) : null}
+              <Rocket
+                size="1em"
+                style={{ display: displayData.avatarUrl ? 'none' : 'block' }}
+              />
             </div>
             <div className="status-indicator"></div>
           </div>
@@ -209,9 +231,27 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ className = '' }) => {
             <div className="comment-text">{displayData.message}</div>
           </div>
 
+          {/* 今ハマっていること・見てほしいモノなど（画像） */}
+          {displayData.favoriteNowImageUrl && (
+            <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span>📸</span>
+                <span className="font-semibold text-gray-800">今ハマっていること・見てほしいモノなど</span>
+              </div>
+              <div className="rounded-lg overflow-hidden">
+                <img
+                  src={displayData.favoriteNowImageUrl}
+                  alt="今ハマっていること・見てほしいモノなど"
+                  className="w-full h-auto object-cover"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* 編集ボタン - 認証ガード付き */}
           <button onClick={handleEditClick} className="edit-profile-btn">
-            <i className={`fas ${isAuthenticated ? 'fa-pencil-alt' : 'fa-sign-in-alt'}`}></i>
+            {isAuthenticated ? <Pencil size="1em" /> : <LogIn size="1em" />}
             {isAuthenticated ? 'プロフィール編集' : 'ログインして編集'}
           </button>
         </div>

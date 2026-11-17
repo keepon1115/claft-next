@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"c:\\\\dev\\\\Yononaka マップ\\\\assets\\\\raw\\\\NinjaAdventure\" -Directory -Recurse -Depth 1 | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"c:\\\\dev\\\\Yononaka マップ\\\\assets\\\\raw\\\\NinjaAdventure\\\\\", \"\"\\) })",
+      "PowerShell($root = \"c:\\\\dev\\\\Yononaka マップ\\\\assets\\\\raw\\\\NinjaAdventure\\\\Ninja Adventure - Asset Pack\"; Get-ChildItem \"$root\\\\Backgrounds\" -Directory | Select-Object -ExpandProperty Name; \"\"; Get-ChildItem \"$root\\\\Backgrounds\" -Recurse -File | Select-Object -First 30 -ExpandProperty Name; \"\"; Get-ChildItem \"$root\\\\Actor\\\\Characters\" -ErrorAction SilentlyContinue | Select-Object -First 10 -ExpandProperty Name; Get-ChildItem \"$root\\\\Actor\\\\Character\" -Directory | Select-Object -First 15 -ExpandProperty Name)",
+      "PowerShell($root = \"c:\\\\dev\\\\Yononaka マップ\\\\assets\\\\raw\\\\NinjaAdventure\\\\Ninja Adventure - Asset Pack\"; Get-ChildItem \"$root\\\\Backgrounds\\\\Tilesets\" -File | Select-Object -ExpandProperty Name; \"\"; \\(Get-ChildItem \"$root\\\\Actor\\\\Character\" -Directory | Measure-Object\\).Count; Get-ChildItem \"$root\\\\Actor\\\\Character\\\\Boy\" -Recurse -File | Select-Object -First 10 | ForEach-Object { \"$\\($_.Directory.Name\\)\\\\$\\($_.Name\\)\" })",
+      "PowerShell(node \"c:\\\\dev\\\\Yononaka �}�b�v\\\\tools\\\\generate_tiles.js\")",
+      "Read(//c/dev/godot/**)",
+      "PowerShell(Get-ChildItem \"C:\\\\dev\\\\godot\" -Force | Select-Object Name, Length; Expand-Archive \"$env:USERPROFILE\\\\Downloads\\\\Godot_v4.6.3-stable_win64.exe.zip\" -DestinationPath \"C:\\\\dev\\\\godot\" -Force; Get-ChildItem \"C:\\\\dev\\\\godot\" | Select-Object Name)",
+      "PowerShell(Get-ChildItem \"C:\\\\dev\\\\godot\" -Force | ForEach-Object { $_.Name })",
+      "PowerShell(& \"C:\\\\dev\\\\godot\\\\Godot_v4.6.3-stable_win64_console.exe\" --headless --path \"c:\\\\dev\\\\Yononaka マップ\" --import 2>&1 | Select-Object -Last 20; \"EXIT: $LASTEXITCODE\")",
+      "PowerShell(& \"C:\\\\dev\\\\godot\\\\Godot_v4.6.3-stable_win64_console.exe\" --headless --path \"c:\\\\dev\\\\Yononaka マップ\" \"res://scenes/KodawariMap.tscn\" --quit-after 5 2>&1 | Select-Object -First 40; \"EXIT: $LASTEXITCODE\")",
+      "PowerShell(& \"C:\\\\dev\\\\godot\\\\Godot_v4.6.3-stable_win64_console.exe\" --path \"c:\\\\dev\\\\Yononaka マップ\" -s tools/screenshot.gd 2>&1 | Select-String \"saved|ERROR|SCRIPT\" | Select-Object -First 10; \"EXIT: $LASTEXITCODE\")"
+    ],
+    "additionalDirectories": [
+      "c:\\dev\\Yononaka �}�b�v\\assets\\tiles"
+    ]
+  }
+}

@@ -1,9 +1,13 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient, safeSupabaseQuery, SupabaseError } from '@/lib/supabase/client'
+import { useUserStore } from '@/stores/userStore'
+import { useQuestStore } from '@/stores/questStore'
+import { useMinecraftSdgsStore } from '@/stores/minecraftSdgsStore'
+import { useTutorialStore } from '@/stores/tutorialStore'
 import type { UserProfile, UserStats } from '@/types'
 import type { User as AuthUser } from '@supabase/supabase-js'
 
@@ -26,6 +30,9 @@ interface AuthState {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, password: string, nickname?: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<{ success: boolean; error?: string }>
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
+  updateEmail: (newEmail: string) => Promise<{ success: boolean; error?: string }>
   checkAdminStatus: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>
   clearError: () => void
@@ -37,9 +44,8 @@ interface AuthState {
 // =====================================================
 
 export const useAuthStore = create<AuthState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           // 初期状態
           user: null,
@@ -54,6 +60,16 @@ export const useAuthStore = create<AuthState>()(
           // 初期化
           // =====================================================
           initialize: async () => {
+            // 既に初期化済み/ローディング中はスキップ
+            const alreadyInitialized = get().isInitialized
+            const alreadyLoading = get().isLoading
+            if (alreadyInitialized || alreadyLoading) {
+              console.log(`Auth: 初期化スキップ (initialized=${alreadyInitialized}, loading=${alreadyLoading})`)
+              return
+            }
+
+            console.log('Auth: 初期化開始')
+
             set((state) => {
               state.isLoading = true
               state.error = null
@@ -62,10 +78,10 @@ export const useAuthStore = create<AuthState>()(
             try {
               // Supabaseクライアントの初期化を試行
               const supabase = createBrowserSupabaseClient()
-              
+
               // 現在のセッションを取得
               const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-              
+
               if (sessionError) {
                 throw new Error(`セッション取得エラー: ${sessionError.message}`)
               }
@@ -80,7 +96,7 @@ export const useAuthStore = create<AuthState>()(
               // 認証状態の変更を監視
               supabase.auth.onAuthStateChange(async (event, session) => {
                 console.log('Auth state changed:', event, !!session?.user)
-                
+
                 try {
                   if (session?.user) {
                     set((state) => {
@@ -96,6 +112,10 @@ export const useAuthStore = create<AuthState>()(
                       state.isAdmin = false
                       state.error = null
                     })
+
+              // クエスト/SDGsストアのメモリ状態を完全初期化
+              try { useQuestStore.getState().setDemoMode() } catch {}
+              try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
                   }
                 } catch (error) {
                   console.error('認証状態変更エラー:', error)
@@ -108,15 +128,16 @@ export const useAuthStore = create<AuthState>()(
               console.log('✅ Supabase認証初期化完了')
               set((state) => {
                 state.isInitialized = true
+                state.isLoading = false
               })
-
             } catch (error) {
               console.warn('⚠️ Supabase初期化失敗、開発モックモードで動作します:', error)
-              
+
               // 開発環境でのモックモード
               if (process.env.NODE_ENV === 'development') {
                 set((state) => {
                   state.isInitialized = true
+                  state.isLoading = false
                   state.error = '開発モード: Supabase設定なしで動作中'
                   state.user = null
                   state.profile = null
@@ -125,14 +146,12 @@ export const useAuthStore = create<AuthState>()(
                 })
                 console.log('🔧 開発モード: 認証機能を無効化して動作継続')
               } else {
-              set((state) => {
+                set((state) => {
+                  state.isInitialized = true
+                  state.isLoading = false
                   state.error = error instanceof Error ? error.message : '認証初期化に失敗しました'
-              })
+                })
               }
-            } finally {
-              set((state) => {
-                state.isLoading = false
-              })
             }
           },
 
@@ -228,6 +247,18 @@ export const useAuthStore = create<AuthState>()(
                 }
                 
                 throw new Error(errorMessage)
+              }
+
+              // 成功時：即座にユーザー情報を反映し、ポストログイン処理を実行
+              if (data?.user) {
+                set((state) => {
+                  state.user = data.user as any
+                })
+                try {
+                  await get().handlePostLogin(data.user as any)
+                } catch (e) {
+                  console.warn('handlePostLogin 実行時の警告:', e)
+                }
               }
 
               return { success: true }
@@ -327,16 +358,122 @@ export const useAuthStore = create<AuthState>()(
                   state.error = '開発モード: Supabase設定なしで動作中'
                 })
 
+                // 即時リセット（モック時も実施）
+                try { useAuthStore.persist?.clearStorage?.() } catch {}
+                try { useUserStore.persist?.clearStorage?.() } catch {}
+                try { useQuestStore.persist?.clearStorage?.() } catch {}
+                try { useMinecraftSdgsStore.persist?.clearStorage?.() } catch {}
+                try { localStorage.removeItem('sdgs:return') } catch {}
+
+                // 他ストアのメモリ状態もニュートラルに戻す
+                try { useQuestStore.getState().setDemoMode() } catch {}
+                try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
+                try {
+                  useUserStore.setState((state) => ({
+                    profileData: {
+                      nickname: 'CLAFT冒険者',
+                      character: '',
+                      skills: [''],
+                      weakness: '',
+                      favoritePlace: '',
+                      energyCharge: '',
+                      companion: '',
+                      catchphrase: '',
+                      message: '',
+                      avatarUrl: '',
+                      favoriteNowImageUrl: '',
+                      profileCompletion: 0
+                    },
+                    extendedStats: null,
+                    achievements: state.achievements.map(a => ({ ...a, isUnlocked: false, unlockedAt: undefined })),
+                    recentActivities: [],
+                    isLoading: false,
+                    isSaving: false,
+                    error: null,
+                    lastSyncTime: null,
+                    isInitialized: false
+                  }))
+                } catch {}
+
                 return { success: true }
               }
 
               // 実際のSupabaseログアウト
               const supabase = createBrowserSupabaseClient()
-              const { error } = await supabase.auth.signOut()
-              
-              if (error) {
-                throw new Error(`ログアウトエラー: ${error.message}`)
+              let signOutError: any = null
+              try {
+                const { error } = await supabase.auth.signOut({ scope: 'global' as any })
+                signOutError = error
+              } catch (e) {
+                signOutError = e
               }
+
+              // グローバルサインアウトがセッション不整合等で失敗する場合はローカルにフォールバック
+              if (signOutError) {
+                const message = (signOutError as any)?.message || ''
+                const status = (signOutError as any)?.status
+                const shouldFallbackToLocal =
+                  status === 401 || status === 403 ||
+                  message.includes('session') ||
+                  message.includes('refresh') ||
+                  message.includes('not allowed')
+
+                if (shouldFallbackToLocal) {
+                  try {
+                    await supabase.auth.signOut({ scope: 'local' as any })
+                  } catch {}
+                } else {
+                  // それ以外のエラーはログとして保持（ローカル状態は後続でクリア）
+                  console.warn('Supabase signOut failed:', signOutError)
+                }
+              }
+
+              // 即時にローカル状態・永続データをクリア（共有端末対策）
+              set((state) => {
+                state.user = null
+                state.profile = null
+                state.stats = null
+                state.isAdmin = false
+                state.error = null
+              })
+
+              try { useAuthStore.persist?.clearStorage?.() } catch {}
+              try { useUserStore.persist?.clearStorage?.() } catch {}
+              try { useQuestStore.persist?.clearStorage?.() } catch {}
+              try { useMinecraftSdgsStore.persist?.clearStorage?.() } catch {}
+              try { useTutorialStore.persist?.clearStorage?.() } catch {}
+              try { useTutorialStore.persist?.clearStorage?.() } catch {}
+              try { localStorage.removeItem('sdgs:return') } catch {}
+
+              // 他ストアのメモリ状態を即座に中立化
+              try { useQuestStore.getState().setDemoMode() } catch {}
+              try { useMinecraftSdgsStore.getState().setDemoMode() } catch {}
+              try {
+                useUserStore.setState((state) => ({
+                  profileData: {
+                    nickname: 'CLAFT冒険者',
+                    character: '',
+                    skills: [''],
+                    weakness: '',
+                    favoritePlace: '',
+                    energyCharge: '',
+                    companion: '',
+                    catchphrase: '',
+                    message: '',
+                    avatarUrl: '',
+                    favoriteNowImageUrl: '',
+                    profileCompletion: 0
+                  },
+                  extendedStats: null,
+                  achievements: state.achievements.map(a => ({ ...a, isUnlocked: false, unlockedAt: undefined })),
+                  recentActivities: [],
+                  isLoading: false,
+                  isSaving: false,
+                  error: null,
+                  lastSyncTime: null,
+                  isInitialized: false
+                }))
+              } catch {}
 
               return { success: true }
 
@@ -345,6 +482,165 @@ export const useAuthStore = create<AuthState>()(
               set((state) => {
                 state.error = errorMessage
               })
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // パスワードリセット
+          // =====================================================
+          resetPassword: async (email: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!email.trim()) {
+                throw new Error('メールアドレスを入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: パスワードリセットメール送信をシミュレーション')
+                console.log('📧 リセットメール送信先:', email.trim())
+                
+                // 開発モードでは成功をシミュレート
+                return { success: true }
+              }
+
+              // 実際のSupabaseパスワードリセット
+              const supabase = createBrowserSupabaseClient()
+              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+              const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo: `${siteUrl}/auth/reset-password`
+              })
+              
+              if (error) {
+                throw new Error(`パスワードリセットメール送信エラー: ${error.message}`)
+              }
+
+              console.log('✅ パスワードリセットメール送信完了')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'パスワードリセットメール送信に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ パスワードリセットエラー:', error)
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // パスワード更新
+          // =====================================================
+          updatePassword: async (newPassword: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!newPassword.trim()) {
+                throw new Error('新しいパスワードを入力してください')
+              }
+
+              if (newPassword.length < 6) {
+                throw new Error('パスワードは6文字以上で入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: パスワード更新をシミュレーション')
+                return { success: true }
+              }
+
+              // 実際のSupabaseパスワード更新
+              const supabase = createBrowserSupabaseClient()
+              const { error } = await supabase.auth.updateUser({
+                password: newPassword
+              })
+              
+              if (error) {
+                throw new Error(`パスワード更新エラー: ${error.message}`)
+              }
+
+              console.log('✅ パスワード更新完了')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'パスワードの更新に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ パスワード更新エラー:', error)
+              return { success: false, error: errorMessage }
+            } finally {
+              set((state) => {
+                state.isLoading = false
+              })
+            }
+          },
+
+          // =====================================================
+          // メールアドレス更新
+          // =====================================================
+          updateEmail: async (newEmail: string) => {
+            set((state) => {
+              state.isLoading = true
+              state.error = null
+            })
+
+            try {
+              // バリデーション
+              if (!newEmail.trim()) {
+                throw new Error('新しいメールアドレスを入力してください')
+              }
+
+              // 簡単なメールアドレス形式チェック
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+              if (!emailRegex.test(newEmail.trim())) {
+                throw new Error('有効なメールアドレスを入力してください')
+              }
+
+              // 開発モックモードのチェック
+              if (process.env.NODE_ENV === 'development' && get().error?.includes('開発モード')) {
+                console.log('🔧 開発モード: メールアドレス更新をシミュレーション')
+                console.log('📧 新しいメールアドレス:', newEmail.trim())
+                return { success: true }
+              }
+
+              // 実際のSupabaseメールアドレス更新
+              const supabase = createBrowserSupabaseClient()
+              const { error } = await supabase.auth.updateUser({
+                email: newEmail.trim()
+              })
+              
+              if (error) {
+                throw new Error(`メールアドレス更新エラー: ${error.message}`)
+              }
+
+              console.log('✅ メールアドレス更新完了（確認メールをご確認ください）')
+              return { success: true }
+
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'メールアドレスの更新に失敗しました'
+              set((state) => {
+                state.error = errorMessage
+              })
+              console.error('❌ メールアドレス更新エラー:', error)
               return { success: false, error: errorMessage }
             } finally {
               set((state) => {
@@ -552,17 +848,11 @@ export const useAuthStore = create<AuthState>()(
           name: 'claft-auth-store',
           partialize: (state) => ({
             // セキュリティのため、永続化するのは必要最小限のデータのみ
-            isAdmin: state.isAdmin,
-            isInitialized: state.isInitialized
+            isAdmin: state.isAdmin
           })
         }
       )
-    ),
-    {
-      name: 'auth-store',
-      enabled: process.env.NODE_ENV === 'development'
-    }
-  )
+    )
 )
 
 // =====================================================
@@ -590,14 +880,17 @@ export const useAuth = () => {
     login: store.login,
     signup: store.signup,
     logout: store.logout,
+    resetPassword: store.resetPassword,
+    updatePassword: store.updatePassword,
+    updateEmail: store.updateEmail,
     updateProfile: store.updateProfile,
     clearError: store.clearError
   }
 }
 
 export const useAuthActions = () => {
-  const { initialize, login, signup, logout, updateProfile, clearError } = useAuthStore()
-  return { initialize, login, signup, logout, updateProfile, clearError }
+  const { initialize, login, signup, logout, resetPassword, updatePassword, updateEmail, updateProfile, clearError } = useAuthStore()
+  return { initialize, login, signup, logout, resetPassword, updatePassword, updateEmail, updateProfile, clearError }
 }
 
 export const useAuthState = () => {

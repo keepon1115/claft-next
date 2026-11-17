@@ -13,9 +13,9 @@ async function checkAdminPermission() {
   const supabase = createServerSupabaseClient(cookieStore)
   
   try {
-    // セッション確認
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session?.user) {
+    // getUser() でサーバー側JWT検証を行う（getSession() はローカルデコードのみ）
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       throw new Error('認証が必要です')
     }
     
@@ -23,7 +23,7 @@ async function checkAdminPermission() {
     const { data: adminUser, error: adminError } = await supabase
       .from('admin_users')
       .select('user_id, email, is_active')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
     
@@ -32,13 +32,62 @@ async function checkAdminPermission() {
     }
     
     return {
-      userId: session.user.id,
+      userId: user.id,
       email: adminUser.email,
       supabase
     }
   } catch (error) {
     console.error('権限チェックエラー:', error)
     redirect('/unauthorized')
+  }
+}
+
+/**
+ * ユーザー情報を複数のソースから取得するヘルパー関数
+ */
+async function getUserInfo(supabase: any, userId: string) {
+  try {
+    // まず users_profile から取得
+    const { data: profile } = await supabase
+      .from('users_profile')
+      .select('id, nickname, email')
+      .eq('id', userId)
+      .single()
+    
+    if (profile?.email) {
+      return profile
+    }
+    
+    // users_profile にない場合、auth.users から取得を試行
+    try {
+      const { data: { users }, error } = await supabase.auth.admin.listUsers()
+      if (!error && users) {
+        const authUser = users.find(u => u.id === userId)
+        if (authUser) {
+          return {
+            id: userId,
+            nickname: authUser.user_metadata?.full_name || authUser.user_metadata?.name || null,
+            email: authUser.email || `user-${userId.substring(0, 8)}@example.com`
+          }
+        }
+      }
+    } catch (authError) {
+      console.warn('auth.admin.listUsers エラー:', authError)
+    }
+    
+    // デフォルト値を返す
+    return {
+      id: userId,
+      nickname: null,
+      email: `user-${userId.substring(0, 8)}@example.com`
+    }
+  } catch (error) {
+    console.error('ユーザー情報取得エラー:', error)
+    return {
+      id: userId,
+      nickname: null,
+      email: `user-${userId.substring(0, 8)}@example.com`
+    }
   }
 }
 
@@ -115,7 +164,7 @@ export async function approveQuest(userId: string, stageId: number) {
     const { userId: adminUserId, supabase } = await checkAdminPermission()
     
     // 入力値検証
-    if (!userId || !stageId || stageId < 1 || stageId > 6) {
+    if (!userId || !stageId || stageId < 1 || stageId > 12) {
       throw new Error('無効なパラメータです')
     }
     
@@ -151,6 +200,7 @@ export async function approveQuest(userId: string, stageId: number) {
     
     // 2. 次のステージの処理
     if (stageId < 6) {
+      // ステージ1-5の場合は通常の次ステージ解放
       const nextStageId = stageId + 1
       
       // 次のステージのレコードが存在するか確認
@@ -191,6 +241,79 @@ export async function approveQuest(userId: string, stageId: number) {
         
         updates.push(unlockNextStage)
       }
+    } else if (stageId === 6) {
+      // ステージ6承認の場合は山エリア（ステージ7）を解放
+      const { data: existingStage7, error: checkError } = await supabase
+        .from('quest_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('stage_id', 7)
+        .maybeSingle()
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+      
+      if (!existingStage7) {
+        // ステージ7が存在しない場合は新規作成
+        const insertStage7 = supabase
+          .from('quest_progress')
+          .insert({
+            user_id: userId,
+            stage_id: 7,
+            status: 'current',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        
+        updates.push(insertStage7)
+      } else if (existingStage7.status === 'locked') {
+        // 存在するがロック状態の場合は解放
+        const unlockStage7 = supabase
+          .from('quest_progress')
+          .update({ 
+            status: 'current',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+          .eq('stage_id', 7)
+        
+        updates.push(unlockStage7)
+      }
+    } else if (stageId >= 7 && stageId < 12) {
+      // 7-11: 通常の次ステージ解放（7→8 ... 11→12）
+      const nextStageId = stageId + 1
+      const { data: existingNext, error: checkError } = await supabase
+        .from('quest_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('stage_id', nextStageId)
+        .maybeSingle()
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+      if (!existingNext) {
+        const insertNextStage = supabase
+          .from('quest_progress')
+          .insert({
+            user_id: userId,
+            stage_id: nextStageId,
+            status: 'current',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        updates.push(insertNextStage)
+      } else if (existingNext.status === 'locked') {
+        const unlockNextStage = supabase
+          .from('quest_progress')
+          .update({ status: 'current', updated_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('stage_id', nextStageId)
+        updates.push(unlockNextStage)
+      }
+    } else if (stageId === 12) {
+      // 12承認：次の数値ステージはなし。ジブンクラフト解放はクライアントのcheckAreaUnlockで処理
+      // ここでは特別なDB処理は不要（完了更新は既にupdatesに含まれている）
     }
     
     // 並列実行でパフォーマンス向上
@@ -205,13 +328,17 @@ export async function approveQuest(userId: string, stageId: number) {
     // 3. 統計情報の更新
     await updateUserStats(userId, 'quest_completed')
     
-    // キャッシュを再検証
-    revalidatePath('/admin')
+    // キャッシュを再検証（エラーが発生しても処理を継続）
+    try {
+      revalidatePath('/admin')
+    } catch (revalidateError) {
+      console.warn('キャッシュ再検証エラー:', revalidateError)
+    }
     
     return {
       success: true,
       message: `ステージ${stageId}を承認しました`,
-      nextStageUnlocked: stageId < 6
+      nextStageUnlocked: stageId <= 11
     }
     
   } catch (error) {
@@ -268,8 +395,12 @@ export async function rejectQuest(userId: string, stageId: number) {
       throw error
     }
     
-    // キャッシュを再検証
-    revalidatePath('/admin')
+    // キャッシュを再検証（エラーが発生しても処理を継続）
+    try {
+      revalidatePath('/admin')
+    } catch (revalidateError) {
+      console.warn('キャッシュ再検証エラー:', revalidateError)
+    }
     
     return {
       success: true,
@@ -430,6 +561,183 @@ export async function grantAdminAccess(userId: string, email: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : '管理者権限の付与に失敗しました'
+    }
+  }
+}
+
+// =====================================================
+// マイクラSDGs承認関連アクション
+// =====================================================
+
+/**
+ * マイクラSDGsステージを承認
+ */
+export async function approveMinecraftSdgsStage(
+  targetUserId: string,
+  stageId: number
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const { userId: adminUserId, supabase } = await checkAdminPermission()
+    
+    // 承認待ちのステージを取得
+    const { data: progress, error: fetchError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+      .eq('status', 'pending_approval')
+      .single()
+    
+    if (fetchError || !progress) {
+      return {
+        success: false,
+        error: '承認待ちのステージが見つかりません'
+      }
+    }
+    
+    // ステージを承認（completedに変更）
+    const { error: updateError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        approved_at: new Date().toISOString(),
+        approved_by: adminUserId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+    
+    if (updateError) throw updateError
+    
+    // 次のステージを解放
+    const nextStageId = stageId + 1
+    if (nextStageId <= 19) {
+      // 既存レコードがあるか確認
+      const { data: nextProgress } = await supabase
+        .from('minecraft_sdgs_progress')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .eq('stage_id', nextStageId)
+        .single()
+      
+      if (!nextProgress) {
+        // 次のステージのレコードを作成
+        await supabase
+          .from('minecraft_sdgs_progress')
+          .insert({
+            user_id: targetUserId,
+            stage_id: nextStageId,
+            status: 'current',
+            baseline_stage: progress.baseline_stage || 0
+          })
+      } else {
+        // 既存レコードをcurrentに更新
+        await supabase
+          .from('minecraft_sdgs_progress')
+          .update({
+            status: 'current',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', targetUserId)
+          .eq('stage_id', nextStageId)
+      }
+    }
+    
+    // 通知を送信
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: targetUserId,
+        type: 'minecraft_sdgs_approval',
+        title: 'ステージが承認されました！',
+        message: `ステージ${stageId}が承認されました。次のステージに挑戦できます！`,
+        data: { stage_id: stageId, next_stage_id: nextStageId }
+      })
+    
+    revalidatePath('/admin/minecraft-sdgs')
+    revalidatePath('/minecraft-sdgs')
+    
+    return {
+      success: true,
+      message: `ステージ${stageId}を承認しました`
+    }
+    
+  } catch (error) {
+    console.error('マイクラSDGs承認エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'ステージの承認に失敗しました'
+    }
+  }
+}
+
+/**
+ * マイクラSDGsステージを却下
+ */
+export async function rejectMinecraftSdgsStage(
+  targetUserId: string,
+  stageId: number,
+  reason: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const { userId: adminUserId, supabase } = await checkAdminPermission()
+    
+    // 承認待ちのステージを取得
+    const { data: progress, error: fetchError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+      .eq('status', 'pending_approval')
+      .single()
+    
+    if (fetchError || !progress) {
+      return {
+        success: false,
+        error: '承認待ちのステージが見つかりません'
+      }
+    }
+    
+    // ステージを却下（programming_work_completedに戻す）
+    const { error: updateError } = await supabase
+      .from('minecraft_sdgs_progress')
+      .update({
+        status: 'programming_work_completed',
+        rejected_at: new Date().toISOString(),
+        rejected_by: adminUserId,
+        rejection_reason: reason,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', targetUserId)
+      .eq('stage_id', stageId)
+    
+    if (updateError) throw updateError
+    
+    // 通知を送信
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: targetUserId,
+        type: 'minecraft_sdgs_rejection',
+        title: 'ステージが却下されました',
+        message: `ステージ${stageId}が却下されました。理由: ${reason}`,
+        data: { stage_id: stageId, reason }
+      })
+    
+    revalidatePath('/admin/minecraft-sdgs')
+    revalidatePath('/minecraft-sdgs')
+    
+    return {
+      success: true,
+      message: `ステージ${stageId}を却下しました`
+    }
+    
+  } catch (error) {
+    console.error('マイクラSDGs却下エラー:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'ステージの却下に失敗しました'
     }
   }
 } 

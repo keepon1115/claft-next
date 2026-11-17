@@ -222,17 +222,47 @@ export default function ApprovalTable({
 
       if (fetchError) throw fetchError
 
-      // 別途 users_profile を取得
+      // ユーザー情報を複数のソースから取得
       const userIds = questData?.map(q => q.user_id) || []
       let userProfiles: any[] = []
       
       if (userIds.length > 0) {
+        // まず users_profile から取得
         const { data: profileData } = await supabase
           .from('users_profile')
           .select('id, nickname, email')
           .in('id', userIds)
         
         userProfiles = profileData || []
+        
+        // users_profile で見つからないユーザーの情報を auth.users から取得
+        const missingUserIds = userIds.filter(userId => 
+          !userProfiles.some(profile => profile.id === userId)
+        )
+        
+        if (missingUserIds.length > 0) {
+          try {
+            const { data: { users }, error: authError } = await supabase.auth.admin.listUsers()
+            if (!authError && users) {
+              const authUsers = users.filter(user => missingUserIds.includes(user.id))
+              const authUserProfiles = authUsers.map(user => ({
+                id: user.id,
+                nickname: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                email: user.email || 'unknown@example.com'
+              }))
+              userProfiles = [...userProfiles, ...authUserProfiles]
+            }
+          } catch (authError) {
+            console.warn('認証ユーザー情報取得エラー:', authError)
+            // 見つからないユーザーにはデフォルト値を設定
+            const defaultProfiles = missingUserIds.map(userId => ({
+              id: userId,
+              nickname: null,
+              email: `user-${userId.substring(0, 8)}@example.com`
+            }))
+            userProfiles = [...userProfiles, ...defaultProfiles]
+          }
+        }
       }
 
       // データを結合
@@ -379,7 +409,14 @@ export default function ApprovalTable({
         if (onApprovalChangeRef.current) onApprovalChangeRef.current()
         await loadPendingApprovalsRef.current?.()
       } else {
-        throw new Error(result.error)
+        // NEXT_REDIRECTエラーの場合は、エラーを投げずにログ出力のみ
+        if (result.error?.includes('NEXT_REDIRECT')) {
+          console.warn('NEXT_REDIRECT エラーが発生しましたが、処理は継続します:', result.error)
+          showNotification('warning', '承認処理は完了しましたが、画面の更新でエラーが発生しました')
+        } else {
+          console.error('一括承認エラー:', result.error)
+          showNotification('error', `一括承認に失敗しました: ${result.error}`)
+        }
       }
     } catch (error) {
       console.error('一括承認エラー:', error)

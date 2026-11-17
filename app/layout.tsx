@@ -23,14 +23,6 @@ export const metadata: Metadata = {
   title: "CLAFT - Creative Learning And Future Technology",
   description: "自分らしく、クリエイティブに成長するプラットフォーム",
   manifest: '/manifest.json',
-  themeColor: '#673AB7',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover'
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -41,27 +33,29 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: '#673AB7',
+  colorScheme: 'light',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <head>
-        {/* Font Awesome */}
-        <link 
-          rel="stylesheet" 
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-        />
         {/* Google Fonts preconnect for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
-      <body className={`${dotGothic16.variable} ${mPlusRounded.variable}`}>
+      <body className={`${dotGothic16.variable} ${mPlusRounded.variable} bg-[var(--cream-bg)] text-[var(--text-dark)]`}>
         <AppProviders>
           {children}
         </AppProviders>

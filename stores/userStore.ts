@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
@@ -20,6 +20,7 @@ export interface ProfileData {
   catchphrase: string
   message: string
   avatarUrl?: string
+  favoriteNowImageUrl?: string
   profileCompletion: number
 }
 
@@ -77,6 +78,7 @@ const defaultProfileData: ProfileData = {
   catchphrase: '',
   message: '',
   avatarUrl: '',
+  favoriteNowImageUrl: '',
   profileCompletion: 85,
 }
 
@@ -179,6 +181,7 @@ interface UserState {
   updateProfile: (updates: Partial<ProfileData>) => Promise<{ success: boolean; error?: string }>
   addExperience: (amount: number, reason?: string) => Promise<{ success: boolean; levelUp?: boolean; error?: string }>
   calculateProfileCompletion: () => number
+  refreshProfile: (userId: string) => Promise<void>
   clearError: () => void
 }
 
@@ -201,9 +204,8 @@ const calculateExperienceToNext = (experience: number): number => {
 // =====================================================
 
 export const useUserStore = create<UserState>()(
-  devtools(
-    immer(
-      persist(
+  immer(
+    persist(
         (set, get) => ({
           // 初期状態
           profileData: { ...defaultProfileData },
@@ -227,6 +229,23 @@ export const useUserStore = create<UserState>()(
               })
               return
             }
+            
+            // 直近のキャッシュが新鮮なら、スピナーを出さずにバックグラウンド更新
+            const { lastSyncTime, extendedStats, isInitialized, profileData } = get()
+            const sameUser = extendedStats?.userId === userId
+            const lastSyncMs = lastSyncTime ? Date.parse(lastSyncTime) : 0
+            const isFresh = lastSyncMs && (Date.now() - lastSyncMs) < 3 * 60 * 1000 // 3分
+
+            // 既にキャッシュがある場合はスピナーを出さずにバックグラウンド更新
+            const hasCachedProfile = !!extendedStats || (profileData && profileData.nickname !== defaultProfileData.nickname)
+
+            if ((isInitialized && sameUser) || hasCachedProfile) {
+              // 既存表示を維持しつつ、最新化だけ行う
+              set((state) => { state.isInitialized = true; state.isLoading = false })
+              get().refreshProfile(userId)
+              return
+            }
+
             set((state) => {
               state.isLoading = true
               state.error = null
@@ -234,35 +253,48 @@ export const useUserStore = create<UserState>()(
 
             try {
               console.log('🔧 userStore初期化開始:', userId)
-              
-              // Supabaseクライアント作成
+
               const supabase = createBrowserSupabaseClient()
-              
-              // プロフィールデータを取得
-              const { data: profileData, error: profileError } = await supabase
-                .from('users_profile')
-                .select('*')
-                .eq('id', userId)
-                .maybeSingle()
+
+              // タイムアウト付きでプロフィールと統計を並列取得（UX向上）
+              const withTimeout = <T,>(p: Promise<T>, ms = 4000) => {
+                return Promise.race([
+                  p,
+                  new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+                ]) as Promise<T>
+              }
+
+              const [profileResult, statsResult] = await Promise.all([
+                withTimeout(
+                  supabase
+                    .from('users_profile')
+                    .select('id,nickname,character_type,skills,weakness,favorite_place,energy_charge,companion,catchphrase,message,avatar_url,favorite_now_image_url,profile_completion')
+                    .eq('id', userId)
+                    .maybeSingle()
+                ),
+                withTimeout(
+                  supabase
+                    .from('user_stats')
+                    .select('user_id,login_count,last_login_date,total_exp,quest_clear_count,created_at,updated_at')
+                    .eq('user_id', userId)
+                    .maybeSingle()
+                )
+              ])
+
+              const profileError = (profileResult as any).error
+              const statsError = (statsResult as any).error
+              const profileData = (profileResult as any).data
+              const statsData = (statsResult as any).data
 
               if (profileError && profileError.code !== 'PGRST116') {
                 console.error('❌ プロフィール取得エラー:', profileError)
                 throw profileError
               }
-
-              // 統計データを取得
-              const { data: statsData, error: statsError } = await supabase
-                .from('user_stats')
-                .select('*')
-                .eq('user_id', userId)
-                .maybeSingle()
-
               if (statsError && statsError.code !== 'PGRST116') {
                 console.error('❌ 統計データ取得エラー:', statsError)
                 throw statsError
               }
 
-              // プロフィールデータを変換
               const profile: ProfileData = profileData ? {
                 nickname: profileData.nickname || defaultProfileData.nickname,
                 character: profileData.character_type || defaultProfileData.character,
@@ -274,10 +306,10 @@ export const useUserStore = create<UserState>()(
                 catchphrase: profileData.catchphrase || defaultProfileData.catchphrase,
                 message: profileData.message || defaultProfileData.message,
                 avatarUrl: profileData.avatar_url || defaultProfileData.avatarUrl,
+                favoriteNowImageUrl: (profileData as any).favorite_now_image_url || defaultProfileData.favoriteNowImageUrl,
                 profileCompletion: profileData.profile_completion || 0,
               } : { ...defaultProfileData }
 
-              // 統計データを変換
               const stats: ExtendedUserStats = statsData ? {
                 userId,
                 loginCount: statsData.login_count || 0,
@@ -298,7 +330,6 @@ export const useUserStore = create<UserState>()(
                 updatedAt: statsData.updated_at || new Date().toISOString(),
               } : { ...defaultExtendedStats, userId }
 
-              // 状態を更新
               set((state) => {
                 state.profileData = profile
                 state.extendedStats = stats
@@ -325,14 +356,13 @@ export const useUserStore = create<UserState>()(
                 state.lastSyncTime = new Date().toISOString()
                 state.error = null
               })
-              
+
               console.log('✅ userStore: 初期化完了')
-              
+
             } catch (error) {
               console.error('❌ userStore初期化エラー:', error)
               set((state) => {
                 state.error = 'userStore初期化に失敗しました'
-                // エラーの場合でもデフォルトデータで初期化
                 state.profileData = { ...defaultProfileData }
                 state.extendedStats = { ...defaultExtendedStats, userId }
                 state.achievements = predefinedAchievements.map(achievement => ({ ...achievement }))
@@ -444,6 +474,58 @@ export const useUserStore = create<UserState>()(
           },
 
           // =====================================================
+          // プロフィールリフレッシュ
+          // =====================================================
+          refreshProfile: async (userId: string) => {
+            if (!userId) return
+
+            try {
+              console.log('🔄 プロフィールをリフレッシュしています...')
+              
+              const supabase = createBrowserSupabaseClient()
+              
+              // 最新のプロフィールデータを取得
+              const { data: profileData, error: profileError } = await supabase
+                .from('users_profile')
+                .select('id,nickname,character_type,skills,weakness,favorite_place,energy_charge,companion,catchphrase,message,avatar_url,favorite_now_image_url,profile_completion')
+                .eq('id', userId)
+                .maybeSingle()
+
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('❌ プロフィールリフレッシュエラー:', profileError)
+                return
+              }
+
+              if (profileData) {
+                // プロフィールデータを更新
+                const profile: ProfileData = {
+                  nickname: profileData.nickname || get().profileData.nickname,
+                  character: profileData.character_type || get().profileData.character,
+                  skills: profileData.skills || get().profileData.skills,
+                  weakness: profileData.weakness || get().profileData.weakness,
+                  favoritePlace: profileData.favorite_place || get().profileData.favoritePlace,
+                  energyCharge: profileData.energy_charge || get().profileData.energyCharge,
+                  companion: profileData.companion || get().profileData.companion,
+                  catchphrase: profileData.catchphrase || get().profileData.catchphrase,
+                  message: profileData.message || get().profileData.message,
+                  avatarUrl: profileData.avatar_url || get().profileData.avatarUrl,
+                  favoriteNowImageUrl: (profileData as any).favorite_now_image_url || get().profileData.favoriteNowImageUrl,
+                  profileCompletion: profileData.profile_completion || get().calculateProfileCompletion(),
+                }
+
+                set((state) => {
+                  state.profileData = profile
+                  state.lastSyncTime = new Date().toISOString()
+                })
+
+                console.log('✅ プロフィールリフレッシュ完了')
+              }
+            } catch (error) {
+              console.error('❌ プロフィールリフレッシュエラー:', error)
+            }
+          },
+
+          // =====================================================
           // エラークリア
           // =====================================================
           clearError: () => {
@@ -457,11 +539,7 @@ export const useUserStore = create<UserState>()(
           version: 1,
         }
       )
-    ),
-    {
-      name: 'CLAFT User Store',
-    }
-  )
+    )
 )
 
 // =====================================================

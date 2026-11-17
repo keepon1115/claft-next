@@ -4,6 +4,12 @@ import { type Database } from '@/types/index'
 import { type NextRequest, type NextResponse } from 'next/server'
 import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
+/**
+ * ブラウザ・サーバー両クライアントで統一する Cookie/Storage キー名。
+ * ここを変えると既存セッションが無効になるので慎重に。
+ */
+export const SUPABASE_STORAGE_KEY = 'claft-auth'
+
 // グローバル変数の型定義
 declare global {
   var supabaseDevWarningShown: boolean | undefined
@@ -33,10 +39,20 @@ function createMockSupabaseClient() {
     }),
     rpc: () => Promise.resolve({ data: null, error: null }),
     storage: {
-      from: () => ({
-        upload: () => Promise.resolve({ data: null, error: null }),
+      from: (bucket: string) => ({
+        upload: (path: string, file: File, options?: any) => {
+          console.warn('🔧 開発モック: ストレージアップロードをシミュレーション')
+          return Promise.resolve({
+            data: { path, fullPath: `${bucket}/${path}` },
+            error: null
+          })
+        },
         download: () => Promise.resolve({ data: null, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: '' } })
+        getPublicUrl: (path: string) => {
+          const mockUrl = `https://mock.supabase.co/storage/v1/object/public/${bucket}/${path}`
+          console.warn('🔧 開発モック: モックURLを生成:', mockUrl)
+          return { data: { publicUrl: mockUrl } }
+        }
       })
     }
   } as any
@@ -75,27 +91,39 @@ function getEnvVars() {
   return { url, anonKey }
 }
 
+// ブラウザ用クライアントのシングルトンキャッシュ。
+// createBrowserClient()は内部に認証リスナー・トークン自動リフレッシュタイマー・
+// Realtimeソケット管理を持つため、呼び出すたびに新規生成すると
+// タイマー/リスナーが蓄積し体感速度が悪化する（詳細: docs/performance-investigation.md）。
+let browserSupabaseClientSingleton: ReturnType<typeof createBrowserClient<Database>> | ReturnType<typeof createMockSupabaseClient> | null = null
+
 /**
  * ブラウザ（クライアントサイド）用Supabaseクライアント
  * クライアントコンポーネントで使用
+ * 同一ブラウザコンテキスト内では同じインスタンスを使い回す（シングルトン）
  */
 export function createBrowserSupabaseClient() {
+  if (browserSupabaseClientSingleton) {
+    return browserSupabaseClientSingleton
+  }
+
   try {
     const envVars = getEnvVars()
-    
+
     // 開発モードで環境変数が設定されていない場合はモッククライアントを返す
     if (!envVars) {
-      return createMockSupabaseClient()
+      browserSupabaseClientSingleton = createMockSupabaseClient()
+      return browserSupabaseClientSingleton
     }
-    
+
     const { url, anonKey } = envVars
-    
-    return createBrowserClient<Database>(url, anonKey, {
+
+    browserSupabaseClientSingleton = createBrowserClient<Database>(url, anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'claft-auth'
+        storageKey: SUPABASE_STORAGE_KEY,
       },
       realtime: {
         params: {
@@ -103,10 +131,12 @@ export function createBrowserSupabaseClient() {
         }
       }
     })
+    return browserSupabaseClientSingleton
   } catch (error) {
     // 開発モードではエラーをキャッチしてモッククライアントを返す
     if (process.env.NODE_ENV === 'development') {
-      return createMockSupabaseClient()
+      browserSupabaseClientSingleton = createMockSupabaseClient()
+      return browserSupabaseClientSingleton
     }
     console.error('❌ ブラウザSupabaseクライアントの初期化に失敗:', error)
     throw error
@@ -127,6 +157,10 @@ export function createServerSupabaseClient(
       url,
       anonKey,
       {
+        auth: {
+          // ブラウザ側と同じキーを使うことでCookieを正しく読める
+          storageKey: SUPABASE_STORAGE_KEY,
+        },
         cookies: {
           get(name: string) {
             return cookieStore.get(name)?.value
@@ -274,8 +308,13 @@ export function createServiceRoleSupabaseClient() {
 
 /**
  * Supabaseエラーハンドリングユーティリティ
+ * PostgRESTエラーの詳細情報を保持
  */
 export class SupabaseError extends Error {
+  public hint?: string
+  public status?: number
+  public originalError?: any
+
   constructor(
     message: string,
     public code?: string,
@@ -284,17 +323,52 @@ export class SupabaseError extends Error {
     super(message)
     this.name = 'SupabaseError'
   }
+
+  /**
+   * エラーの詳細情報を文字列として取得
+   */
+  getDetailedMessage(): string {
+    const parts = [this.message]
+    
+    if (this.code) {
+      parts.push(`Code: ${this.code}`)
+    }
+    
+    if (this.details) {
+      parts.push(`Details: ${JSON.stringify(this.details)}`)
+    }
+    
+    if (this.hint) {
+      parts.push(`Hint: ${this.hint}`)
+    }
+    
+    if (this.status) {
+      parts.push(`Status: ${this.status}`)
+    }
+    
+    return parts.join(' | ')
+  }
 }
 
 /**
  * Supabaseレスポンスのエラーハンドリング
+ * 元のエラー情報を保持し、詳細なデバッグ情報を提供
  */
 export function handleSupabaseError(error: any): never {
+  // 空のオブジェクトや falsy な値をチェック
+  if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+    throw new SupabaseError('Unknown error occurred', undefined, error)
+  }
+  
+  // 元のエラー情報をログ出力（デバッグ用）
+  console.error('[Supabase] Original error:', error)
+  
   if (error?.code) {
-    const errorMessages: Record<string, string> = {
+    // PostgRESTエラーコードに対する日本語メッセージ（可読性向上のため）
+    const friendlyMessages: Record<string, string> = {
       'PGRST116': 'データが見つかりません',
       'PGRST201': '認証が必要です',
-      'PGRST301': 'アクセス権限がありません',
+      'PGRST301': 'アクセス権限がありません', 
       '23505': 'このデータは既に存在します',
       '23503': '関連するデータが存在しないため処理できません',
       'auth/invalid-email': '無効なメールアドレスです',
@@ -304,10 +378,22 @@ export function handleSupabaseError(error: any): never {
       'auth/wrong-password': 'パスワードが間違っています'
     }
     
-    const message = errorMessages[error.code] || error.message || 'データベースエラーが発生しました'
-    throw new SupabaseError(message, error.code, error.details)
+    // 元のメッセージを優先し、日本語メッセージは補足として使用
+    const originalMessage = error.message || friendlyMessages[error.code] || 'データベースエラーが発生しました'
+    
+    // 元のエラー情報を全て保持
+    const supabaseError = new SupabaseError(originalMessage, error.code, error.details)
+    // エラーオブジェクトに追加情報を付与
+    Object.assign(supabaseError, {
+      hint: error.hint,
+      status: error.status,
+      originalError: error
+    })
+    
+    throw supabaseError
   }
   
+  // PostgRESTエラーではない場合も元のメッセージを保持
   throw new SupabaseError(
     error?.message || 'Supabaseエラーが発生しました',
     undefined,
@@ -317,6 +403,7 @@ export function handleSupabaseError(error: any): never {
 
 /**
  * 型安全なSupabaseクエリヘルパー
+ * 元のエラー情報を保持し、包み直しを最小限に抑制
  */
 export async function safeSupabaseQuery<T>(
   queryFn: () => Promise<{ data: T | null; error: any }>
@@ -324,20 +411,34 @@ export async function safeSupabaseQuery<T>(
   try {
     const { data, error } = await queryFn()
     
-    if (error) {
+    // 実際のエラーが存在する場合のみエラーハンドリング
+    const hasRealError = error && 
+      !(typeof error === 'object' && Object.keys(error).length === 0) &&
+      error.message !== undefined
+    
+    if (hasRealError) {
+      // 元のエラーをそのまま保持して投げる
       handleSupabaseError(error)
     }
     
-    if (data === null) {
-      throw new SupabaseError('データが見つかりません', 'PGRST116')
+    // データが null で、実際のエラーもない場合は「データなし」エラー
+    if (data === null && !hasRealError) {
+      throw new SupabaseError('No data returned', 'PGRST116')
     }
     
     return data
   } catch (error) {
+    // SupabaseErrorは既に適切に処理されているのでそのまま再投げ
     if (error instanceof SupabaseError) {
       throw error
     }
-    throw new SupabaseError('予期しないエラーが発生しました', undefined, error)
+    
+    // ネットワークエラーやその他の予期しないエラー
+    console.error('[Supabase] Unexpected error:', error)
+    
+    // 元のエラーメッセージを保持（包み直しを避ける）
+    const originalMessage = error instanceof Error ? error.message : 'Unexpected error'
+    throw new SupabaseError(originalMessage, undefined, error)
   }
 }
 

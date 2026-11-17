@@ -21,9 +21,15 @@ import {
   Filter,
   Search,
   Calendar,
-  Activity
+  Activity,
+  Settings,
+  BookOpen,
+  HelpCircle,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
-import ApprovalTable from '@/components/admin/ApprovalTable'
+// 承認フロー撤廃により ApprovalTable は未使用
 import FilterSection from '@/components/admin/FilterSection'
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
@@ -31,7 +37,6 @@ import { getAdminInfo } from './actions'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
-import { AuthButton } from '@/components/auth/AuthButton'
 
 // ==========================================
 // 型定義
@@ -92,6 +97,13 @@ interface NotificationData {
   timestamp: Date
 }
 
+interface TabData {
+  id: string
+  label: string
+  icon: any
+  badge?: number
+}
+
 // ==========================================
 // 統計カードコンポーネント
 // ==========================================
@@ -100,258 +112,217 @@ function StatCard({
   title, 
   value, 
   icon: Icon, 
-  color = 'primary',
-  trend,
-  loading = false
+  color = 'primary', 
+  loading = false,
+  suffix = '',
+  onClick 
 }: {
   title: string
   value: number
   icon: any
-  color?: 'primary' | 'warning' | 'success' | 'accent' | 'blue'
-  trend?: { value: number; isPositive: boolean }
+  color?: 'primary' | 'success' | 'warning' | 'accent'
   loading?: boolean
+  suffix?: string
+  onClick?: () => void
 }) {
+  const iconColor = {
+    primary: 'text-blue-600',
+    success: 'text-green-600',
+    warning: 'text-orange-600',
+    accent: 'text-purple-600'
+  } as const
+
   return (
-    <div className={`stat-card ${color} text-white rounded-xl p-6 relative overflow-hidden shadow-lg`}>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-2">
-          <Icon size={24} className="opacity-80" />
-          {trend && (
-            <div className={`flex items-center text-sm ${trend.isPositive ? 'text-green-200' : 'text-red-200'}`}>
-              <TrendingUp size={16} className={trend.isPositive ? '' : 'rotate-180'} />
-              <span className="ml-1">{Math.abs(trend.value)}%</span>
-            </div>
-          )}
-        </div>
-        <div className="stat-value">
+    <div 
+      className={`bg-white text-slate-900 p-6 rounded-xl shadow-md border ${onClick ? 'cursor-pointer hover:shadow-lg transition-all duration-300' : ''}`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-slate-600 text-sm mb-1">{title}</p>
           {loading ? (
-            <div className="loading-spinner w-8 h-8"></div>
+            <div className="w-24 h-7 bg-slate-100 rounded animate-pulse" />
           ) : (
-            value.toLocaleString()
+            <p className="text-3xl font-extrabold">
+              {value.toLocaleString()}{suffix}
+            </p>
           )}
         </div>
-        <div className="stat-label">{title}</div>
+        <div className={iconColor[color]}>
+          <Icon size={32} />
+        </div>
       </div>
     </div>
   )
 }
 
 // ==========================================
-// ヘッダーコンポーネント
+// クイックアクションボタン
 // ==========================================
 
-function AdminHeader({ user, adminInfo }: { user: User; adminInfo?: AdminInfo }) {
-  const handleLogout = async () => {
-    const supabase = createBrowserSupabaseClient()
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  }
+function QuickActionButton({ 
+  icon: Icon, 
+  label, 
+  onClick, 
+  variant = 'primary',
+  badge,
+  disabled = false
+}: {
+  icon: any
+  label: string
+  onClick: () => void
+  variant?: 'primary' | 'secondary' | 'success' | 'warning'
+  badge?: number
+  disabled?: boolean
+}) {
+  const variants = {
+    primary: 'border-blue-500 text-slate-800 hover:bg-blue-50',
+    secondary: 'border-gray-400 text-slate-800 hover:bg-gray-50',
+    success: 'border-green-500 text-slate-800 hover:bg-green-50',
+    warning: 'border-orange-500 text-slate-800 hover:bg-orange-50'
+  } as const
 
   return (
-    <header className="admin-header">
-      <div className="admin-header-content">
-        <div className="admin-title">
-          <Shield size={32} />
-          CLAFT 管理画面
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        relative flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all
+        bg-white border ${variants[variant]}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+      `}
+    >
+      <Icon size={20} />
+      <span>{label}</span>
+      {badge && badge > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ==========================================
+// タブコンポーネント
+// ==========================================
+
+function TabButton({ tab, isActive, onClick }: {
+  tab: TabData
+  isActive: boolean
+  onClick: () => void
+}) {
+  const Icon = tab.icon
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex items-center gap-3 px-6 py-3 rounded-lg font-medium transition-all relative
+        ${isActive 
+          ? 'bg-blue-600 text-white shadow-lg' 
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }
+      `}
+    >
+      <Icon size={20} />
+      <span>{tab.label}</span>
+      {tab.badge && tab.badge > 0 && (
+        <span className={`
+          text-xs rounded-full w-5 h-5 flex items-center justify-center
+          ${isActive ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}
+        `}>
+          {tab.badge > 99 ? '99+' : tab.badge}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ==========================================
+// 使い方ガイドモーダル
+// ==========================================
+
+function UserGuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4">
+      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">📖 管理画面使い方ガイド</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={24} />
+          </button>
         </div>
         
-        <div className="admin-user-info">
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '14px', opacity: 0.9 }}>管理者</div>
-            <div style={{ fontWeight: 600 }}>{adminInfo?.email || user.email}</div>
-          </div>
-          <button onClick={handleLogout} className="admin-logout-btn">
-            <LogOut size={16} style={{ marginRight: '8px' }} />
-            ログアウト
+        <div className="p-6 space-y-8">
+          {/* ダッシュボード概要 */}
+          <section>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <BarChart3 className="text-blue-600" />
+              ダッシュボード概要
+            </h3>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-gray-700 mb-3">
+                管理画面では、CLAFT システムの全体状況を一目で確認し、効率的にユーザー管理を行えます。
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• 📊 統計情報でシステム全体の状況を把握</li>
+                <li>• ⚡ クイックアクションで頻繁な操作を効率化</li>
+                <li>• 📋 タブ切り替えで各機能にスムーズにアクセス</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* クエスト承認作業セクションは撤廃 */}
+
+          {/* フィルター機能 */}
+          <section>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Filter className="text-purple-600" />
+              フィルター機能
+            </h3>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-gray-700 mb-3">効率的な検索とフィルタリングで目的のデータをすぐに見つけられます。</p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• 🔍 ユーザー名・メールアドレスで検索</li>
+                <li>• 📊 ステージ別でフィルタリング</li>
+                <li>• 📅 日付範囲で絞り込み</li>
+                <li>• 🔄 リアルタイム更新で最新情報を常に表示</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* ショートカットキー */}
+          <section>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Award className="text-orange-600" />
+              効率化のコツ
+            </h3>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• 📈 統計カードをクリックして関連データにジャンプ</li>
+                <li>• ⚡ クイックアクションでよく使う機能にすぐアクセス</li>
+                <li>• 🔔 通知システムで処理結果を即座に確認</li>
+                <li>• 📋 承認履歴で過去の操作を追跡</li>
+              </ul>
+            </div>
+          </section>
+        </div>
+
+        <div className="sticky bottom-0 bg-gray-50 p-6 text-center border-t">
+          <button 
+            onClick={onClose}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            理解しました
           </button>
         </div>
       </div>
-    </header>
-  )
-}
-
-// ==========================================
-// 通知システムコンポーネント
-// ==========================================
-
-function NotificationSystem({ notifications }: { notifications: NotificationData[] }) {
-  return (
-    <div className="notification-container">
-      {notifications.map((notification) => (
-        <div key={notification.id} className={`notification ${notification.type}`}>
-          <div className="notification-icon">
-            {notification.type === 'success' && <Check size={20} />}
-            {notification.type === 'error' && <X size={20} />}
-            {notification.type === 'info' && <AlertCircle size={20} />}
-          </div>
-          <div className="notification-content">
-            <div className="notification-title">{notification.title}</div>
-            {notification.message && (
-              <div className="notification-message">{notification.message}</div>
-            )}
-          </div>
-          <div className={`notification-progress ${notification.type}`}></div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ==========================================
-// ユーザー管理テーブルコンポーネント
-// ==========================================
-
-function UserManagementTable({ userData, loading }: { userData: UserData[]; loading: boolean }) {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '未設定'
-    try {
-      return new Date(dateString).toLocaleDateString('ja-JP')
-    } catch {
-      return '無効な日付'
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <p>ユーザーデータを読み込んでいます...</p>
-      </div>
-    )
-  }
-
-  if (!userData || userData.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', color: 'var(--admin-text-secondary)' }}>
-        ユーザーが登録されていません
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table className="user-management-table">
-        <thead>
-          <tr>
-            <th>ユーザー</th>
-            <th>登録日</th>
-            <th>最終ログイン</th>
-            <th>クエスト進捗</th>
-            <th>経験値</th>
-          </tr>
-        </thead>
-        <tbody>
-          {userData.map((user) => {
-            const userName = user.nickname || user.email?.split('@')[0] || 'Unknown'
-            const userEmail = user.email || 'unknown@example.com'
-            const registerDate = formatDate(user.created_at)
-            const lastLogin = user.last_login_date 
-              ? formatDate(user.last_login_date)
-              : '未ログイン'
-            const questCount = user.quest_clear_count || 0
-            const totalExp = user.total_exp || 0
-            
-            return (
-              <tr key={user.id}>
-                <td>
-                  <div className="user-cell">
-                    <div className="user-avatar">{userName.charAt(0).toUpperCase()}</div>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{userName}</div>
-                      <div style={{ fontSize: '14px', color: 'var(--admin-text-secondary)' }}>{userEmail}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>{registerDate}</td>
-                <td>{lastLogin}</td>
-                <td>
-                  <span className="stage-badge">{questCount}個クリア</span>
-                </td>
-                <td>{totalExp} EXP</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-// ==========================================
-// 承認履歴テーブルコンポーネント
-// ==========================================
-
-function ApprovalHistoryTable({ approvalHistory, loading }: { approvalHistory: ApprovalHistory[]; loading: boolean }) {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '日時不明'
-    try {
-      return new Date(dateString).toLocaleString('ja-JP')
-    } catch {
-      return '無効な日付'
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <p>承認履歴を読み込んでいます...</p>
-      </div>
-    )
-  }
-
-  if (!approvalHistory || approvalHistory.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', color: 'var(--admin-text-secondary)' }}>
-        承認履歴がありません
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <table className="history-table">
-        <thead>
-          <tr>
-            <th>ユーザー</th>
-            <th>ステージ</th>
-            <th>アクション</th>
-            <th>日時</th>
-          </tr>
-        </thead>
-        <tbody>
-          {approvalHistory.map((item) => {
-            const userName = item.users_profile?.nickname || item.users_profile?.email?.split('@')[0] || 'Unknown'
-            const action = item.approved_at ? '承認' : '却下'
-            const actionDate = item.approved_at || item.rejected_at
-            
-            return (
-              <tr key={item.id}>
-                <td>
-                  <div className="user-cell">
-                    <div className="user-avatar">{userName.charAt(0).toUpperCase()}</div>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{userName}</div>
-                      <div style={{ fontSize: '14px', color: 'var(--admin-text-secondary)' }}>
-                        {item.users_profile?.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span className="stage-badge">ステージ {item.stage_id}</span>
-                </td>
-                <td>
-                  <span className={`action-history-badge ${item.approved_at ? 'approved' : 'rejected'}`}>
-                    {action}
-                  </span>
-                </td>
-                <td>{formatDate(actionDate)}</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
     </div>
   )
 }
@@ -362,10 +333,14 @@ function ApprovalHistoryTable({ approvalHistory, loading }: { approvalHistory: A
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const { isAuthenticated, isAdmin, user, isLoading } = useAuth()
+  const { isAuthenticated, user, isLoading } = useAuth()
   const { showToast } = useToast()
 
   // 状態管理
+  const [activeTab, setActiveTab] = useState('overview')
+  const [showGuide, setShowGuide] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+  
   const [filters, setFilters] = useState<FilterValues>({
     userSearch: '',
     stageFilter: null,
@@ -385,200 +360,155 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState<NotificationData[]>([])
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
-  const [historyLoading, setHistoryLoading] = useState(false)
-  const [usersLoading, setUsersLoading] = useState(false)
 
   const supabase = createBrowserSupabaseClient()
 
-  // 安定したloadAllData参照
-  const loadAllDataRef = useRef<() => Promise<void>>()
+  // タブ定義
+  const tabs: TabData[] = [
+    { id: 'overview', label: '概要', icon: BarChart3 },
+    { id: 'users', label: 'ユーザー管理', icon: Users },
+    { id: 'settings', label: 'システム設定', icon: Settings }
+  ]
 
-  // 認証チェック
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      if (!isAdmin) {
-        // 管理者権限がない場合の処理は後でrender部分で行う
-        return
-      }
-      setLoading(false)
-      loadAllDataRef.current?.()
-    } else if (!isLoading && !isAuthenticated) {
-      // 未認証の場合の処理はrender部分で行う
-      setLoading(false)
-    }
-  }, [isAuthenticated, isAdmin, isLoading])
-
-  // 通知システム
-  const showNotification = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
-    const notification: NotificationData = {
-      id: Date.now().toString(),
-      type,
-      title,
-      message,
-      timestamp: new Date()
-    }
-    
-    setNotifications(prev => [notification, ...prev.slice(0, 4)]) // 最大5件まで
-    
-    // 5秒後に自動削除
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== notification.id))
-    }, 5000)
-    
-    showToast(type, title, message)
-  }, [showToast])
-
-  // Realtimeフック
-  const {
-    isConnected: realtimeConnected,
-    notifications: realtimeNotifications,
-    unreadCount: realtimeUnreadCount
-  } = useRealtimeUpdates({
-    onNotification: showNotification,
-    onDataUpdate: () => {
-      if (isAuthenticated && isAdmin && !loading && loadAllDataRef.current) {
-        loadAllDataRef.current()
-      }
-    },
-    currentAdminId: user?.id || null
-  })
-
-  // ==========================================
-  // データ読み込み関数
-  // ==========================================
-
+  // データ読み込み
   const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true)
-      const [
-        { count: totalUsers },
-        { count: pendingApprovals },
-        { count: completedQuests },
-        { count: activeUsers }
-      ] = await Promise.all([
-        supabase.from('users_profile').select('*', { count: 'exact', head: true }),
-        supabase.from('quest_progress').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-        supabase.from('quest_progress').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-        supabase.from('user_stats').select('*', { count: 'exact', head: true }).gte('last_login_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      
+      // 基本統計の取得
+      const [usersResult, approvalsResult, questsResult] = await Promise.all([
+        supabase.from('users_profile').select('id', { count: 'exact' }),
+        supabase.from('quest_progress').select('id', { count: 'exact' }).eq('status', 'pending_approval'),
+        supabase.from('quest_progress').select('id', { count: 'exact' }).eq('status', 'completed')
       ])
 
-      const averageProgress = ((completedQuests || 0) / Math.max((pendingApprovals || 0) + (completedQuests || 0), 1) * 100)
+      // アクティブユーザー数（過去30日以内にログインしたユーザー）
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      
+      const { data: activeUsersData } = await supabase
+        .from('users_profile')
+        .select('id')
+        .gte('last_login_date', thirtyDaysAgo.toISOString())
+
+      // 平均進捗率の計算
+      const { data: progressData } = await supabase
+        .from('quest_progress')
+        .select('user_id, stage_id')
+        .eq('status', 'completed')
+
+      const userProgressMap = new Map()
+      progressData?.forEach(item => {
+        const userId = item.user_id
+        if (!userProgressMap.has(userId)) {
+          userProgressMap.set(userId, 0)
+        }
+        userProgressMap.set(userId, userProgressMap.get(userId) + 1)
+      })
+
+      const totalUsers = usersResult.count || 0
+      const averageProgress = totalUsers > 0 
+        ? Array.from(userProgressMap.values()).reduce((sum, progress) => sum + progress, 0) / totalUsers 
+        : 0
 
       setStats({
-        totalUsers: totalUsers || 0,
-        pendingApprovals: pendingApprovals || 0,
-        completedQuests: completedQuests || 0,
-        activeUsers: activeUsers || 0,
-        averageProgress: parseFloat(averageProgress.toFixed(2))
+        totalUsers,
+        pendingApprovals: approvalsResult.count || 0,
+        completedQuests: questsResult.count || 0,
+        activeUsers: activeUsersData?.length || 0,
+        averageProgress: Math.round((averageProgress / 12) * 100)
       })
+
     } catch (error) {
-      console.error('統計データ読み込みエラー:', error)
-      showNotification('error', 'エラー', '統計データの取得に失敗しました')
+      console.error('統計データ取得エラー:', error)
+      showToast('統計データの取得に失敗しました', 'error')
     } finally {
       setStatsLoading(false)
     }
-  }, [supabase, showNotification])
+  }, [supabase, showToast])
 
   const loadApprovalHistory = useCallback(async () => {
     try {
-      setHistoryLoading(true)
-      
-      // まず quest_progress だけを取得
-      const { data: questData, error } = await supabase
+      const { data, error } = await supabase
         .from('quest_progress')
         .select(`
-          id,
-          user_id,
-          stage_id,
-          status,
-          approved_at,
-          rejected_at,
-          approved_by,
-          rejected_by,
-          created_at
+          id, user_id, stage_id, status, approved_at, rejected_at, 
+          approved_by, rejected_by, created_at,
+          users_profile:user_id (nickname, email)
         `)
-        .in('status', ['completed', 'rejected'])
-        .order('approved_at', { ascending: false, nullsLast: true })
-        .order('rejected_at', { ascending: false, nullsLast: true })
+        .in('status', ['completed', 'current'])
+        .not('approved_at', 'is', null)
+        .order('approved_at', { ascending: false })
         .limit(20)
 
       if (error) throw error
-
-      // 別途 users_profile を取得
-      const userIds = questData?.map(q => q.user_id) || []
-      let userProfiles: any[] = []
-      
-      if (userIds.length > 0) {
-        const { data: profileData } = await supabase
-          .from('users_profile')
-          .select('id, nickname, email')
-          .in('id', userIds)
-        
-        userProfiles = profileData || []
-      }
-
-      // データを結合
-      const combinedData = questData?.map(quest => ({
-        ...quest,
-        users_profile: userProfiles.find(profile => profile.id === quest.user_id) || {
-          nickname: null,
-          email: 'unknown@example.com'
-        }
-      })) || []
-
-      setApprovalHistory(combinedData as ApprovalHistory[])
+      setApprovalHistory(data || [])
     } catch (error) {
-      console.error('承認履歴読み込みエラー:', error)
-      showNotification('error', 'エラー', '承認履歴の取得に失敗しました')
-      setApprovalHistory([])
-    } finally {
-      setHistoryLoading(false)
+      console.error('承認履歴取得エラー:', error)
     }
-  }, [supabase, showNotification])
+  }, [supabase])
 
   const loadUserData = useCallback(async () => {
     try {
-      setUsersLoading(true)
-      const { data: users, error: usersError } = await supabase
-        .from('users_profile')
-        .select('id, email, nickname, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      if (usersError) throw usersError
-
-      const userIds = users?.map(u => u.id) || []
-      let userStats: any[] = []
-      
-      if (userIds.length > 0) {
-        const { data: stats } = await supabase
+      // users_profile と user_stats, quest_progress 集計を取得
+      const [usersResponse, statsResponse] = await Promise.all([
+        supabase
+          .from('users_profile')
+          .select('id, email, nickname, created_at')
+          .order('created_at', { ascending: false }),
+        supabase
           .from('user_stats')
           .select('user_id, quest_clear_count, total_exp, last_login_date')
-          .in('user_id', userIds)
-        
-        userStats = stats || []
+      ])
+
+      if (usersResponse.error) throw usersResponse.error
+      if (statsResponse.error) throw statsResponse.error
+      
+      // データを結合
+      const users = usersResponse.data || []
+      const stats = statsResponse.data || []
+
+      // quest_progress から完了数を集計
+      let completedCounts: Record<string, number> = {}
+      if (users.length > 0) {
+        const { data: progressRows } = await supabase
+          .from('quest_progress')
+          .select('user_id')
+          .eq('status', 'completed')
+          .in('user_id', users.map(u => u.id))
+
+        completedCounts = (progressRows || []).reduce((acc: Record<string, number>, row: any) => {
+          acc[row.user_id] = (acc[row.user_id] || 0) + 1
+          return acc
+        }, {})
       }
 
-      const combinedData = users?.map(user => {
-        const stats = userStats.find(s => s.user_id === user.id)
+      const formattedData = users.map(user => {
+        const userStats = stats.find(stat => stat.user_id === user.id)
+        const completed = completedCounts[user.id] ?? userStats?.quest_clear_count ?? 0
         return {
-          ...user,
-          quest_clear_count: stats?.quest_clear_count || 0,
-          total_exp: stats?.total_exp || 0,
-          last_login_date: stats?.last_login_date
+          id: user.id,
+          email: user.email,
+          nickname: user.nickname,
+          created_at: user.created_at,
+          quest_clear_count: completed,
+          total_exp: userStats?.total_exp || 0,
+          last_login_date: userStats?.last_login_date || null
         }
-      }) || []
-
-      setUserData(combinedData)
+      })
+      
+      setUserData(formattedData)
     } catch (error) {
-      console.error('ユーザーデータ読み込みエラー:', error)
-      showNotification('error', 'エラー', 'ユーザーデータの取得に失敗しました')
-    } finally {
-      setUsersLoading(false)
+      console.error('ユーザーデータ取得エラー:', error)
+      // エラーの詳細をログ出力
+      if (error && typeof error === 'object') {
+        console.error('エラー詳細:', JSON.stringify(error, null, 2))
+      }
+      // エラーが発生してもアプリケーションが止まらないようにデフォルトデータを設定
+      setUserData([])
     }
-  }, [supabase, showNotification])
+  }, [supabase])
 
-  // 全データ読み込み
   const loadAllData = useCallback(async () => {
     await Promise.all([
       loadStats(),
@@ -587,275 +517,377 @@ export default function AdminDashboard() {
     ])
   }, [loadStats, loadApprovalHistory, loadUserData])
 
-  // refを更新
-  useEffect(() => {
-    loadAllDataRef.current = loadAllData
-  }, [loadAllData])
-
-  // 全データリフレッシュ
-  const handleRefreshAll = useCallback(async () => {
-    try {
-      await loadAllData()
-      showNotification('success', 'データ更新完了', '全てのデータを最新に更新しました')
-    } catch (error) {
-      showNotification('error', '更新エラー', 'データの更新に失敗しました')
+  // 通知システム
+  const showNotification = useCallback((type: 'success' | 'error' | 'info', title: string, message?: string) => {
+    const id = Date.now().toString()
+    const notification: NotificationData = {
+      id,
+      type,
+      title,
+      message,
+      timestamp: new Date()
     }
-  }, [loadAllData, showNotification])
+    
+    setNotifications(prev => [notification, ...prev].slice(0, 5))
+    showToast(title, type)
+    
+    // 5秒後に自動削除
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    }, 5000)
+  }, [showToast])
 
-  // ==========================================
-  // レンダリング
-  // ==========================================
+  // 初期化
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      setLoading(false)
+      loadAllData()
+    } else if (!isLoading && !isAuthenticated) {
+      setLoading(false)
+    }
+  }, [isAuthenticated, isLoading, loadAllData])
 
-  // ローディング中
-  if (isLoading || loading) {
+  // リアルタイム更新
+  useRealtimeUpdates({
+    table: 'quest_progress',
+    event: '*',
+    callback: () => {
+      loadStats()
+      if (activeTab === 'approvals') {
+        // ApprovalTableコンポーネントが自動更新するため、ここでは統計のみ更新
+      }
+      if (activeTab === 'history') {
+        loadApprovalHistory()
+      }
+    }
+  })
+
+  // クイックアクション
+  const quickActions = [
+    {
+      icon: Users,
+      label: 'ユーザー管理',
+      onClick: () => setActiveTab('users'),
+      variant: 'primary' as const
+    },
+    {
+      icon: HelpCircle,
+      label: '使い方ガイド',
+      onClick: () => setShowGuide(true),
+      variant: 'warning' as const
+    },
+  ]
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-16 h-16 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-white text-xl font-semibold">管理画面を読み込んでいます...</p>
+          <div className="animate-spin w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">管理画面を読み込んでいます...</p>
         </div>
       </div>
     )
   }
 
-  // 未認証の場合
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
-          <div className="mb-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield size={32} className="text-purple-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              🔐 管理者ログインが必要です
-            </h1>
-            <p className="text-gray-600">
-              CLAFT管理画面は管理者権限を持つユーザーのみアクセス可能です。
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <AuthButton 
-              variant="default"
-              size="lg"
-              redirectTo="/admin"
-              defaultTab="login"
-              className="w-full"
-            />
-            
-            <button
-              onClick={() => router.push('/')}
-              className="w-full px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              ホームに戻る
-            </button>
-          </div>
-          
-          <p className="mt-4 text-sm text-gray-500">
-            管理者アカウントでログインしてください
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // 認証済みだが管理者権限がない場合
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
-          <div className="mb-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X size={32} className="text-red-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              ⚠️ アクセス権限がありません
-            </h1>
-            <p className="text-gray-600">
-              申し訳ございませんが、あなたのアカウントには管理者権限がありません。
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <strong>ログイン中のユーザー:</strong><br />
-                {user?.email}
-              </p>
-            </div>
-            
-            <button
-              onClick={() => router.push('/')}
-              className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              ホームに戻る
-            </button>
-            
-            <button
-              onClick={async () => {
-                const supabase = createBrowserSupabaseClient()
-                await supabase.auth.signOut()
-                window.location.href = '/admin'
-              }}
-              className="w-full px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              別のアカウントでログイン
-            </button>
-          </div>
-          
-          <p className="mt-4 text-sm text-gray-500">
-            管理者権限が必要な場合は、システム管理者にお問い合わせください。
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">認証が必要です</h1>
+          <p className="text-gray-600 mb-6">管理画面にアクセスするにはログインしてください。</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="admin-dashboard admin-body">
-      {/* 通知システム */}
-      <NotificationSystem notifications={notifications} />
-
+    <div className="min-h-screen bg-gray-50 text-slate-800">
       {/* ヘッダー */}
-      <AdminHeader user={user} />
-
-      {/* メインコンテンツ */}
-      <main className="admin-container">
-        {/* リアルタイム接続ステータス */}
-        <div className="realtime-status">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className={`status-indicator ${realtimeConnected ? 'connected' : 'disconnected'}`}></div>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--admin-text)' }}>
-              {realtimeConnected ? 'リアルタイム接続中' : '接続を再試行中...'}
-            </span>
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold text-slate-900">🛠️ CLAFT 管理画面</h1>
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                Admin Dashboard v2.0
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowGuide(true)}
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <HelpCircle size={16} />
+                ヘルプ
+              </button>
+              
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>{user?.email}</span>
+                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                  管理者
+                </span>
+              </div>
+            </div>
           </div>
-          {realtimeUnreadCount > 0 && (
-            <div style={{ 
-              background: 'var(--admin-danger)', 
-              color: 'white', 
-              fontSize: '12px', 
-              fontWeight: 700, 
-              padding: '4px 8px', 
-              borderRadius: '12px' 
-            }}>
-              {realtimeUnreadCount}
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 統計カード */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StatCard
+            title="総ユーザー数"
+            value={stats.totalUsers}
+            icon={Users}
+            color="primary"
+            loading={statsLoading}
+            onClick={() => setActiveTab('users')}
+          />
+          <StatCard
+            title="完了クエスト"
+            value={stats.completedQuests}
+            icon={CheckCircle}
+            color="success"
+            loading={statsLoading}
+            onClick={() => setActiveTab('overview')}
+          />
+          <StatCard
+            title="平均進捗率"
+            value={stats.averageProgress}
+            suffix="%"
+            icon={ChartBar}
+            color="accent"
+            loading={statsLoading}
+          />
+        </div>
+
+        {/* クイックアクション */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8 text-slate-800">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">⚡ クイックアクション</h2>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {collapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            </button>
+          </div>
+          
+          {!collapsed && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => (
+                <QuickActionButton key={index} {...action} />
+              ))}
             </div>
           )}
         </div>
 
-        {/* 統計情報 */}
-        <section className="admin-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <div className="section-icon">
-                <BarChart3 size={20} />
+        {/* タブナビゲーション */}
+        <div className="flex space-x-2 mb-6 overflow-x-auto">
+          {tabs.map(tab => (
+            <TabButton
+              key={tab.id}
+              tab={tab}
+              isActive={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            />
+          ))}
+        </div>
+
+        {/* タブコンテンツ */}
+        <div className="bg-white rounded-xl shadow-sm">
+          {activeTab === 'overview' && (
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">📊 システム概要</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">最近のアクティビティ</h3>
+                  {approvalHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Activity className="mx-auto h-8 w-8 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-500">アクティビティはありません</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {approvalHistory.slice(0, 5).map(item => (
+                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex-shrink-0">
+                            <CheckCircle className="text-green-600" size={16} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {item.users_profile?.nickname || 'ユーザー'} - ステージ{item.stage_id}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(item.approved_at || item.created_at).toLocaleString('ja-JP')}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              承認済み
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900">システム状況</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-900">データベース</span>
+                      <span className="flex items-center gap-1 text-green-600 text-sm">
+                        <CheckCircle size={16} />
+                        正常
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-900">認証システム</span>
+                      <span className="flex items-center gap-1 text-green-600 text-sm">
+                        <CheckCircle size={16} />
+                        正常
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-900">リアルタイム更新</span>
+                      <span className="flex items-center gap-1 text-green-600 text-sm">
+                        <CheckCircle size={16} />
+                        正常
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              統計情報
-            </h2>
-            <button onClick={handleRefreshAll} className="refresh-btn">
-              <RefreshCw size={16} />
-              更新
-            </button>
-          </div>
-          
-          <div className="stats-grid">
-            <StatCard
-              title="総ユーザー数"
-              value={stats.totalUsers}
-              icon={Users}
-              color="blue"
-              loading={statsLoading}
-            />
-            <StatCard
-              title="承認待ちクエスト"
-              value={stats.pendingApprovals}
-              icon={Clock}
-              color="warning"
-              loading={statsLoading}
-            />
-            <StatCard
-              title="完了クエスト総数"
-              value={stats.completedQuests}
-              icon={CheckCircle}
-              color="success"
-              loading={statsLoading}
-            />
-            <StatCard
-              title="アクティブユーザー"
-              value={stats.activeUsers}
-              icon={Activity}
-              color="accent"
-              loading={statsLoading}
-            />
-            <StatCard
-              title="平均進捗率"
-              value={stats.averageProgress}
-              icon={ChartBar}
-              color="primary"
-              loading={statsLoading}
-            />
-          </div>
-        </section>
+            </div>
+          )}
 
-        {/* フィルターセクション */}
-        <FilterSection
-          initialFilters={filters}
-          onFilterChange={(newFilters) => setFilters(newFilters)}
-          loading={statsLoading}
-        />
+          {/* 承認タブは不要のため削除 */}
 
-        {/* 承認テーブル */}
-        <ApprovalTable
-          filters={filters}
-          onApprovalChange={loadAllData}
-          onNotification={showNotification}
-        />
-
-        {/* 承認履歴 */}
-        <section className="admin-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <div className="section-icon" style={{ 
-                background: 'linear-gradient(135deg, var(--admin-accent) 0%, #AD1457 100%)' 
-              }}>
-                <History size={20} />
+          {activeTab === 'users' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">👥 ユーザー管理</h2>
+                <p className="text-gray-600">登録ユーザーの情報と進捗状況を確認できます。</p>
               </div>
-              最近の承認履歴
-            </h2>
-            <button onClick={loadApprovalHistory} className="refresh-btn">
-              <RefreshCw size={16} />
-              更新
-            </button>
-          </div>
-          
-          <ApprovalHistoryTable 
-            approvalHistory={approvalHistory} 
-            loading={historyLoading} 
-          />
-        </section>
+              
+              {userData.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">ユーザーデータなし</h3>
+                  <p className="mt-1 text-sm text-gray-500">ユーザーデータが見つかりませんでした。</p>
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={loadUserData}
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <RefreshCw className="-ml-1 mr-2 h-4 w-4" />
+                      再読み込み
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ユーザー
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          クリア数
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          経験値
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          最終ログイン
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {userData.map(user => (
+                        <tr key={user.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.nickname || 'ユーザー名なし'}
+                              </div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {user.quest_clear_count || 0} クリア
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {user.total_exp || 0} EXP
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {user.last_login_date 
+                              ? new Date(user.last_login_date).toLocaleDateString('ja-JP')
+                              : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  未ログイン
+                                </span>
+                              )
+                            }
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* 全ユーザー管理 */}
-        <section className="admin-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <div className="section-icon">
-                <Users size={20} />
+          {/* 承認履歴は承認機能廃止に合わせて非表示 */}
+
+          {activeTab === 'settings' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">⚙️ システム設定</h2>
+                <p className="text-gray-600">システムの各種設定を管理します。</p>
               </div>
-              ユーザー管理
-            </h2>
-            <button onClick={loadUserData} className="refresh-btn">
-              <RefreshCw size={16} />
-              更新
-            </button>
-          </div>
-          
-          <UserManagementTable 
-            userData={userData} 
-            loading={usersLoading} 
-          />
-        </section>
-      </main>
+              
+              <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-blue-900 mb-2">データベース統計</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-700">総ユーザー数:</span>
+                      <span className="ml-2 font-medium">{stats.totalUsers}</span>
+                    </div>
+                    <div>
+                      <span className="text-blue-700">総クエスト数:</span>
+                      <span className="ml-2 font-medium">{stats.completedQuests}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-green-900 mb-2">システム情報</h3>
+                  <div className="space-y-2 text-sm text-green-700">
+                    <div>バージョン: CLAFT Admin v2.0</div>
+                    <div>最終更新: {new Date().toLocaleDateString('ja-JP')}</div>
+                    <div>環境: {process.env.NODE_ENV}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 使い方ガイドモーダル */}
+      <UserGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   )
 }

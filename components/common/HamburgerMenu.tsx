@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // =====================================================
 // HamburgerMenu型定義
@@ -26,6 +26,11 @@ export function HamburgerMenu({
 }: HamburgerMenuProps) {
   const [isActive, setIsActive] = useState(isOpen)
 
+  // 親の開閉状態に同期（同一ページ遷移で再マウントされない場合の対策）
+  useEffect(() => {
+    setIsActive(isOpen)
+  }, [isOpen])
+
   const handleClick = () => {
     setIsActive(!isActive)
     onToggle?.()
@@ -35,7 +40,7 @@ export function HamburgerMenu({
     <>
       <div
         className={`
-          fixed cursor-pointer z-[10000]
+          fixed cursor-pointer z-[10000] hamburger-menu
           bg-white/95 rounded-[10px] p-[10px]
           shadow-[0_4px_15px_rgba(0,0,0,0.1)]
           transition-all duration-300 ease-in-out
@@ -47,7 +52,8 @@ export function HamburgerMenu({
         `}
         onClick={handleClick}
         role="button"
-        aria-label="メニューを開く"
+        aria-label={isActive ? 'メニューを閉じる' : 'メニューを開く'}
+        aria-expanded={isActive}
         style={{
           top: '20px',
           left: '20px'

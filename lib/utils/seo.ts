@@ -135,20 +135,11 @@ export function generateMetadata({
       },
     },
     category: section || 'クラフト・DIY',
-    ...(siteConfig.themeColor && {
-      themeColor: siteConfig.themeColor,
-    }),
     manifest: '/manifest.json',
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
       title: siteConfig.name,
-    },
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      maximumScale: 1,
-      userScalable: false,
     },
   }
 

@@ -8,11 +8,17 @@ import HamburgerMenu from '@/components/common/HamburgerMenu'
 import { Sidebar } from '@/components/common/Sidebar'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/stores/userStore'
+import AccountSettings from '@/components/profile/AccountSettings'
+import {
+  ArrowLeft, Rocket, User, Star, Heart, Shield, Undo2, TriangleAlert,
+  Image as ImageIcon, Upload, CircleCheckBig, LoaderCircle, Check, PenLine,
+  Drama, MessageCircle, Images, Meh, MapPin, BatteryFull, Users, MessageSquare, Save,
+} from 'lucide-react'
 
 export default function ProfilePage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading } = useAuth()
-  const { profileData, updateProfile, initialize } = useUserStore()
+  const { profileData, updateProfile, initialize, refreshProfile } = useUserStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
   const [saveStatus, setSaveStatus] = useState('saved') // 'saving' | 'saved' | 'error'
@@ -21,6 +27,12 @@ export default function ProfilePage() {
   
   // ローカルプロフィールデータの状態（編集用）
   const [localProfileData, setLocalProfileData] = useState(profileData)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [favNowFile, setFavNowFile] = useState<File | null>(null)
+  const [favNowPreview, setFavNowPreview] = useState<string | null>(null)
+  const [uploadingFavNow, setUploadingFavNow] = useState(false)
 
   // 認証チェック
   useEffect(() => {
@@ -68,14 +80,189 @@ export default function ProfilePage() {
     // setSaveStatus('saving')
   }
 
+  // アバター画像選択処理
+  const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // ファイルサイズチェック（5MB制限）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ファイルサイズが大きすぎます。5MB以下の画像を選択してください。')
+      return
+    }
+
+    // ファイル形式チェック
+    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+      alert('対応していない画像形式です。JPEG、PNG、WebP形式の画像を選択してください。')
+      return
+    }
+
+    setAvatarFile(file)
+    setLocalChanges(true)
+
+    // プレビュー画像を作成
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setAvatarPreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // アバター画像アップロード処理
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user?.id) return null
+
+    setUploadingAvatar(true)
+    try {
+      const fileExtension = avatarFile.name.split('.').pop()
+      const fileName = `avatar-${Date.now()}.${fileExtension}`
+      const filePath = `${user.id}/${fileName}`
+
+      console.log('🔧 アバター画像アップロード開始:', {
+        fileName,
+        filePath,
+        fileSize: avatarFile.size,
+        fileType: avatarFile.type,
+        userId: user.id,
+        bucketId: 'user-avatars'
+      })
+
+      // Supabase Storageにアップロード
+      const { data, error } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, avatarFile, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (error) {
+        console.error('❌ ストレージアップロードエラー:', {
+          error,
+          errorMessage: error?.message,
+          errorDetails: error?.details,
+          errorHint: error?.hint,
+          filePath,
+          userId: user.id
+        })
+        
+        // RLSエラーの場合は具体的なメッセージを表示
+        if (error?.message?.includes('row-level security') || error?.message?.includes('policy')) {
+          throw new Error(`権限エラー: ユーザー認証またはアクセス権限に問題があります。\n詳細: ${error.message}`)
+        }
+        
+        throw new Error(`アップロードに失敗しました: ${error?.message || 'Unknown error'}`)
+      }
+
+      // パブリックURLを取得
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath)
+
+      console.log('✅ アバター画像アップロード完了:', {
+        publicUrl,
+        data
+      })
+      
+      return publicUrl
+
+    } catch (error) {
+      console.error('❌ アバター画像アップロードエラー:', error)
+      const errorMessage = error instanceof Error ? error.message : 'アップロードに失敗しました'
+      
+      // ユーザーにわかりやすいエラーメッセージを表示
+      alert(`アバター画像のアップロードに失敗しました。\n\n${errorMessage}\n\n開発環境では、Supabaseの設定が必要です。`)
+      
+      throw error
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  // 「今ハマっていること」画像選択
+  const handleFavNowSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ファイルサイズが大きすぎます。5MB以下の画像を選択してください。')
+      return
+    }
+    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+      alert('対応していない画像形式です。JPEG、PNG、WebP形式の画像を選択してください。')
+      return
+    }
+    setFavNowFile(file)
+    setLocalChanges(true)
+    const reader = new FileReader()
+    reader.onload = (e) => setFavNowPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  // 「今ハマっていること」画像アップロード
+  const uploadFavoriteNowImage = async (): Promise<string | null> => {
+    if (!favNowFile || !user?.id) return null
+    setUploadingFavNow(true)
+    try {
+      const ext = favNowFile.name.split('.').pop()
+      const fileName = `favorite-now-${Date.now()}.${ext}`
+      const filePath = `${user.id}/${fileName}`
+      const { data, error } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, favNowFile, { cacheControl: '3600', upsert: true })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath)
+      return publicUrl
+    } catch (e) {
+      console.error('❌ 今ハマっていること 画像アップロードエラー:', e)
+      alert('「今ハマっていること」画像のアップロードに失敗しました')
+      return null
+    } finally {
+      setUploadingFavNow(false)
+    }
+  }
+
   // Supabaseに保存
   const handleSaveProfile = async () => {
     if (!user?.id) return
 
     setSaveStatus('saving')
     try {
+      let avatarUrl = localProfileData.avatarUrl
+      let favoriteNowImageUrl = localProfileData.favoriteNowImageUrl
+
+      // アバター画像がアップロードされている場合は先にアップロード
+      if (avatarFile) {
+        try {
+          avatarUrl = await uploadAvatar()
+          if (avatarUrl) {
+            setLocalProfileData(prev => ({ ...prev, avatarUrl }))
+            console.log('✅ アバターURL更新:', avatarUrl)
+          }
+        } catch (uploadError) {
+          console.error('❌ アバターアップロード失敗:', uploadError)
+          // アバターアップロードに失敗してもプロフィール保存は継続
+          setSaveStatus('error')
+          return
+        }
+      }
+
+      if (favNowFile) {
+        try {
+          const url = await uploadFavoriteNowImage()
+          if (url) {
+            favoriteNowImageUrl = url
+            setLocalProfileData(prev => ({ ...prev, favoriteNowImageUrl: url }))
+          }
+        } catch (e) {
+          setSaveStatus('error')
+          return
+        }
+      }
+
       // userStoreを更新
-      const result = await updateProfile(localProfileData)
+      const updatedProfileData = { ...localProfileData, avatarUrl, favoriteNowImageUrl }
+      const result = await updateProfile(updatedProfileData)
       
       if (result.success) {
         // Supabaseにも保存
@@ -93,6 +280,8 @@ export default function ProfilePage() {
             companion: localProfileData.companion,
             catchphrase: localProfileData.catchphrase,
             message: localProfileData.message,
+            avatar_url: avatarUrl,
+            favorite_now_image_url: favoriteNowImageUrl,
             updated_at: new Date().toISOString()
           })
 
@@ -100,6 +289,14 @@ export default function ProfilePage() {
 
         setSaveStatus('saved')
         setLocalChanges(false)
+        setAvatarFile(null)
+        setAvatarPreview(null)
+        setFavNowFile(null)
+        setFavNowPreview(null)
+        
+        // プロフィールをリフレッシュして最新状態に同期
+        await refreshProfile(user.id)
+        
         console.log('✅ プロフィール保存完了')
       } else {
         throw new Error(result.error)
@@ -236,7 +433,7 @@ export default function ProfilePage() {
               className="back-button"
               onClick={() => router.push('/')}
             >
-              <i className="fas fa-arrow-left"></i>
+              <ArrowLeft size="1em" />
               ホームに戻る
             </button>
             
@@ -246,7 +443,7 @@ export default function ProfilePage() {
             </div>
             
             <div className={`save-indicator ${saveStatus === 'saving' ? 'saving' : ''}`}>
-              <i className={`fas ${saveStatus === 'saving' ? 'fa-spinner fa-spin' : 'fa-check'}`}></i>
+              {saveStatus === 'saving' ? <LoaderCircle size="1em" className="animate-spin" /> : <Check size="1em" />}
               {saveStatus === 'saving' ? '保存中...' : '保存済み'}
             </div>
           </div>
@@ -259,7 +456,15 @@ export default function ProfilePage() {
             <div className="preview-card">
               <div className="character-avatar">
                 <div className="avatar-circle">
-                  <i className="fas fa-user-astronaut"></i>
+                  {avatarPreview || localProfileData.avatarUrl ? (
+                    <img 
+                      src={avatarPreview || localProfileData.avatarUrl} 
+                      alt="アバター"
+                      className="avatar-image"
+                    />
+                  ) : (
+                    <Rocket size="1em" />
+                  )}
                 </div>
                 <div className="character-speech active">
                   {localProfileData.catchphrase}
@@ -275,7 +480,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">レベル</div>
-                  <div className="stat-value">Lv. 3</div>
+                  <div className="stat-value">Lv. 1</div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">スキル数</div>
@@ -288,7 +493,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="stat-item">
                   <div className="stat-label">経験値</div>
-                  <div className="stat-value">250 XP</div>
+                  <div className="stat-value">0 XP</div>
                 </div>
               </div>
               
@@ -312,22 +517,29 @@ export default function ProfilePage() {
                 className={`tab-button ${activeTab === 'basic' ? 'active' : ''}`}
                 onClick={() => setActiveTab('basic')}
               >
-                <i className="fas fa-user"></i>
+                <User size="1em" />
                 基本情報
               </button>
               <button 
                 className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
                 onClick={() => setActiveTab('skills')}
               >
-                <i className="fas fa-star"></i>
+                <Star size="1em" />
                 スキル
               </button>
               <button 
                 className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
                 onClick={() => setActiveTab('personal')}
               >
-                <i className="fas fa-heart"></i>
+                <Heart size="1em" />
                 大切なこと
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'account' ? 'active' : ''}`}
+                onClick={() => setActiveTab('account')}
+              >
+                <Shield size="1em" />
+                アカウント設定
               </button>
             </div>
 
@@ -338,7 +550,7 @@ export default function ProfilePage() {
                 disabled={!localChanges || saveStatus === 'saving'}
                 className={`save-btn ${!localChanges ? 'disabled' : ''} ${saveStatus === 'saving' ? 'saving' : ''}`}
               >
-                <i className={`fas ${saveStatus === 'saving' ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+                {saveStatus === 'saving' ? <LoaderCircle size="1em" className="animate-spin" /> : <Save size="1em" />}
                 {saveStatus === 'saving' ? '保存中...' : 'プロフィールを保存する'}
               </button>
               
@@ -351,14 +563,14 @@ export default function ProfilePage() {
                   }}
                   className="cancel-btn"
                 >
-                  <i className="fas fa-undo"></i>
+                  <Undo2 size="1em" />
                   変更を取り消す
                 </button>
               )}
               
               {saveStatus === 'error' && (
                 <div className="error-message">
-                  <i className="fas fa-exclamation-triangle"></i>
+                  <TriangleAlert size="1em" />
                   保存に失敗しました。もう一度お試しください。
                 </div>
               )}
@@ -369,9 +581,61 @@ export default function ProfilePage() {
               {/* 基本情報タブ */}
               {activeTab === 'basic' && (
                 <div className="form-section">
+                  {/* アバター画像アップロード */}
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-signature"></i>
+                      <ImageIcon size="1em" />
+                      アバター画像
+                    </label>
+                    <div className="avatar-upload-area">
+                      <div className="avatar-preview">
+                        {avatarPreview || localProfileData.avatarUrl ? (
+                          <img 
+                            src={avatarPreview || localProfileData.avatarUrl} 
+                            alt="アバタープレビュー"
+                            className="avatar-preview-image"
+                          />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            <Rocket size="1em" />
+                            <span>画像を選択</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="avatar-upload-controls">
+                        <input
+                          type="file"
+                          id="avatar-upload"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleAvatarSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="avatar-upload" className="avatar-upload-btn">
+                          <Upload size="1em" />
+                          画像を選択
+                        </label>
+                        {avatarFile && (
+                          <div className="upload-status">
+                            <CircleCheckBig size="1em" className="text-green-500" />
+                            {avatarFile.name}
+                          </div>
+                        )}
+                        {uploadingAvatar && (
+                          <div className="upload-progress">
+                            <LoaderCircle size="1em" className="animate-spin" />
+                            アップロード中...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-hint">
+                      💡 JPEG、PNG、WebP形式、5MB以下の画像をアップロードできます
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      <PenLine size="1em" />
                       なまえ（ニックネーム）
                     </label>
                     <input
@@ -385,7 +649,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-mask"></i>
+                      <Drama size="1em" />
                       キャラ（特性）
                     </label>
                     <input
@@ -402,7 +666,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-comment"></i>
+                      <MessageCircle size="1em" />
                       セリフ（口ぐせ）
                     </label>
                     <input
@@ -421,7 +685,56 @@ export default function ProfilePage() {
                 <div className="form-section">
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-star"></i>
+                      <Images size="1em" />
+                      今ハマっていること・見てほしいモノなど（画像）
+                    </label>
+                    <div className="avatar-upload-area">
+                      <div className="avatar-preview" style={{ borderRadius: 12 }}>
+                        {favNowPreview || localProfileData.favoriteNowImageUrl ? (
+                          <img
+                            src={favNowPreview || (localProfileData.favoriteNowImageUrl as string)}
+                            alt="今ハマっていること"
+                            className="avatar-preview-image"
+                            style={{ borderRadius: 12 }}
+                          />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            <ImageIcon size="1em" />
+                            <span>画像を選択</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="avatar-upload-controls">
+                        <input
+                          type="file"
+                          id="favnow-upload"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={handleFavNowSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="favnow-upload" className="avatar-upload-btn">
+                          <Upload size="1em" />
+                          画像を選択
+                        </label>
+                        {favNowFile && (
+                          <div className="upload-status">
+                            <CircleCheckBig size="1em" className="text-green-500" />
+                            {favNowFile.name}
+                          </div>
+                        )}
+                        {uploadingFavNow && (
+                          <div className="upload-progress">
+                            <LoaderCircle size="1em" className="animate-spin" />
+                            アップロード中...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-hint">💡 JPEG、PNG、WebP形式、5MB以下の画像をアップロードできます</div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Star size="1em" />
                       とくい（スキル）
                     </label>
                     <input
@@ -438,7 +751,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-grimace"></i>
+                      <Meh size="1em" />
                       よわみ（苦手）
                     </label>
                     <input
@@ -457,7 +770,7 @@ export default function ProfilePage() {
                 <div className="form-section">
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-map-marker-alt"></i>
+                      <MapPin size="1em" />
                       すきな時間・場所
                     </label>
                     <input
@@ -471,7 +784,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-battery-full"></i>
+                      <BatteryFull size="1em" />
                       エネルギーチャージ方法
                     </label>
                     <input
@@ -485,7 +798,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-users"></i>
+                      <Users size="1em" />
                       一緒に冒険したい人
                     </label>
                     <input
@@ -499,7 +812,7 @@ export default function ProfilePage() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      <i className="fas fa-message"></i>
+                      <MessageSquare size="1em" />
                       ひとこと
                     </label>
                     <textarea
@@ -510,6 +823,13 @@ export default function ProfilePage() {
                       rows={4}
                     />
                   </div>
+                </div>
+              )}
+
+              {/* アカウント設定タブ */}
+              {activeTab === 'account' && (
+                <div className="form-section">
+                  <AccountSettings />
                 </div>
               )}
             </div>
@@ -1250,6 +1570,7 @@ export default function ProfilePage() {
           display: flex;
           align-items: center;
           gap: 8px;
+          color: #333;
         }
 
         .tab-button::before {
@@ -1269,10 +1590,26 @@ export default function ProfilePage() {
           background: var(--blue);
           color: white;
         }
+        /* アクティブ時に子要素も白で表示（アイコン等の可読性向上） */
+        .tab-button.active *,
+        .tab-button.active i,
+        .tab-button.active svg {
+          color: #fff !important;
+          fill: #fff !important;
+        }
 
         .tab-button:hover::before {
           width: 300px;
           height: 300px;
+        }
+        
+        .tab-button:hover {
+          color: white;
+        }
+        
+        .tab-button:hover > * {
+          position: relative;
+          z-index: 2;
         }
 
         .form-section {
@@ -1379,6 +1716,122 @@ export default function ProfilePage() {
           background: #F3F4F6;
           border-radius: 8px;
           border-left: 3px solid #3B82F6;
+        }
+
+        /* アバター画像アップロード */
+        .avatar-upload-area {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          padding: 20px;
+          border: 2px dashed #E0E0E0;
+          border-radius: 12px;
+          background: #FAFAFA;
+          transition: all 0.3s ease;
+        }
+
+        .avatar-upload-area:hover {
+          border-color: var(--blue);
+          background: #F0F8FF;
+        }
+
+        .avatar-preview {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+          box-shadow: 0 8px 30px rgba(126, 87, 194, 0.3);
+          flex-shrink: 0;
+        }
+
+        .avatar-preview-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+
+        .avatar-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+
+        .avatar-placeholder {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          color: white;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        .avatar-placeholder i {
+          font-size: 40px;
+          opacity: 0.8;
+        }
+
+        .avatar-upload-controls {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .avatar-upload-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 20px;
+          background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+          color: white;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          width: fit-content;
+        }
+
+        .avatar-upload-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(126, 87, 194, 0.4);
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        .upload-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #F0F9FF;
+          border: 1px solid #BAE6FD;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #0369A1;
+        }
+
+        .upload-progress {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #FEF3C7;
+          border: 1px solid #FCD34D;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #92400E;
         }
 
         /* 保存ボタンエリア */

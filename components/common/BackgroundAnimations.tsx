@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // =====================================================
 // 型定義
@@ -29,6 +29,8 @@ export default function BackgroundAnimations({ className = '' }: BackgroundAnima
       
       {/* 街のシルエット */}
       <div className="city-silhouette"></div>
+
+      <ConfettiListener />
       
       {/* スタイル定義（既存のCSSを完全再現） */}
       <style jsx>{`
@@ -274,4 +276,32 @@ export default function BackgroundAnimations({ className = '' }: BackgroundAnima
       `}</style>
     </div>
   );
+}
+
+function ConfettiListener() {
+  useEffect(() => {
+    function onConfetti() {
+      try {
+        import('canvas-confetti').then((m) => {
+          const confetti = m.default
+          const duration = 1600
+          const end = Date.now() + duration
+          const colors = ['#34d399', '#60a5fa', '#fbbf24', '#f472b6']
+          ;(function frame() {
+            confetti({
+              particleCount: 6,
+              startVelocity: 55,
+              spread: 70,
+              origin: { x: Math.random(), y: Math.random() - 0.2 },
+              colors
+            })
+            if (Date.now() < end) requestAnimationFrame(frame)
+          })()
+        })
+      } catch {}
+    }
+    window.addEventListener('claft:confetti', onConfetti)
+    return () => window.removeEventListener('claft:confetti', onConfetti)
+  }, [])
+  return null
 } 

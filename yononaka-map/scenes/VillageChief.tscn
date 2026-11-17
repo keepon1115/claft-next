@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/VillageChief.gd" id="1"]
+
+[sub_resource type="CircleShape2D" id="2"]
+radius = 50.0
+
+[node name="VillageChief" type="Area2D"]
+script = ExtResource("1")
+
+; 足元のドロップシャドウ（接地感）
+[node name="Shadow" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(6, 7.8, 5.2, 8.9, 3, 9.7, 0, 10, -3, 9.7, -5.2, 8.9, -6, 7.8, -5.2, 6.7, -3, 5.9, 0, 5.6, 3, 5.9, 5.2, 6.7)
+color = Color(0.08, 0.07, 0.05, 0.25)
+
+; 16x16 の4方向スプライト（VillageChief.gd が実行時に組み立てる）
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("2")

@@ -1,0 +1,8 @@
+{
+  "title": "ラジオ塔",
+  "intro": "とおくの こえが きこえてくる…",
+  "links": [
+    { "label": "🎧 コテンラジオを きく", "url": "https://cotenradio.fm/" },
+    { "label": "🔭 視点をふやすページへ", "url": "/perspectives" }
+  ]
+}

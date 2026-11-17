@@ -8,6 +8,7 @@ import type { UserProfile, UserStats } from '@/types'
 import AnimationProvider from '@/components/common/AnimationProvider'
 import { PerformanceProvider } from '@/components/common/PerformanceMonitor'
 import { NotificationProvider } from '@/components/common/NotificationSystem'
+import { ThemeProvider } from 'next-themes'
 
 // Vercel Analytics
 import { Analytics } from '@vercel/analytics/react'
@@ -349,9 +350,19 @@ class AuthErrorBoundary extends React.Component<AuthErrorBoundaryProps, AuthErro
  */
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <NotificationProvider>
-      {children}
-    </NotificationProvider>
+    <AuthErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} disableTransitionOnChange>
+        <AuthProvider>
+          <AnimationProvider>
+            <PerformanceProvider>
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </PerformanceProvider>
+          </AnimationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </AuthErrorBoundary>
   )
 }
 
